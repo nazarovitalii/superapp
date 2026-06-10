@@ -73,3 +73,48 @@ Angular format `type(scope): description`. Types: `feat`, `fix`, `docs`, `style`
 | `NgModules` for new code                                                   | standalone components                     |
 | Re-declaring Material theme styles                                         | existing theme variables                  |
 | One-off `.mat-*`, `.mdc-*`, `button[mat-*]`, or shared component overrides | reusable inputs, tokens, or shared styles |
+
+---
+
+# MrSQM (форк-переосмысление)
+
+Этот репозиторий — форк Super Productivity, переделываемый в **MrSQM**: desktop/mobile-клиент
+B2B-платформы обмена недвижимостью для дубайских риелторов. Дизайн/UX/темы Super Productivity
+сохраняются, функциональность — MrSQM. Весь продуктовый код — в `src/app/mrsqm/`.
+
+**Связанные проекты группы:** admin `~/Projects/admin` · mainapp `~/Projects/mainapp` (web-клиент того же продукта) · parser4 · parser5. Общая Supabase self-hosted.
+
+## git
+
+- `origin` — твой репо (github.com/nazarovitalii/superapp), ветка **main**. Сюда пушим, отсюда деплоит Coolify.
+- `upstream` — Super Productivity (johannesjo). Только `pull` обновлений, не пушить.
+
+## Система документирования MrSQM
+
+Контент-доки MrSQM — в `docs/` (отдельно от upstream-доков Super Productivity):
+
+| Документ | Что внутри |
+|---|---|
+| `docs/README.md` | Бизнес-логика, продукт |
+| `docs/architecture.md` | Стратегические решения (auth, роли, подписки, AI, A2A) |
+| `docs/database.md` | Схема БД (таблицы/VIEW/RPC/RLS) |
+| `docs/tabs.md` | Экраны UI |
+| `docs/tests.md` | Прод-тесты (T-N) |
+| `docs/TODO.md` | Беклог |
+| `docs/commits.md` | История коммитов (хук дописывает) |
+
+**При каждом деплое** пройти чеклист 7 файлов (см. `/deploy` skill) → `/export-convo` → `/daily-summary`.
+
+## Рутины (`.claude/skills/`)
+
+`/deploy` · `/export-convo` · `/daily-summary` · `/migrate` · `/test-prod`.
+Hooks: `.claude/settings.json` (PreCommit-блок секретов + PostCommit-автодопись `docs/commits.md`/`docs/database.md`).
+Rules: `src/app/mrsqm/**` (Angular/Supabase) + `docs/migrations/**` (SQL/RLS).
+⚠️ `.claude/` в `.gitignore` (от upstream) — skills/hooks работают локально, в репо не уходят.
+
+## Безопасность (MrSQM)
+
+- ⛔ Изменения БД — только с явного согласия (объяснить → спросить → ждать). SQL писать в `docs/migrations/`, читать БД (SELECT) — можно.
+- RLS обязателен для пользовательских данных (клиент на anon-ключе).
+- Общая БД — не трогать чужие таблицы (`bayut_*` = admin/парсеры).
+- После пуша — TG-summary (тот же бот/чат, что admin), не переспрашивать.
