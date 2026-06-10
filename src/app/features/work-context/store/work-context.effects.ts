@@ -59,7 +59,8 @@ export class WorkContextEffects {
         (url) =>
           !!url.match(/(schedule)$/) ||
           !!url.match(/(planner)$/) ||
-          !!url.match(/(boards)$/),
+          !!url.match(/(boards)$/) ||
+          url.startsWith('/mrsqm'),
       ),
       withLatestFrom(this._workContextService.activeWorkContextTypeAndId$),
       filter(

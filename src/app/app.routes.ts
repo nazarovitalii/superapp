@@ -127,6 +127,44 @@ export const APP_ROUTES: Routes = [
     loadComponent: () =>
       import('./routes/pages.routes').then((m) => m.ConfigPageComponent),
   },
+  // ─── MrSQM — риелторская CRM ─────────────────────────────────────────────
+  {
+    path: 'mrsqm/feed',
+    loadComponent: () =>
+      import('./mrsqm/pages/feed/feed-page.component').then((m) => m.FeedPageComponent),
+    data: { page: 'mrsqm-feed' },
+    canActivate: [FocusOverlayOpenGuard],
+  },
+  {
+    path: 'mrsqm/add',
+    loadComponent: () =>
+      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+    data: { page: 'mrsqm-add', title: 'Добавить объект', icon: 'add_home' },
+  },
+  {
+    path: 'mrsqm/saved',
+    loadComponent: () =>
+      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+    data: { page: 'mrsqm-saved', title: 'Избранное', icon: 'bookmark' },
+  },
+  {
+    path: 'mrsqm/network',
+    loadComponent: () =>
+      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+    data: { page: 'mrsqm-network', title: 'Сеть', icon: 'group' },
+  },
+  {
+    path: 'mrsqm/chat',
+    loadComponent: () =>
+      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+    data: { page: 'mrsqm-chat', title: 'AI Chat', icon: 'smart_toy' },
+  },
+  {
+    path: 'mrsqm/profile',
+    loadComponent: () =>
+      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+    data: { page: 'mrsqm-profile', title: 'Профиль', icon: 'person' },
+  },
   // Wildcard — redirects to default start page
   {
     path: '**',

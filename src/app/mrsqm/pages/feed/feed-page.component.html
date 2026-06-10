@@ -1,0 +1,53 @@
+<div class="feed-container">
+  <!-- Шапка таблицы — колонки -->
+  <div class="table-header">
+    <div class="th th-address">Адрес</div>
+    <div class="th th-type">Тип</div>
+    <div class="th th-beds">Beds</div>
+    <div class="th th-size">Площадь</div>
+    <div class="th th-price">Цена</div>
+    <div class="th th-listing">Листинг</div>
+  </div>
+
+  <div class="property-list">
+    @for (p of properties(); track p.id) {
+      <mrsqm-property-card
+        [property]="p"
+        [isActive]="selectedPropertyId === p.id"
+        (cardClick)="openDetail(p)"
+      />
+    } @empty {
+      @if (!isLoading()) {
+        <div class="empty-state">
+          <mat-icon>search_off</mat-icon>
+          <p>Объектов не найдено</p>
+        </div>
+      }
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="spinner-row">
+      <mat-spinner diameter="32" />
+    </div>
+  }
+
+  @if (countHidden() > 0) {
+    <div class="hidden-hint">
+      <mat-icon>lock</mat-icon>
+      Ещё {{ countHidden() }} объектов доступно на <strong>Pro</strong>
+    </div>
+  }
+
+  @if (hasMore() && !isLoading()) {
+    <div class="load-more-row">
+      <button
+        mat-stroked-button
+        class="load-more-btn"
+        (click)="loadMore()"
+      >
+        Загрузить ещё
+      </button>
+    </div>
+  }
+</div>

@@ -29,14 +29,10 @@ import { PluginService } from '../../plugins/plugin.service';
 import { lsGetBoolean, lsSetItem } from '../../util/ls-util';
 import { MenuTreeService } from '../../features/menu-tree/menu-tree.service';
 import { Router } from '@angular/router';
-import {
-  MenuTreeKind,
-  MenuTreeViewNode,
-} from '../../features/menu-tree/store/menu-tree.model';
+import { MenuTreeViewNode } from '../../features/menu-tree/store/menu-tree.model';
 import { GlobalConfigService } from '../../features/config/global-config.service';
 import { AppFeaturesConfig } from '../../features/config/global-config.model';
 import { SnackService } from '../../core/snack/snack.service';
-import { IS_IOS_NATIVE } from '../../util/is-native-platform';
 
 @Injectable({
   providedIn: 'root',
@@ -104,9 +100,6 @@ export class MagicNavConfigService {
   private readonly isBoardsEnabled = computed(
     () => this._configService.appFeatures().isBoardsEnabled,
   );
-  private readonly isDonatePageEnabled = computed(
-    () => this._configService.appFeatures().isDonatePageEnabled,
-  );
   private readonly isHabitsEnabled = computed(
     () => this._configService.appFeatures().isHabitsEnabled,
   );
@@ -145,87 +138,62 @@ export class MagicNavConfigService {
   // Main navigation configuration
   readonly navConfig = computed<NavConfig>(() => ({
     items: [
-      // Work Context Items
+      // ─── CRM секция ──────────────────────────────────────────────────────
+      {
+        type: 'route',
+        id: 'crm-feed',
+        label: 'Лента',
+        icon: 'apartment',
+        route: '/mrsqm/feed',
+      } as NavItem,
+      {
+        type: 'route',
+        id: 'crm-add',
+        label: 'Добавить',
+        icon: 'add_home',
+        route: '/mrsqm/add',
+      } as NavItem,
+      {
+        type: 'route',
+        id: 'crm-saved',
+        label: 'Избранное',
+        icon: 'bookmark',
+        route: '/mrsqm/saved',
+      } as NavItem,
+      {
+        type: 'route',
+        id: 'crm-network',
+        label: 'Сеть',
+        icon: 'group',
+        route: '/mrsqm/network',
+      } as NavItem,
+      {
+        type: 'route',
+        id: 'crm-chat',
+        label: 'AI Chat',
+        icon: 'smart_toy',
+        route: '/mrsqm/chat',
+      } as NavItem,
+      {
+        type: 'route',
+        id: 'crm-profile',
+        label: 'Профиль',
+        icon: 'person',
+        route: '/mrsqm/profile',
+      } as NavItem,
+
+      // ─── Разделитель ─────────────────────────────────────────────────────
+      { type: 'separator', id: 'sep-crm-sp' },
+
+      // ─── SP планировщик ──────────────────────────────────────────────────
+      // Work Context Items (Today)
       ...this._buildWorkContextItems(),
 
-      // Separator
-
-      // Main Routes
+      // Main Routes (Planner, Schedule, Boards, Habits)
       ...this._buildMainRoutesItems(),
 
       // Plugin entries
       ...this._buildPluginItems(),
-
-      // Separator
-      { type: 'separator', id: 'sep-2' },
-
-      // Projects Section
-      {
-        type: 'tree',
-        id: 'projects',
-        label: T.MH.PROJECTS,
-        icon: 'expand_more',
-        treeKind: MenuTreeKind.PROJECT,
-        tree:
-          this._projectNavTree().length > 0
-            ? this._projectNavTree()
-            : this._visibleProjects().map((project) => ({
-                k: MenuTreeKind.PROJECT,
-                project,
-              })),
-        action: () => this._toggleProjectsExpanded(),
-        additionalButtons: [
-          {
-            id: 'project-visibility',
-            icon: 'visibility',
-            tooltip: T.F.PROJECT_FOLDER.TOOLTIP_VISIBILITY,
-            action: () => this._openProjectVisibilityMenu(),
-          },
-          {
-            id: 'add-project-folder',
-            icon: 'create_new_folder',
-            tooltip: T.F.PROJECT_FOLDER.TOOLTIP_CREATE,
-            action: () => this._openCreateProjectFolder(),
-          },
-          {
-            id: 'add-project',
-            icon: 'add',
-            tooltip: T.MH.CREATE_PROJECT,
-            action: () => this._openCreateProject(),
-          },
-        ],
-      },
-
-      // Tags Section
-      {
-        type: 'tree',
-        id: 'tags',
-        label: T.MH.TAGS,
-        icon: 'expand_more',
-        treeKind: MenuTreeKind.TAG,
-        tree:
-          this._tagNavTree().length > 0
-            ? this._tagNavTree()
-            : this._tags().map((tag) => ({
-                k: MenuTreeKind.TAG,
-                tag,
-              })),
-        action: () => this._toggleTagsExpanded(),
-        additionalButtons: [
-          {
-            id: 'add-tag-folder',
-            icon: 'create_new_folder',
-            tooltip: T.F.TAG_FOLDER.TOOLTIP_CREATE,
-            action: () => this._openCreateTagFolder(),
-          },
-          {
-            id: 'add-tag',
-            icon: 'add',
-            tooltip: T.MH.CREATE_TAG,
-            action: () => this._createNewTag(),
-          },
-        ],
-      },
 
       // Separator
       { type: 'separator', id: 'sep-3', mtAuto: true },
@@ -243,28 +211,7 @@ export class MagicNavConfigService {
             } as NavItem,
           ]
         : []),
-      {
-        type: 'route',
-        id: 'scheduled-list',
-        label: T.MH.ALL_PLANNED_LIST,
-        icon: 'list',
-        route: '/scheduled-list',
-      },
 
-      // Help Menu (rendered as mat-menu)
-      // Not allowed to display donation stuff on iOS per App Store guidelines
-      ...(this.isDonatePageEnabled() && !IS_IOS_NATIVE
-        ? [
-            {
-              type: 'route',
-              id: 'donate',
-              label: T.MH.DONATE,
-              icon: 'favorite',
-              route: '/donate',
-              featureConfigKey: 'isDonatePageEnabled',
-            } as NavItem,
-          ]
-        : []),
       {
         type: 'menu',
         id: 'help',
@@ -284,25 +231,6 @@ export class MagicNavConfigService {
             label: T.MH.HM.REPORT_A_PROBLEM,
             icon: 'bug_report',
             action: () => this._openBugReport(),
-          },
-          // Not allowed to display donation stuff on iOS per App Store guidelines
-          ...(!IS_IOS_NATIVE
-            ? [
-                {
-                  type: 'href' as const,
-                  id: 'help-contribute',
-                  label: T.MH.HM.CONTRIBUTE,
-                  icon: 'volunteer_activism',
-                  href: 'https://github.com/super-productivity/super-productivity/blob/master/CONTRIBUTING.md',
-                },
-              ]
-            : []),
-          {
-            type: 'href',
-            id: 'help-reddit',
-            label: T.MH.HM.REDDIT_COMMUNITY,
-            icon: 'forum',
-            href: 'https://www.reddit.com/r/superProductivity/',
           },
           {
             type: 'action',

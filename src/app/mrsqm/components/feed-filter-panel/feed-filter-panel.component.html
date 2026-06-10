@@ -1,0 +1,119 @@
+<div class="filter-panel">
+  <!-- Заголовок панели — повторяет шапку task-detail-panel -->
+  <div class="panel-header">
+    <button
+      class="close-btn"
+      mat-icon-button
+      (click)="closed.emit()"
+      [attr.aria-label]="'Закрыть'"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="panel-title">Фильтры</span>
+    <button
+      class="reset-btn"
+      mat-button
+      (click)="reset()"
+    >
+      Сбросить
+    </button>
+  </div>
+
+  <div class="filter-scroll">
+    <!-- Тип объекта -->
+    <div class="filter-group">
+      <div class="filter-label">Тип объекта</div>
+      <div class="chip-row">
+        @for (t of propertyTypes; track t) {
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="draft().propertyType === t"
+            (click)="setPropertyType(t)"
+          >
+            {{ t }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Спальни -->
+    <div class="filter-group">
+      <div class="filter-label">Спальни</div>
+      <div class="chip-row">
+        @for (b of bedOptions; track b) {
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="draft().bedrooms === b"
+            (click)="setBedrooms(b)"
+          >
+            {{ bedLabel(b) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Цена -->
+    <div class="filter-group">
+      <div class="filter-label">Цена</div>
+      <div class="price-inputs">
+        <input
+          class="price-input"
+          type="number"
+          inputmode="numeric"
+          placeholder="От"
+          [ngModel]="draft().priceMin"
+          (ngModelChange)="setPriceMin($event)"
+        />
+        <span class="price-dash">—</span>
+        <input
+          class="price-input"
+          type="number"
+          inputmode="numeric"
+          placeholder="До"
+          [ngModel]="draft().priceMax"
+          (ngModelChange)="setPriceMax($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Листинг -->
+    <div class="filter-group">
+      <div class="filter-label">Листинг</div>
+      <mat-button-toggle-group
+        class="listing-toggle"
+        [value]="draft().listingType"
+        (change)="setListingType($event.value)"
+      >
+        <mat-button-toggle value="all">Все</mat-button-toggle>
+        <mat-button-toggle value="official">Official</mat-button-toggle>
+        <mat-button-toggle value="pocket">Pocket</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Срочные -->
+    <div class="filter-group">
+      <label class="switch-row">
+        <span class="filter-label switch-label">Только срочные</span>
+        <input
+          type="checkbox"
+          [checked]="draft().distressOnly"
+          (change)="setDistress($any($event.target).checked)"
+        />
+      </label>
+    </div>
+  </div>
+
+  <!-- Низ — кнопка применить -->
+  <div class="panel-footer">
+    <button
+      mat-flat-button
+      color="primary"
+      class="apply-btn"
+      (click)="apply()"
+    >
+      Применить
+    </button>
+  </div>
+</div>

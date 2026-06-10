@@ -1,4 +1,15 @@
-@if (panelContent() === 'ISSUE_PANEL') {
+@if (panelContent() === 'PROPERTY') {
+  <mrsqm-property-detail
+    [@slideInFromRight]
+    [property]="panelContentService.selectedProperty()!"
+    (closed)="panelContentService.closeProperty()"
+  ></mrsqm-property-detail>
+} @else if (panelContent() === 'FILTERS') {
+  <mrsqm-feed-filter-panel
+    [@slideInFromRight]
+    (closed)="panelContentService.closeFilterPanel()"
+  ></mrsqm-feed-filter-panel>
+} @else if (panelContent() === 'ISSUE_PANEL') {
   @defer (prefetch on idle) {
     <issue-panel [@slideInFromRight]></issue-panel>
   }

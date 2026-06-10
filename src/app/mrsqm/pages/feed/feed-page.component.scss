@@ -1,0 +1,115 @@
+@use '../../../../styles/_globals.scss' as *;
+
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 var(--s) var(--s8);
+}
+
+// Контейнер по центру — как лента задач в инбоксе
+.feed-container {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+// Заголовки таблицы — те же пропорции что в grid карточки
+.table-header {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 2fr)
+    minmax(80px, 1fr)
+    60px
+    90px
+    minmax(100px, 1.2fr)
+    90px;
+  gap: var(--s);
+  padding: var(--s) calc(var(--s) + 5px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--extra-border-color);
+}
+
+.th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.th-beds,
+.th-size,
+.th-price,
+.th-listing {
+  text-align: right;
+}
+
+.property-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-quarter) 5px 0;
+}
+
+.spinner-row {
+  display: flex;
+  justify-content: center;
+  padding: var(--s3) 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s);
+  padding: var(--s6) var(--s2);
+  color: var(--text-color-muted);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.hidden-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  padding: var(--s2);
+  margin: var(--s) 5px;
+  background: var(--bg-lighter);
+  border-radius: var(--card-border-radius);
+  border-left: 3px solid var(--c-primary);
+  color: var(--text-color-muted);
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--c-primary);
+  }
+}
+
+.load-more-row {
+  display: flex;
+  justify-content: center;
+  padding: var(--s2) 0 var(--s4);
+}
+
+.load-more-btn {
+  min-width: 180px;
+}

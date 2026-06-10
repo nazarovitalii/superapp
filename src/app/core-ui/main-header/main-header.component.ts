@@ -49,6 +49,10 @@ import { UserProfileButtonComponent } from '../../features/user-profile/user-pro
 import { FocusButtonComponent } from './focus-button/focus-button.component';
 import { UserProfileService } from '../../features/user-profile/user-profile.service';
 import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
+import { FeedFilterService } from '../../mrsqm/services/feed-filter.service';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { DealType } from '../../mrsqm/types/database';
+import { PanelContentService } from '../../features/panels/panel-content.service';
 
 @Component({
   selector: 'main-header',
@@ -71,6 +75,7 @@ import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
     DesktopPanelButtonsComponent,
     UserProfileButtonComponent,
     FocusButtonComponent,
+    MatButtonToggleModule,
   ],
 })
 export class MainHeaderComponent implements OnDestroy {
@@ -93,6 +98,8 @@ export class MainHeaderComponent implements OnDestroy {
   private readonly _dateService = inject(DateService);
   private readonly _dataInitStateService = inject(DataInitStateService);
   private readonly _focusModeService = inject(FocusModeService);
+  readonly feedFilter = inject(FeedFilterService);
+  private readonly _panelContentService = inject(PanelContentService);
 
   readonly isDataLoaded = toSignal(this._dataInitStateService.isAllDataLoadedInitially$, {
     initialValue: false,
@@ -127,6 +134,23 @@ export class MainHeaderComponent implements OnDestroy {
   );
 
   currentTaskContext = toSignal(this._currentTaskContext$);
+
+  readonly isFeedRoute = toSignal(
+    this._router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects.startsWith('/mrsqm/feed')),
+      startWith(this._router.url.startsWith('/mrsqm/feed')),
+    ),
+    { initialValue: this._router.url.startsWith('/mrsqm/feed') },
+  );
+
+  setDealType(type: DealType): void {
+    this.feedFilter.set(type);
+  }
+
+  toggleFilterPanel(): void {
+    this._panelContentService.toggleFilterPanel();
+  }
 
   private _isRouteWithSidePanel$ = this._router.events.pipe(
     filter((event): event is NavigationEnd => event instanceof NavigationEnd),

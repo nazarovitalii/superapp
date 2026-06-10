@@ -1,0 +1,179 @@
+<div class="detail-panel">
+  <!-- Кнопка закрытия — повторяет edge-close-handle из right-panel SP -->
+  <button
+    class="close-btn"
+    (click)="closed.emit()"
+    [attr.aria-label]="'Закрыть'"
+    mat-icon-button
+  >
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else {
+    <div class="detail-scroll">
+      <!-- Галерея фото -->
+      @if (displayData.photos?.length) {
+        <div class="gallery">
+          <img
+            class="gallery-img"
+            [src]="displayData.photos![activePhotoIdx()]"
+            [alt]="displayData.location_name ?? ''"
+          />
+          @if (displayData.photos!.length > 1) {
+            <div class="gallery-controls">
+              <button
+                mat-icon-button
+                (click)="prevPhoto()"
+              >
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <span class="gallery-counter">
+                {{ activePhotoIdx() + 1 }} / {{ displayData.photos!.length }}
+              </span>
+              <button
+                mat-icon-button
+                (click)="nextPhoto()"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="gallery gallery--placeholder">
+          <mat-icon>apartment</mat-icon>
+        </div>
+      }
+
+      <div class="detail-body">
+        <!-- Цена и тип сделки -->
+        <div class="price-row">
+          <span class="price-main">
+            {{ displayData.price | number: '1.0-0' }}
+            {{ displayData.price_currency }}
+            @if (displayData.price_period) {
+              <span class="price-period">/{{ displayData.price_period }}</span>
+            }
+          </span>
+          <div class="type-chips">
+            <span class="type-chip type-chip--deal">
+              {{ displayData.deal_type === 'sale' ? 'Продажа' : 'Аренда' }}
+            </span>
+            @if (displayData.listing_type === 'pocket') {
+              <span class="type-chip type-chip--pocket">
+                <mat-icon>star</mat-icon>Pocket
+              </span>
+            }
+            @if (displayData.is_distress) {
+              <span class="type-chip type-chip--distress">Срочно</span>
+            }
+          </div>
+        </div>
+
+        <!-- Параметры объекта -->
+        <div class="specs-grid">
+          @if (displayData.bedrooms !== null) {
+            <div class="spec-item">
+              <mat-icon>bed</mat-icon>
+              <span>{{ displayData.bedrooms }} спал.</span>
+            </div>
+          }
+          @if (displayData.bathrooms !== null) {
+            <div class="spec-item">
+              <mat-icon>shower</mat-icon>
+              <span>{{ displayData.bathrooms }} ванн.</span>
+            </div>
+          }
+          @if (displayData.area_sqft !== null) {
+            <div class="spec-item">
+              <mat-icon>square_foot</mat-icon>
+              <span>{{ displayData.area_sqft | number: '1.0-0' }} sqft</span>
+            </div>
+          }
+          @if (displayData.furnished) {
+            <div class="spec-item">
+              <mat-icon>chair</mat-icon>
+              <span>{{
+                displayData.furnished === 'yes' ? 'Меблировано' : 'Без мебели'
+              }}</span>
+            </div>
+          }
+          @if (displayData.handover) {
+            <div class="spec-item">
+              <mat-icon>home</mat-icon>
+              <span>{{
+                displayData.handover === 'ready' ? 'Готово' : 'Строительство'
+              }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Локация -->
+        @if (detail()?.location_full_path ?? displayData.location_name; as loc) {
+          <div class="section">
+            <div class="section-label"><mat-icon>place</mat-icon>Расположение</div>
+            <p class="section-text">{{ loc }}</p>
+          </div>
+        }
+
+        <!-- Описание -->
+        @if (displayData.description) {
+          <div class="section">
+            <div class="section-label"><mat-icon>description</mat-icon>Описание</div>
+            <p class="section-text description-text">{{ displayData.description }}</p>
+          </div>
+        }
+
+        <!-- Агент -->
+        <div class="section agent-section">
+          <div class="section-label"><mat-icon>person</mat-icon>Агент</div>
+          <div class="agent-row">
+            @if (displayData.owner_photo_url) {
+              <img
+                class="agent-avatar"
+                [src]="displayData.owner_photo_url"
+                [alt]="displayData.owner_full_name ?? ''"
+              />
+            } @else {
+              <div class="agent-avatar agent-avatar--placeholder">
+                <mat-icon>person</mat-icon>
+              </div>
+            }
+            <div class="agent-info">
+              <div class="agent-name">{{ displayData.owner_full_name }}</div>
+              @if (displayData.owner_agency_name) {
+                <div class="agent-agency">{{ displayData.owner_agency_name }}</div>
+              }
+              @if (detail()?.owner_languages?.length) {
+                <div class="agent-langs">
+                  {{ detail()!.owner_languages!.join(', ') }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- WhatsApp кнопка -->
+          @if (detail()?.owner_whatsapp_phone; as phone) {
+            <button
+              mat-flat-button
+              class="whatsapp-btn"
+              (click)="openWhatsApp(phone)"
+            >
+              <mat-icon>chat</mat-icon>
+              WhatsApp
+            </button>
+          } @else {
+            <div class="pro-hint">
+              <mat-icon>lock</mat-icon>
+              Контакт агента доступен на <strong>Pro</strong>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

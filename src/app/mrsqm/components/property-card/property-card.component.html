@@ -1,0 +1,73 @@
+<div
+  class="inner-wrapper"
+  (click)="cardClick.emit()"
+  (keydown.enter)="cardClick.emit()"
+  role="button"
+  tabindex="0"
+  [class.is-active]="isActive()"
+>
+  <div class="box"></div>
+
+  <div class="first-line">
+    <!-- Адрес: leaf + community -->
+    <div class="col col-address">
+      <span class="addr-leaf">{{
+        property().location_name || property().community_name || '—'
+      }}</span>
+      @if (property().community_name && property().location_name) {
+        <span class="addr-community">{{ property().community_name }}</span>
+      }
+    </div>
+
+    <!-- Тип: Apartment / Villa etc -->
+    <div class="col col-type">
+      {{ property().property_type || '—' }}
+    </div>
+
+    <!-- Beds -->
+    <div class="col col-beds">
+      @if (property().bedrooms !== null) {
+        <span class="cell-val">{{
+          property().bedrooms === 0 ? 'Studio' : property().bedrooms + ' BR'
+        }}</span>
+      } @else {
+        <span class="cell-muted">—</span>
+      }
+    </div>
+
+    <!-- Size -->
+    <div class="col col-size">
+      @if (property().area_sqft !== null) {
+        <span class="cell-val"
+          >{{ property().area_sqft | number: '1.0-0' }}
+          <span class="cell-unit">sqft</span></span
+        >
+      } @else {
+        <span class="cell-muted">—</span>
+      }
+    </div>
+
+    <!-- Price -->
+    <div class="col col-price">
+      <span class="price-val">{{ property().price | number: '1.0-0' }}</span>
+      <span class="price-cur"
+        >{{ property().price_currency }}
+        @if (property().price_period) {
+          /{{ property().price_period }}
+        }
+      </span>
+    </div>
+
+    <!-- Pocket / Official -->
+    <div class="col col-listing">
+      @if (property().listing_type === 'pocket') {
+        <span class="badge badge--pocket">Pocket</span>
+      } @else {
+        <span class="badge badge--official">Official</span>
+      }
+      @if (property().is_distress) {
+        <span class="badge badge--distress">Срочно</span>
+      }
+    </div>
+  </div>
+</div>

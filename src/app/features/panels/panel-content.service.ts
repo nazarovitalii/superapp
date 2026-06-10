@@ -1,4 +1,4 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
 import {
   INITIAL_LAYOUT_STATE,
@@ -7,6 +7,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TaskService } from '../tasks/task.service';
 import { TaskDetailTargetPanel } from '../tasks/task.model';
+import { PropertyFeedItem } from '../../mrsqm/types/database';
 
 export type PanelContentType =
   | 'NOTES'
@@ -15,12 +16,48 @@ export type PanelContentType =
   | 'ISSUE_PANEL'
   | 'TASK_VIEW_CUSTOMIZER_PANEL'
   | 'PLUGIN'
-  | 'SCHEDULE_DAY_PANEL';
+  | 'SCHEDULE_DAY_PANEL'
+  | 'PROPERTY'
+  | 'FILTERS';
 
 @Injectable({ providedIn: 'root' })
 export class PanelContentService {
   private _taskService = inject(TaskService);
   private _store = inject(Store);
+
+  // MrSQM: выбранный объект недвижимости
+  readonly selectedProperty = signal<PropertyFeedItem | null>(null);
+  // MrSQM: открыта ли панель фильтров ленты
+  readonly isFilterPanelOpen = signal(false);
+
+  openProperty(property: PropertyFeedItem): void {
+    // Закрываем task-panel чтобы не конфликтовать
+    this._taskService.setSelectedId(null);
+    this.isFilterPanelOpen.set(false);
+    this.selectedProperty.set(property);
+  }
+
+  closeProperty(): void {
+    this.selectedProperty.set(null);
+  }
+
+  openFilterPanel(): void {
+    this._taskService.setSelectedId(null);
+    this.selectedProperty.set(null);
+    this.isFilterPanelOpen.set(true);
+  }
+
+  closeFilterPanel(): void {
+    this.isFilterPanelOpen.set(false);
+  }
+
+  toggleFilterPanel(): void {
+    if (this.isFilterPanelOpen()) {
+      this.closeFilterPanel();
+    } else {
+      this.openFilterPanel();
+    }
+  }
 
   private readonly _selectedTask = toSignal(this._taskService.selectedTask$, {
     initialValue: null,
@@ -56,6 +93,8 @@ export class PanelContentService {
     if (isShowTaskViewCustomizerPanel) return 'TASK_VIEW_CUSTOMIZER_PANEL';
     if (isShowPluginPanel) return 'PLUGIN';
     if (isShowScheduleDayPanel) return 'SCHEDULE_DAY_PANEL';
+    if (this.isFilterPanelOpen()) return 'FILTERS';
+    if (this.selectedProperty()) return 'PROPERTY';
     if (selectedTask) return 'TASK';
     return null;
   });
@@ -77,7 +116,9 @@ export class PanelContentService {
       isShowIssuePanel ||
       isShowTaskViewCustomizerPanel ||
       isShowPluginPanel ||
-      isShowScheduleDayPanel
+      isShowScheduleDayPanel ||
+      this.selectedProperty() ||
+      this.isFilterPanelOpen()
     );
   });
 

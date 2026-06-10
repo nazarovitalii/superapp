@@ -34,6 +34,8 @@ import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { isTouchActive } from '../../util/input-intent';
 import { PanelContentService, PanelContentType } from '../panels/panel-content.service';
+import { PropertyDetailComponent } from '../../mrsqm/components/property-detail/property-detail.component';
+import { FeedFilterPanelComponent } from '../../mrsqm/components/feed-filter-panel/feed-filter-panel.component';
 
 // Keep in sync with CSS var --transition-duration-m
 const CLOSE_ANIMATION_MS = 225;
@@ -57,6 +59,8 @@ export type RightPanelContentPanelType = PanelContentType;
     TaskDetailPanelComponent,
     PluginPanelContainerComponent,
     ScheduleDayPanelComponent,
+    PropertyDetailComponent,
+    FeedFilterPanelComponent,
   ],
 })
 export class RightPanelContentComponent implements OnDestroy {
@@ -66,6 +70,7 @@ export class RightPanelContentComponent implements OnDestroy {
   store = inject(Store);
   private _router = inject(Router);
   private _panelContentService = inject(PanelContentService);
+  readonly panelContentService = this._panelContentService;
 
   // Convert observables to signals
   private readonly _selectedTask = toSignal(this.taskService.selectedTask$, {
@@ -181,9 +186,14 @@ export class RightPanelContentComponent implements OnDestroy {
       // For now, let's allow all panels but they'll be in "over" mode
     }
 
+    const selectedProperty = this._panelContentService.selectedProperty();
+    const isFilterPanelOpen = this._panelContentService.isFilterPanelOpen();
+
     return (
       !!(
         selectedTask ||
+        selectedProperty ||
+        isFilterPanelOpen ||
         isShowNotes ||
         isShowAddTaskPanel ||
         isShowTaskViewCustomizerPanel ||
@@ -287,6 +297,8 @@ export class RightPanelContentComponent implements OnDestroy {
 
   close(): void {
     this.taskService.setSelectedId(null);
+    this._panelContentService.closeProperty();
+    this._panelContentService.closeFilterPanel();
     this.layoutService.hideNotes();
     this.layoutService.hideAddTaskPanel();
     this.layoutService.hideTaskViewCustomizerPanel();
@@ -303,7 +315,7 @@ export class RightPanelContentComponent implements OnDestroy {
   }
 
   private _updatePanelTypeWithDelay(): void {
-    const currentPanelType = this._panelContentService.getCurrentPanelType();
+    const currentPanelType = this._panelContentService.panelType();
     this._clearPanelTypeTimer();
 
     if (currentPanelType) {

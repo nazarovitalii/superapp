@@ -1,0 +1,314 @@
+@use '../../../../styles/_globals.scss' as *;
+
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+// Повторяет структуру .right-panel из SP
+.detail-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg);
+}
+
+// Кнопка закрытия — в левом верхнем углу панели
+.close-btn {
+  position: absolute;
+  top: var(--s);
+  left: var(--s);
+  z-index: 10;
+  color: var(--ink-muted);
+
+  &:hover {
+    color: var(--ink);
+  }
+}
+
+.loading-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+// ─── Галерея ─────────────────────────────────────────────────────────────────
+.gallery {
+  width: 100%;
+  height: 220px;
+  margin-top: var(--s5);
+  position: relative;
+  background: var(--surface-0);
+  overflow: hidden;
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-muted);
+
+    mat-icon {
+      font-size: 72px;
+      width: 72px;
+      height: 72px;
+    }
+  }
+}
+
+.gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-controls {
+  position: absolute;
+  bottom: var(--s);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  padding: 0 var(--s);
+
+  button {
+    color: #fff;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.gallery-counter {
+  font-size: 0.8rem;
+  color: #fff;
+  white-space: nowrap;
+}
+
+// ─── Тело панели ─────────────────────────────────────────────────────────────
+.detail-body {
+  padding: var(--s2) var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+// ─── Цена ────────────────────────────────────────────────────────────────────
+.price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s);
+}
+
+.price-main {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+  line-height: 1.2;
+}
+
+.price-period {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.type-chips {
+  display: flex;
+  gap: var(--s-half);
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+
+  &--deal {
+    background: var(--surface-0);
+    color: var(--ink-muted);
+  }
+
+  &--pocket {
+    background: rgba(255, 160, 0, 0.18);
+    color: #f57c00;
+  }
+
+  &--distress {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+  }
+}
+
+// ─── Параметры ───────────────────────────────────────────────────────────────
+.specs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s);
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  background: var(--surface-0);
+  padding: var(--s-half) var(--s);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--ink);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--brand);
+  }
+}
+
+// ─── Секции ──────────────────────────────────────────────────────────────────
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.section-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.description-text {
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+// ─── Агент ───────────────────────────────────────────────────────────────────
+.agent-section {
+  gap: var(--s);
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.agent-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--placeholder {
+    background: var(--surface-0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-muted);
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.agent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink-strong);
+}
+
+.agent-agency {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.agent-langs {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+// ─── WhatsApp кнопка ──────────────────────────────────────────────────────────
+.whatsapp-btn {
+  background-color: #25d366 !important;
+  color: #fff !important;
+  width: 100%;
+  margin-top: var(--s-half);
+
+  mat-icon {
+    margin-right: var(--s-half);
+  }
+}
+
+// ─── Pro hint ────────────────────────────────────────────────────────────────
+.pro-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  padding: var(--s) var(--s2);
+  background: var(--surface-0);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: var(--s-half);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--brand);
+  }
+}
