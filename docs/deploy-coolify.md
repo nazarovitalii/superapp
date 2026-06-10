@@ -31,15 +31,32 @@
 
 ---
 
-## Шаг 2. Создать ресурс в Coolify
+## Шаг 2. Подключить приватный репозиторий к Coolify
 
-1. Открой Coolify → нужный **Project** → **+ New Resource**.
-2. Выбери **Application** → источник **Public Repository** (или Private, если
-   подключал GitHub-аккаунт).
-3. **Repository URL:** `https://github.com/nazarovitalii/superapp.git`
+> ⚠️ Репозиторий **приватный** — вариант «Public Repository» не подойдёт
+> (Coolify не сможет его скачать). Нужно один раз подключить GitHub к Coolify
+> через **GitHub App**. Если ты уже подключал GitHub для `mainapp`/`admin` —
+> этот источник переиспользуется, переходи сразу к пункту «Создать приложение».
+
+### 2a. Подключить GitHub (если ещё не подключён)
+
+1. Coolify → **Sources** (или **Keys & Tokens → GitHub Apps**) → **+ Add** →
+   **GitHub App**.
+2. Выбери **GitHub.com**, нажми создать — Coolify перекинет на github.com.
+3. На github.com установи приложение Coolify на аккаунт `nazarovitalii`:
+   выбери **Only select repositories** → отметь **`superapp`** (можно добавить
+   и остальные) → **Install**.
+4. Вернёшься в Coolify — источник GitHub появится в списке.
+
+### 2b. Создать приложение
+
+1. Coolify → нужный **Project** → **+ New Resource** → **Application** →
+   **Private Repository (with GitHub App)**.
+2. Выбери только что подключённый GitHub-источник.
+3. Выбери репозиторий **`nazarovitalii/superapp`**.
 4. **Branch:** `main`
-5. **Build Pack:** выбери **Dockerfile** (НЕ Nixpacks). Coolify подхватит
-   `Dockerfile` из корня репозитория автоматически.
+5. **Build Pack:** **Dockerfile** (НЕ Nixpacks). Coolify подхватит `Dockerfile`
+   из корня репозитория автоматически.
 6. **Port (Ports Exposes):** `80`
    - Если Coolify спросит «Ports Mappings» — оставь пустым, проксирование само.
 
@@ -108,7 +125,8 @@ Angular-сборка прожорлива. Если в логе видишь `Ja
 ## Чеклист (коротко)
 
 - [ ] DNS: `A`-запись `sapp` → `51.83.197.222`
-- [ ] Coolify: New Application → repo `superapp`, branch `main`, Build Pack = Dockerfile
+- [ ] Coolify: подключить GitHub App с доступом к приватному `superapp` (если ещё нет)
+- [ ] New Application → **Private Repository (GitHub App)** → repo `superapp`, branch `main`, Build Pack = Dockerfile
 - [ ] Port = 80
 - [ ] Domain = `https://sapp.mrsqm.com` + Force HTTPS
 - [ ] Deploy → дождаться сборки
