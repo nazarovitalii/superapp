@@ -17,7 +17,7 @@
         (cardClick)="openDetail(p)"
       />
     } @empty {
-      @if (!isLoading()) {
+      @if (!isLoading() && !loadError()) {
         <div class="empty-state">
           <mat-icon>search_off</mat-icon>
           <p>Объектов не найдено</p>
@@ -32,10 +32,10 @@
     </div>
   }
 
-  @if (countHidden() > 0) {
-    <div class="hidden-hint">
-      <mat-icon>lock</mat-icon>
-      Ещё {{ countHidden() }} объектов доступно на <strong>Pro</strong>
+  @if (loadError() && !isLoading()) {
+    <div class="empty-state">
+      <mat-icon>cloud_off</mat-icon>
+      <p>Не удалось загрузить ленту</p>
     </div>
   }
 

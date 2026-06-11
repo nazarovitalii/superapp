@@ -35,7 +35,7 @@
 | #    | Приоритет | Задача                                                                                | Упрощение для MVP-1                                                     | Статус |
 | ---- | --------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------ |
 | P-1  | 🔴        | Типы БД: `src/app/mrsqm/types/database.ts` (PropertyFeedItem и др.)                   | без BadgeLevel/AgentBadge                                               | `[~]`  |
-| P-2  | 🔴        | Лента (`/mrsqm/feed`): карточки 1-строкой, Sale/Rent, пагинация, центрированный фрейм | сделано на **mock**, реальный `get_feed` не подключён (нужен auth+city) | `[~]`  |
+| P-2  | 🔴        | Лента (`/mrsqm/feed`): карточки 1-строкой, Sale/Rent, пагинация, центрированный фрейм | **реальный `get_feed` подключён** (фильтры→params, count_total, пагинация); моки удалены, пустой результат = empty-state | ✅     |
 | P-3  | 🔴        | Карточка: модалка справа (нативная right-panel SP), данные агента, WhatsApp           | на **mock**, `get_property` не подключён                                | `[~]`  |
 | P-4  | 🔴        | Фильтры ленты: sidebar (тип/беды/цена/листинг/distress) + тогл Sale/Rent в хедере     | на **mock**; district через `search_locations` не подключён             | `[~]`  |
 | P-5  | 🟡        | Добавить объект (`/add`): 5-шаг. форма → INSERT в `properties` под RLS (НЕ `publish_property` — его нет), справочники `get_filter_options`, локация `search_locations`. **Боевой INSERT проверен** (status→draft, значения сверены с CHECK) | **без фото** (P-5b) | ✅     |
@@ -82,9 +82,9 @@
 
 | #     | Приоритет | Описание                                                                                                                                                              | Статус |
 | ----- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| API-1 | 🔴        | `get_feed` требует `city_id` (из `p_city_id` или `user_context`); без города → **ошибка**. M-3 (Auth) ✅ — теперь юзер залогинен; осталось подключить реальный `get_feed` вместо мока и прокинуть город из контекста юзера | `[ ]`  |
+| API-1 | 🔴        | `get_feed` подключён ✅ — город берётся из `user_context` автоматически (auth.uid из JWT), реальный ответ `{results,count_total,limit,offset}`. Лента пуста, т.к. в БД 0 объектов (наполняется людьми через P-5) | ✅     |
 | API-2 | 🟡        | `p_bedrooms`/`p_bathrooms` — **массивы** `int[]` (мультивыбор), в текущих фильтрах одно значение                                                                      | `[ ]`  |
-| API-3 | 🟡        | Ответ `get_feed` — `count_total`/`count_nearby` (нет `count_hidden`); типы объектов — id+lookup из `get_filter_options`, не строка                                    | `[ ]`  |
+| API-3 | 🟡        | Ответ `get_feed` = `{results, count_total, limit, offset}` (НЕ count_hidden/count_nearby/plan — тип исправлен ✅). Pro-апселл «ещё N на Pro» в ленте убран (не было в API) | ✅     |
 | API-4 | 🟢        | `properties.status` имеет 7 значений (draft/pending_review/active/rejected/expired/archived_sold/archived_withdrawn). Типы обновлены ✅                                | ✅     |
 | API-5 | 🟡        | На `properties` НЕТ DELETE-RLS-политики (есть только insert/select по owner). Юзер не может удалить свой объект с клиента → для «удалить объявление» нужна политика или RPC | `[ ]`  |
 | API-6 | 🟢        | CHECK-значения enum-полей: `furnished`=furnished/unfurnished (НЕ yes/no), `occupancy_status`=vacant/occupied/vacant_on_transfer. Брать из `get_filter_options`, не хардкодить | ✅     |

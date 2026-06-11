@@ -136,15 +136,27 @@ export interface PropertyDetail extends PropertyFeedItem {
   owner_languages: string[] | null;
 }
 
+// Ответ RPC get_feed — сверено с живой схемой: только эти 4 ключа.
 export interface FeedResponse {
   results: PropertyFeedItem[];
-  count_visible: number;
-  count_hidden: number;
-  count_nearby: number;
-  plan: Plan;
+  count_total: number;
   limit: number;
   offset: number;
 }
+
+// Параметры get_feed, которые шлёт лента (подмножество; остальное — DEFAULT NULL).
+// p_user_id НЕ передаём — RPC берёт auth.uid() из JWT.
+// type (не interface) + index signature — чтобы был совместим с rpc(Record<string,unknown>).
+export type FeedParams = {
+  p_deal_type: DealType;
+  p_limit: number;
+  p_offset: number;
+  p_bedrooms?: number[] | null;
+  p_price_min?: number | null;
+  p_price_max?: number | null;
+  p_listing_type?: string | null;
+  p_is_distress?: boolean | null;
+} & Record<string, unknown>;
 
 export interface LocationSearchResult {
   id: string;
