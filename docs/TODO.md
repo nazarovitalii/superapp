@@ -39,7 +39,7 @@
 | P-3  | 🔴        | Карточка: модалка справа (нативная right-panel SP), данные агента, WhatsApp           | на **mock**, `get_property` не подключён                                | `[~]`  |
 | P-4  | 🔴        | Фильтры ленты: sidebar (тип/беды/цена/листинг/distress) + тогл Sale/Rent в хедере     | на **mock**; district через `search_locations` не подключён             | `[~]`  |
 | P-5  | 🟡        | Добавить объект (`/add`): 5-шаг. форма → INSERT в `properties` под RLS (НЕ `publish_property` — его нет), справочники `get_filter_options`, локация `search_locations`. **Боевой INSERT проверен** (status→draft, значения сверены с CHECK) | **без фото** (P-5b) | ✅     |
-| P-6  | 🟡        | Профиль агента (`/profile`): мои объекты, реф-ссылка                                  | без бейджа/баллов/прогресса                                             | `[ ]`  |
+| P-6  | 🟡        | Профиль (`/profile`): инфо из `user_context`, статистика, реф-код+копир., мои объекты (прямой запрос к properties + статус), выход | на чтение; правка контактов нет (на users только admins_update RLS); фото нет (user_settings пуст) | ✅     |
 | P-7  | 🟡        | Избранное (`/saved`): `get_saved_properties`, toggle `save_property`                  | —                                                                       | `[ ]`  |
 | P-8  | 🟡        | Сеть коллег (`/network`): список агентов, поиск, добавить                             | —                                                                       | `[ ]`  |
 | P-9  | 🟢        | AI Чат (`/chat`): заглушка интерфейса                                                 | статичная заглушка                                                      | `[ ]`  |
@@ -87,6 +87,8 @@
 | API-3 | 🟡        | Ответ `get_feed` = `{results, count_total, limit, offset}` (НЕ count_hidden/count_nearby/plan — тип исправлен ✅). Pro-апселл «ещё N на Pro» в ленте убран (не было в API) | ✅     |
 | API-4 | 🟢        | `properties.status` имеет 7 значений (draft/pending_review/active/rejected/expired/archived_sold/archived_withdrawn). Типы обновлены ✅                                | ✅     |
 | API-5 | 🟡        | На `properties` НЕТ DELETE-RLS-политики (есть только insert/select по owner). Юзер не может удалить свой объект с клиента → для «удалить объявление» нужна политика или RPC | `[ ]`  |
+| API-7 | 🟡        | `get_agent_listings` СЛОМАН: `cannot pass more than 100 arguments` (один jsonb_build_object с >50 полями, как было в get_feed). Обойдено прямым запросом к properties. Починить = split jsonb_build_object (как в get_feed) | `[ ]`  |
+| API-8 | 🟡        | На `users` нет self-UPDATE RLS (только `admins_update`) → агент не может редактировать свои контакты. Для правки профиля нужна политика `users_update_own` или RPC | `[ ]`  |
 | API-6 | 🟢        | CHECK-значения enum-полей: `furnished`=furnished/unfurnished (НЕ yes/no), `occupancy_status`=vacant/occupied/vacant_on_transfer. Брать из `get_filter_options`, не хардкодить | ✅     |
 
 ---
