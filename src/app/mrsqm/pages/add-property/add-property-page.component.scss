@@ -1,0 +1,257 @@
+@use '../../../../styles/_globals.scss' as *;
+
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.add-wrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--s2) var(--s);
+}
+
+// Карточка формы — стиль модалки task-detail инбокса (токены SP).
+.add-card {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3);
+  background: var(--bg-lighter, var(--bg));
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-shadow);
+}
+
+// ─── Прогресс шагов ──────────────────────────────────────────────────────
+.steps-row {
+  display: flex;
+  gap: var(--s);
+  justify-content: center;
+}
+
+.step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color-muted);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &.active {
+    color: #fff;
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+
+  &.done {
+    color: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+}
+
+.step-title {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--s4);
+}
+
+// ─── Поля ────────────────────────────────────────────────────────────────
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half, 6px);
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color-muted);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: var(--s) calc(var(--s) + 2px);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  outline: none;
+  resize: none;
+
+  &:focus {
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Чипы выбора ─────────────────────────────────────────────────────────
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-half, 6px);
+}
+
+.chip {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: 16px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--c-primary);
+  }
+
+  &.sel {
+    color: #fff;
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Локация ─────────────────────────────────────────────────────────────
+.loc-selected {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half, 6px);
+  padding: var(--s);
+  background: var(--bg);
+  border: 1px solid var(--c-primary);
+  border-radius: var(--card-border-radius);
+
+  span {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--c-primary);
+  }
+}
+
+.loc-clear {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-color-muted);
+  display: flex;
+}
+
+.loc-hint {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+}
+
+.loc-dropdown {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+}
+
+.loc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s);
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--extra-border-color);
+  background: var(--bg);
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--bg-lighter, var(--bg));
+  }
+}
+
+.loc-name {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.loc-sub {
+  font-size: 0.75rem;
+  color: var(--text-color-muted);
+}
+
+.loc-level {
+  opacity: 0.7;
+}
+
+// ─── Тоглы ───────────────────────────────────────────────────────────────
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.note {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  margin: 0;
+}
+
+// ─── Ошибка и навигация ──────────────────────────────────────────────────
+.add-error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half, 6px);
+  font-size: 0.8rem;
+  color: var(--c-warn, #e53935);
+
+  mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.add-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s);
+  margin-top: var(--s);
+}

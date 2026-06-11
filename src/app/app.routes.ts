@@ -150,7 +150,9 @@ export const APP_ROUTES: Routes = [
   {
     path: 'mrsqm/add',
     loadComponent: () =>
-      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+      import('./mrsqm/pages/add-property/add-property-page.component').then(
+        (m) => m.AddPropertyPageComponent,
+      ),
     data: { page: 'mrsqm-add', title: 'Добавить объект', icon: 'add_home' },
     canActivate: [mrsqmAuthGuard],
   },

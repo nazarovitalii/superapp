@@ -14,6 +14,76 @@ export interface MrsqmUser {
 export type SubStatus = 'active' | 'expired';
 export type DealType = 'sale' | 'rent';
 export type ListingType = 'official' | 'pocket';
+
+// ─── Справочники из RPC get_filter_options ───────────────────────────────
+// Опция со строковым value (deal_type, listing_type, handover, occupancy, period).
+export interface FilterOptionValue {
+  value: string;
+  label_en: string;
+  label_ar?: string | null;
+}
+// Опция с uuid id (category, unit_type, sub_type, furnished). parent_id — иерархия.
+export interface FilterOptionId {
+  id: string;
+  value: string;
+  label_en: string;
+  label_ar?: string | null;
+  parent_id?: string | null;
+}
+// Числовая опция (bedrooms, bathrooms).
+export interface FilterOptionNum {
+  value: number;
+  label_en: string;
+}
+
+export interface FilterOptions {
+  categories: FilterOptionId[];
+  unit_types: FilterOptionId[];
+  sub_types: FilterOptionId[];
+  deal_types: FilterOptionValue[];
+  listing_types: FilterOptionValue[];
+  furnished_options: FilterOptionId[];
+  handover_options: FilterOptionValue[];
+  occupancy_options: FilterOptionValue[];
+  price_periods: FilterOptionValue[];
+  bedrooms: FilterOptionNum[];
+  bathrooms: FilterOptionNum[];
+}
+
+// ─── Результат RPC search_locations (p_mode='search') ────────────────────
+export interface LocationSearchItem {
+  id: string;
+  name: string;
+  level: string;
+  city_name: string | null;
+  community_name: string | null;
+}
+
+// ─── Payload для INSERT в properties (под RLS owner_id = auth.uid()) ──────
+// owner_id не передаём — ставится из auth.uid() на клиенте перед вставкой.
+export interface PropertyInsert {
+  owner_id: string;
+  location_id: string;
+  category_id: string | null;
+  unit_type_id: string | null;
+  sub_type_id: string | null;
+  deal_type: DealType;
+  listing_type: string;
+  price: number;
+  price_currency: string;
+  price_period: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqft: number | null;
+  area_sqm: number | null;
+  furnished: string | null;
+  handover: string | null;
+  occupancy_status: string | null;
+  is_distress: boolean;
+  is_negotiable: boolean;
+  visibility: string;
+  description: string | null;
+}
 export type Furnished = 'yes' | 'no';
 export type Handover = 'ready' | 'offplan';
 export type Visibility = 'public' | 'network';
