@@ -84,10 +84,20 @@ export interface PropertyInsert {
   visibility: string;
   description: string | null;
 }
-export type Furnished = 'yes' | 'no';
+// Значения сверены с CHECK-констрейнтами БД (properties_*_check).
+export type Furnished = 'furnished' | 'unfurnished';
 export type Handover = 'ready' | 'offplan';
+export type OccupancyStatus = 'vacant' | 'occupied' | 'vacant_on_transfer';
 export type Visibility = 'public' | 'network';
-export type PropertyStatus = 'active' | 'pending' | 'archived';
+// properties_status_check — 7 значений; объект создаётся в 'draft'.
+export type PropertyStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'active'
+  | 'rejected'
+  | 'expired'
+  | 'archived_sold'
+  | 'archived_withdrawn';
 
 export interface PropertyFeedItem {
   id: string;
