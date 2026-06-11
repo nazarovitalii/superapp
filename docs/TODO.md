@@ -20,7 +20,8 @@
 | M-4 | 🟡        | Базовый routing: `/mrsqm/feed`,`/add`,`/saved`,`/network`,`/profile`,`/chat` + stub-страницы                                                                                                                                  | ✅     |
 | M-5 | 🔴        | Полный справочник схемы БД (`docs/database.md`): RPC+тела, триггеры, RLS, enum                                                                                                                                                | ✅     |
 | M-6 | 🟡        | Инструкция деплоя в Coolify (`docs/deploy-coolify.md`, домен sapp.mrsqm.com)                                                                                                                                                  | ✅     |
-| M-7 | 🔴        | Coolify-деплой web-клиента (GitHub App, Dockerfile, DNS) — **действие пользователя**                                                                                                                                          | `[ ]`  |
+| M-7 | 🔴        | Coolify-деплой web-клиента — **действие пользователя** (Docker Image из GHCR, DNS, visibility пакета)                                                                                                                         | `[ ]`  |
+| M-8 | 🔴        | CI-сборка образа: GitHub Actions → GHCR (`.github/workflows/build-web-image.yml`), чтобы НЕ собирать на VPS                                                                                                                    | ✅     |
 
 ---
 
@@ -90,6 +91,7 @@
 
 | Дата       | Что                                                                                                                                                                           |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-11 | M-8: CI-сборка образа в GHCR через GitHub Actions (`.github/workflows/build-web-image.yml`) — после инцидента, когда сборка на VPS уронила общую Supabase. Coolify тип ресурса → Docker Image. Инструкция деплоя переписана. |
 | 2026-06-10 | M-7-инфра: инструкция деплоя Coolify (`docs/deploy-coolify.md`, sapp.mrsqm.com, приватный репо через GitHub App)                                                              |
 | 2026-06-10 | M-5: полный справочник схемы БД из живой Supabase (RPC+тела, 31 триггер, 45 RLS, enum)                                                                                        |
 | 2026-06-10 | M-2/M-4 + P-1…P-4 (на mock): Supabase-клиент, env, routing+stubs, типы, лента, карточка-детали в right-panel, sidebar фильтров, тогл Sale/Rent в хедере, реструктуризация nav |

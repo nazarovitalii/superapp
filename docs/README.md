@@ -75,11 +75,16 @@
 
 ## Деплой
 
-**Coolify autodeploy** из ветки `main` (push → автодеплой). Web-сборка `npm run buildFrontend:prodWeb`
-(→ `dist/browser`, через рабочий `Dockerfile` + nginx). Репо **приватный** → Coolify
-подключается через **GitHub App**.
-**Прод (план):** `https://sapp.mrsqm.com` (app.mrsqm.com занят mainapp) — Coolify-ресурс
-ещё не настроен. Пошаговая инструкция: [`docs/deploy-coolify.md`](deploy-coolify.md).
+> ⚠️ **Сборку НЕЛЬЗЯ запускать на нашем VPS.** Сборка Angular съедает всю память
+> и роняет общую Supabase (инцидент 2026-06-10 — пришлось перезагружать сервер).
+
+**Схема:** `git push main` → **GitHub Actions** собирает Docker-образ (на мощностях
+GitHub, бесплатно) → пушит в **GHCR** (`ghcr.io/nazarovitalii/superapp-web:latest`) →
+**Coolify** тянет готовый образ и запускает nginx (~30 МБ, без нагрузки на VPS).
+Workflow: [`.github/workflows/build-web-image.yml`](../.github/workflows/build-web-image.yml).
+В Coolify тип ресурса — **Docker Image** (НЕ сборка из репозитория).
+**Прод (план):** `https://sapp.mrsqm.com` (app.mrsqm.com занят mainapp).
+Пошаговая инструкция: [`docs/deploy-coolify.md`](deploy-coolify.md).
 
 **Supabase-конфиг:** Angular `src/environments/environment.ts` (`supabaseUrl` / `supabaseAnonKey`) —
 зашит в файл, попадает в бандл при сборке. Не `VITE_*` (это React/Vite-механизм mainapp).

@@ -1,0 +1,76 @@
+# Сборка web-образа MrSQM в GitHub Container Registry (GHCR).
+# ВАЖНО: сборка идёт на раннере GitHub, НЕ на прод-VPS (сборка на VPS роняла сервер
+# и общую Supabase — инцидент 2026-06-10). Coolify только ТЯНЕТ готовый образ.
+#
+# Триггеры:
+#   - push в main → собрать и запушить образ с тегами :latest и :<sha>
+#   - ручной запуск (workflow_dispatch) из вкладки Actions
+#
+# После пуша образа Coolify-приложение (Build Pack = Docker Image, тег :latest)
+# подхватит новый образ через webhook/redeploy. См. docs/deploy-coolify.md.
+
+name: build-web-image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Только одна сборка main одновременно; новый push отменяет предыдущую.
+concurrency:
+  group: build-web-image-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  # ghcr.io/<owner>/<repo>-web (owner в нижнем регистре подставляется ниже)
+  IMAGE_NAME: ${{ github.repository }}-web
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # нужно, чтобы пушить в GHCR
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Имя образа в нижнем регистре (GHCR требует lowercase).
+      - name: Compute lowercase image name
+        id: img
+        run: echo "name=$(echo '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Docker meta (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.img.outputs.name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          # nginx-runtime — linux/amd64 (VPS x86_64). Одна платформа = быстрее.
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Кэш слоёв между запусками — ускоряет повторные сборки.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
