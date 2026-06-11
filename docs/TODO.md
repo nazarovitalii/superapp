@@ -22,6 +22,8 @@
 | M-6 | 🟡        | Инструкция деплоя в Coolify (`docs/deploy-coolify.md`, домен sapp.mrsqm.com)                                                                                                                                                  | ✅     |
 | M-7 | 🔴        | Coolify-деплой web-клиента (Docker Image из GHCR, DNS, public-пакет, HTTPS) → https://sapp.mrsqm.com работает                                                                                                                 | ✅     |
 | M-8 | 🔴        | CI-сборка образа: GitHub Actions → GHCR (`.github/workflows/build-web-image.yml`), чтобы НЕ собирать на VPS                                                                                                                    | ✅     |
+| M-9 | 🔴        | ⚠️ **Настоящий вход через Telegram `initData`** (схема `users` парольная НЕ предусмотрена: `telegram_id`/`channel_origin`, паролей нет). Сейчас стоит ВРЕМЕННЫЙ dev-вход email+пароль (см. M-3-dev). Нужна серверная проверка подписи initData (Edge Function/RPC) + выдача сессии по `telegram_id` | `[ ]`  |
+| M-3-dev | 🔴     | ⚠️ **ВРЕМЕННО:** 9 активным юзерам заведён парольный вход в `auth.users` (id = `public.users.id`, email-identity) для dev/тестов. **Удалить перед продом** (это обход реального TG-флоу). Откат: `DELETE FROM auth.users WHERE id IN (SELECT id FROM public.users WHERE is_active);` | `[~]`  |
 
 ---
 
