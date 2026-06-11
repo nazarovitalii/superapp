@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { MrsqmSupabaseService } from './supabase.service';
-import { MyListing, UserProfile } from '../types/database';
+import { MyListing, UserContacts, UserProfile } from '../types/database';
 
 // Сырой ответ properties с embed-локацией (PostgREST).
 interface PropertyRow {
@@ -29,11 +29,27 @@ export class ProfileService {
     const { data, error } = await this._supabase.client
       .from('user_context')
       .select(
-        'full_name, agency_name, emirate_name, plan, subscription_status, ' +
-          'referral_code, friends_count, active_listings, total_listings_ever, broker_license',
+        'full_name, agency_name, agency_members_count, emirate_name, plan, ' +
+          'subscription_status, plan_expires_at, referral_code, referrals_count, ' +
+          'friends_count, comments_count, saved_filters_count, total_searches, ' +
+          'active_listings, total_listings_ever, broker_license, broker_license_expiry, ' +
+          'channel_origin, whatsapp_verified, last_active_at, created_at_user',
       )
       .eq('user_id', userId)
       .maybeSingle<UserProfile>();
+    if (error) {
+      throw error;
+    }
+    return data;
+  }
+
+  // Контакты из таблицы users (RLS users_select_own).
+  async getContacts(userId: string): Promise<UserContacts | null> {
+    const { data, error } = await this._supabase.client
+      .from('users')
+      .select('phone, whatsapp_phone, tg_username, email')
+      .eq('id', userId)
+      .maybeSingle<UserContacts>();
     if (error) {
       throw error;
     }

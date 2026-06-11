@@ -6,7 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProfileService } from '../../services/profile.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { PropertyCreateService } from '../../services/property-create.service';
-import { MyListing, UserProfile } from '../../types/database';
+import { MyListing, UserContacts, UserProfile } from '../../types/database';
 
 // Человекочитаемые статусы объекта.
 const STATUS_LABELS: Record<string, string> = {
@@ -18,6 +18,8 @@ const STATUS_LABELS: Record<string, string> = {
   archived_sold: 'Продан',
   archived_withdrawn: 'Снят',
 };
+
+type Tab = 'overview' | 'listings' | 'activity';
 
 @Component({
   selector: 'mrsqm-profile-page',
@@ -33,10 +35,12 @@ export class ProfilePageComponent {
   private readonly _createService = inject(PropertyCreateService);
 
   readonly profile = signal<UserProfile | null>(null);
+  readonly contacts = signal<UserContacts | null>(null);
   readonly listings = signal<MyListing[]>([]);
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly copied = signal(false);
+  readonly tab = signal<Tab>('overview');
 
   // unit_type_id → название типа (из справочников).
   private _typeLabels = new Map<string, string>();
@@ -53,12 +57,14 @@ export class ProfilePageComponent {
       return;
     }
     try {
-      const [profile, listings, opts] = await Promise.all([
+      const [profile, contacts, listings, opts] = await Promise.all([
         this._service.getProfile(user.id),
+        this._service.getContacts(user.id),
         this._service.getMyListings(user.id),
         this._createService.getFilterOptions().catch(() => null),
       ]);
       this.profile.set(profile);
+      this.contacts.set(contacts);
       this.listings.set(listings);
       if (opts) {
         for (const u of opts.unit_types) this._typeLabels.set(u.id, u.label_en);
@@ -69,6 +75,10 @@ export class ProfilePageComponent {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  setTab(t: Tab): void {
+    this.tab.set(t);
   }
 
   typeLabel(id: string | null): string {

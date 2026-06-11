@@ -39,3 +39,7 @@
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `7fbfc5a76` | 15:51 | fix(db): add community_name to get_feed response |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `a94395ce0` | 15:58 | feat(mrsqm): profile page (P-6) — info, stats, referral, my listings |
+| `624d19994` | 15:58 | docs: P-6 профиль готов; API-7 (get_agent_listings сломан), API-8 (нет self-UPDATE на users) |

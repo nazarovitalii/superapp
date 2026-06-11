@@ -7,13 +7,22 @@
       <span>{{ error() }}</span>
     </div>
   } @else {
-    <!-- Шапка: аватар, имя, агентство, эмират -->
+    <!-- Шапка профиля -->
     <div class="card head">
       <div class="avatar">{{ initial }}</div>
       <div class="head-info">
-        <div class="name">{{ profile()?.full_name || 'Агент' }}</div>
+        <div class="name-row">
+          <span class="name">{{ profile()?.full_name || 'Агент' }}</span>
+          @if (profile()?.plan === 'pro') {
+            <span class="plan-badge">PRO</span>
+          } @else {
+            <span class="plan-badge plan-badge--free">FREE</span>
+          }
+        </div>
         @if (profile()?.agency_name) {
-          <div class="agency">{{ profile()?.agency_name }}</div>
+          <div class="agency">
+            <mat-icon>business</mat-icon>{{ profile()?.agency_name }}
+          </div>
         }
         @if (profile()?.emirate_name) {
           <div class="emirate">
@@ -21,91 +30,225 @@
           </div>
         }
       </div>
-      @if (profile()?.plan === 'pro') {
-        <span class="plan-badge">PRO</span>
-      }
     </div>
 
-    <!-- Статистика -->
-    <div class="card stats">
-      <div class="stat">
-        <span class="stat-val">{{ profile()?.active_listings ?? 0 }}</span>
-        <span class="stat-label">активных</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">{{ profile()?.total_listings_ever ?? 0 }}</span>
-        <span class="stat-label">всего</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">{{ profile()?.friends_count ?? 0 }}</span>
-        <span class="stat-label">в сети</span>
-      </div>
+    <!-- Вкладки -->
+    <div class="tabs">
+      <button
+        class="tab"
+        [class.active]="tab() === 'overview'"
+        (click)="setTab('overview')"
+      >
+        Обзор
+      </button>
+      <button
+        class="tab"
+        [class.active]="tab() === 'listings'"
+        (click)="setTab('listings')"
+      >
+        Объекты ({{ listings().length }})
+      </button>
+      <button
+        class="tab"
+        [class.active]="tab() === 'activity'"
+        (click)="setTab('activity')"
+      >
+        Активность
+      </button>
     </div>
 
-    <!-- Реферальный код -->
-    @if (profile()?.referral_code) {
+    <!-- ВКЛАДКА: Обзор -->
+    @if (tab() === 'overview') {
       <div class="card">
-        <div class="card-title">Реферальный код</div>
-        <div class="referral">
-          <span class="ref-code">{{ profile()?.referral_code }}</span>
-          <button
-            mat-stroked-button
-            (click)="copyReferral()"
-          >
-            <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
-            {{ copied() ? 'Скопировано' : 'Копировать' }}
-          </button>
+        <div class="card-title">Контакты</div>
+        <div class="kv">
+          <span class="k">Email</span
+          ><span class="v">{{ contacts()?.email || '—' }}</span>
+        </div>
+        <div class="kv">
+          <span class="k">Телефон</span
+          ><span class="v">{{ contacts()?.phone || '—' }}</span>
+        </div>
+        <div class="kv">
+          <span class="k">WhatsApp</span>
+          <span class="v">
+            {{ contacts()?.whatsapp_phone || '—' }}
+            @if (contacts()?.whatsapp_phone && profile()?.whatsapp_verified) {
+              <mat-icon class="verified">verified</mat-icon>
+            }
+          </span>
+        </div>
+        <div class="kv">
+          <span class="k">Telegram</span>
+          <span class="v">{{
+            contacts()?.tg_username ? '@' + contacts()?.tg_username : '—'
+          }}</span>
         </div>
       </div>
-    }
 
-    <!-- Лицензия -->
-    @if (profile()?.broker_license) {
       <div class="card">
-        <div class="row">
-          <span class="row-label">Лицензия брокера</span>
-          <span class="row-value">{{ profile()?.broker_license }}</span>
+        <div class="card-title">Агентство</div>
+        <div class="kv">
+          <span class="k">Название</span
+          ><span class="v">{{ profile()?.agency_name || '—' }}</span>
         </div>
+        <div class="kv">
+          <span class="k">Эмират</span
+          ><span class="v">{{ profile()?.emirate_name || '—' }}</span>
+        </div>
+        @if (profile()?.agency_members_count) {
+          <div class="kv">
+            <span class="k">Агентов в команде</span>
+            <span class="v">{{ profile()?.agency_members_count }}</span>
+          </div>
+        }
       </div>
-    }
 
-    <!-- Мои объекты -->
-    <div class="card">
-      <div class="card-title">Мои объекты ({{ listings().length }})</div>
-      @if (listings().length === 0) {
-        <div class="empty">Объектов пока нет</div>
-      } @else {
-        <div class="listings">
-          @for (l of listings(); track l.id) {
-            <div class="listing">
-              <div class="listing-main">
-                <span class="listing-loc">{{ l.location_name || '—' }}</span>
-                <span class="listing-meta">
-                  {{ typeLabel(l.unit_type_id) }}
-                  @if (l.bedrooms !== null) {
-                    · {{ l.bedrooms === 0 ? 'Studio' : l.bedrooms + ' BR' }}
-                  }
-                  @if (l.area_sqft !== null) {
-                    · {{ l.area_sqft | number: '1.0-0' }} sqft
-                  }
-                </span>
-              </div>
-              <div class="listing-side">
-                <span class="listing-price">
-                  {{ l.price | number: '1.0-0' }} {{ l.price_currency }}
-                </span>
-                <span
-                  class="status-badge"
-                  [attr.data-status]="l.status"
-                >
-                  {{ statusLabel(l.status) }}
-                </span>
-              </div>
+      <div class="card">
+        <div class="card-title">Лицензия и подписка</div>
+        <div class="kv">
+          <span class="k">Лицензия брокера</span>
+          <span class="v">{{ profile()?.broker_license || '—' }}</span>
+        </div>
+        @if (profile()?.broker_license_expiry) {
+          <div class="kv">
+            <span class="k">Действует до</span>
+            <span class="v">{{
+              profile()?.broker_license_expiry | date: 'dd.MM.yyyy'
+            }}</span>
+          </div>
+        }
+        <div class="kv">
+          <span class="k">План</span>
+          <span class="v">
+            {{ profile()?.plan === 'pro' ? 'Pro' : 'Free' }}
+            @if (profile()?.subscription_status) {
+              · {{ profile()?.subscription_status }}
+            }
+          </span>
+        </div>
+        @if (profile()?.plan_expires_at) {
+          <div class="kv">
+            <span class="k">Подписка до</span>
+            <span class="v">{{ profile()?.plan_expires_at | date: 'dd.MM.yyyy' }}</span>
+          </div>
+        }
+      </div>
+
+      @if (profile()?.referral_code) {
+        <div class="card">
+          <div class="card-title">Реферальный код</div>
+          <div class="referral">
+            <span class="ref-code">{{ profile()?.referral_code }}</span>
+            <button
+              mat-stroked-button
+              (click)="copyReferral()"
+            >
+              <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+              {{ copied() ? 'Скопировано' : 'Копировать' }}
+            </button>
+          </div>
+          @if (profile()?.referrals_count) {
+            <div class="ref-hint">
+              Приглашено агентов: {{ profile()?.referrals_count }}
             </div>
           }
         </div>
       }
-    </div>
+    }
+
+    <!-- ВКЛАДКА: Объекты -->
+    @if (tab() === 'listings') {
+      <div class="card">
+        @if (listings().length === 0) {
+          <div class="empty">Объектов пока нет</div>
+        } @else {
+          <div class="listings">
+            @for (l of listings(); track l.id) {
+              <div class="listing">
+                <div class="listing-main">
+                  <span class="listing-loc">{{ l.location_name || '—' }}</span>
+                  <span class="listing-meta">
+                    {{ typeLabel(l.unit_type_id) }}
+                    @if (l.bedrooms !== null) {
+                      · {{ l.bedrooms === 0 ? 'Studio' : l.bedrooms + ' BR' }}
+                    }
+                    @if (l.area_sqft !== null) {
+                      · {{ l.area_sqft | number: '1.0-0' }} sqft
+                    }
+                    · {{ l.deal_type === 'sale' ? 'Продажа' : 'Аренда' }}
+                  </span>
+                </div>
+                <div class="listing-side">
+                  <span class="listing-price">
+                    {{ l.price | number: '1.0-0' }} {{ l.price_currency }}
+                  </span>
+                  <span
+                    class="status-badge"
+                    [attr.data-status]="l.status"
+                  >
+                    {{ statusLabel(l.status) }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ВКЛАДКА: Активность -->
+    @if (tab() === 'activity') {
+      <div class="card stats-grid">
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.active_listings ?? 0 }}</span>
+          <span class="stat-label">активных объектов</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.total_listings_ever ?? 0 }}</span>
+          <span class="stat-label">всего объектов</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.friends_count ?? 0 }}</span>
+          <span class="stat-label">в сети</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.referrals_count ?? 0 }}</span>
+          <span class="stat-label">рефералов</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.saved_filters_count ?? 0 }}</span>
+          <span class="stat-label">сохр. фильтров</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">{{ profile()?.total_searches ?? 0 }}</span>
+          <span class="stat-label">поисков</span>
+        </div>
+      </div>
+
+      <div class="card">
+        @if (profile()?.created_at_user) {
+          <div class="kv">
+            <span class="k">С нами с</span>
+            <span class="v">{{ profile()?.created_at_user | date: 'dd.MM.yyyy' }}</span>
+          </div>
+        }
+        @if (profile()?.last_active_at) {
+          <div class="kv">
+            <span class="k">Последняя активность</span>
+            <span class="v">{{
+              profile()?.last_active_at | date: 'dd.MM.yyyy HH:mm'
+            }}</span>
+          </div>
+        }
+        @if (profile()?.channel_origin) {
+          <div class="kv">
+            <span class="k">Канал регистрации</span>
+            <span class="v">{{ profile()?.channel_origin }}</span>
+          </div>
+        }
+      </div>
+    }
 
     <button
       mat-stroked-button

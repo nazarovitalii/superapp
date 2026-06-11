@@ -12,17 +12,37 @@ export interface MrsqmUser {
 }
 
 // Денормализованный профиль из VIEW/таблицы user_context (страница профиля).
+// Бейдж/score не включаем — система бейджей вне MVP.
 export interface UserProfile {
   full_name: string | null;
   agency_name: string | null;
+  agency_members_count: number | null;
   emirate_name: string | null;
   plan: string | null;
   subscription_status: string | null;
+  plan_expires_at: string | null;
   referral_code: string | null;
+  referrals_count: number | null;
   friends_count: number | null;
+  comments_count: number | null;
+  saved_filters_count: number | null;
+  total_searches: number | null;
   active_listings: number | null;
   total_listings_ever: number | null;
   broker_license: string | null;
+  broker_license_expiry: string | null;
+  channel_origin: string | null;
+  whatsapp_verified: boolean | null;
+  last_active_at: string | null;
+  created_at_user: string | null;
+}
+
+// Контактные поля из таблицы users (отдельно — другой источник).
+export interface UserContacts {
+  phone: string | null;
+  whatsapp_phone: string | null;
+  tg_username: string | null;
+  email: string | null;
 }
 
 // Мой объект (прямой запрос к properties под RLS owner_id=auth.uid()).

@@ -7,9 +7,9 @@
 }
 
 .profile-wrap {
-  max-width: 560px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: var(--s2) var(--s) var(--s8);
+  padding: var(--s2) var(--s2) var(--s8);
   display: flex;
   flex-direction: column;
   gap: var(--s2);
@@ -40,6 +40,8 @@
 .card-title {
   font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-color-muted);
   margin-bottom: var(--s);
 }
@@ -52,13 +54,13 @@
 }
 
 .avatar {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   font-weight: 700;
   color: #fff;
   background: var(--c-primary);
@@ -70,68 +72,115 @@
   min-width: 0;
 }
 
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+}
+
 .name {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-color);
 }
 
-.agency {
-  font-size: 0.85rem;
-  color: var(--text-color-muted);
-}
-
-.emirate {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.8rem;
-  color: var(--text-color-muted);
-  margin-top: 2px;
-
-  mat-icon {
-    font-size: 0.95rem;
-    width: 0.95rem;
-    height: 0.95rem;
-  }
-}
-
 .plan-badge {
-  align-self: flex-start;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #fff;
   background: var(--c-primary);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 10px;
+
+  &--free {
+    color: var(--text-color-muted);
+    background: transparent;
+    border: 1px solid var(--extra-border-color);
+  }
 }
 
-// ─── Статистика ──────────────────────────────────────────────────────────
-.stats {
+.agency,
+.emirate {
   display: flex;
-  justify-content: space-around;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-}
-
-.stat-val {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text-color);
-}
-
-.stat-label {
-  font-size: 0.72rem;
+  gap: 4px;
+  font-size: 0.85rem;
   color: var(--text-color-muted);
+  margin-top: 3px;
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+  }
 }
 
-// ─── Реферал / строки ────────────────────────────────────────────────────
+// ─── Вкладки ─────────────────────────────────────────────────────────────
+.tabs {
+  display: flex;
+  gap: var(--s-half, 4px);
+  border-bottom: 1px solid var(--extra-border-color);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--s) var(--s2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+
+  &.active {
+    color: var(--c-primary);
+    border-bottom-color: var(--c-primary);
+  }
+}
+
+// ─── Key-value строки ────────────────────────────────────────────────────
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--extra-border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.k {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+  flex-shrink: 0;
+}
+
+.v {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.verified {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  color: #1b873f;
+}
+
+// ─── Реферал ─────────────────────────────────────────────────────────────
 .referral {
   display: flex;
   align-items: center;
@@ -140,27 +189,43 @@
 
 .ref-code {
   flex: 1;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-color);
   font-family: monospace;
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.row-label {
-  font-size: 0.85rem;
+.ref-hint {
+  font-size: 0.78rem;
   color: var(--text-color-muted);
+  margin-top: var(--s);
 }
 
-.row-value {
-  font-size: 0.9rem;
+// ─── Статистика ──────────────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--text-color);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-color-muted);
 }
 
 // ─── Мои объекты ─────────────────────────────────────────────────────────
@@ -248,4 +313,11 @@
 .logout-btn {
   align-self: center;
   margin-top: var(--s2);
+}
+
+// ─── Адаптив ─────────────────────────────────────────────────────────────
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
