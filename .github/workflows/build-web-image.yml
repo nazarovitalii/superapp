@@ -74,3 +74,26 @@ jobs:
           # Кэш слоёв между запусками — ускоряет повторные сборки.
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Автодеплой: после сборки образа дёргаем Coolify-вебхук, чтобы он
+      # подтянул свежий :latest и передеплоил. Работает, только если задан
+      # секрет COOLIFY_WEBHOOK_URL (и опционально COOLIFY_TOKEN) — иначе шаг
+      # тихо пропускается, сборка остаётся зелёной.
+      - name: Trigger Coolify redeploy
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
+            echo "COOLIFY_WEBHOOK_URL не задан — пропускаю автодеплой (нужно добавить секрет)."
+            exit 0
+          fi
+          echo "Вызываю Coolify webhook для передеплоя…"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X GET \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_WEBHOOK_URL")
+          echo "Coolify ответил HTTP $code"
+          if [ "$code" -ge 400 ]; then
+            echo "::error::Coolify webhook вернул $code — проверь URL/токен в секретах"
+            exit 1
+          fi
