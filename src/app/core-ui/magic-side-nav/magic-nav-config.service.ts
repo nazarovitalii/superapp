@@ -33,6 +33,7 @@ import { MenuTreeViewNode } from '../../features/menu-tree/store/menu-tree.model
 import { GlobalConfigService } from '../../features/config/global-config.service';
 import { AppFeaturesConfig } from '../../features/config/global-config.model';
 import { SnackService } from '../../core/snack/snack.service';
+import { MrsqmAuthService } from '../../mrsqm/services/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -49,6 +50,7 @@ export class MagicNavConfigService {
   private readonly _configService = inject(GlobalConfigService);
   private readonly _snackService = inject(SnackService);
   private readonly _router = inject(Router);
+  private readonly _mrsqmAuth = inject(MrsqmAuthService);
 
   // Simple state signals
   private readonly _isProjectsExpanded = signal(
@@ -180,6 +182,13 @@ export class MagicNavConfigService {
         label: 'Профиль',
         icon: 'person',
         route: '/mrsqm/profile',
+      } as NavItem,
+      {
+        type: 'action',
+        id: 'crm-logout',
+        label: 'Выйти',
+        icon: 'logout',
+        action: () => void this._logout(),
       } as NavItem,
 
       // ─── Разделитель ─────────────────────────────────────────────────────
@@ -500,6 +509,12 @@ export class MagicNavConfigService {
 
   private _openBugReport(): void {
     window.open(getGithubErrorUrl('', undefined, true), '_blank');
+  }
+
+  // Выход из MrSQM: сброс Supabase-сессии и переход на /login.
+  private async _logout(): Promise<void> {
+    await this._mrsqmAuth.signOut();
+    await this._router.navigateByUrl('/login');
   }
 
   private _startTour(tourId: TourId): void {
