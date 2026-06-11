@@ -38,7 +38,7 @@
 | P-2  | 🔴        | Лента (`/mrsqm/feed`): карточки 1-строкой, Sale/Rent, пагинация, центрированный фрейм | сделано на **mock**, реальный `get_feed` не подключён (нужен auth+city) | `[~]`  |
 | P-3  | 🔴        | Карточка: модалка справа (нативная right-panel SP), данные агента, WhatsApp           | на **mock**, `get_property` не подключён                                | `[~]`  |
 | P-4  | 🔴        | Фильтры ленты: sidebar (тип/беды/цена/листинг/distress) + тогл Sale/Rent в хедере     | на **mock**; district через `search_locations` не подключён             | `[~]`  |
-| P-5  | 🟡        | Добавить объект (`/add`): `publish_property`, autocomplete локации                    | урезанная форма, 1–3 фото                                               | `[ ]`  |
+| P-5  | 🟡        | Добавить объект (`/add`): 5-шаг. форма → INSERT в `properties` под RLS (НЕ `publish_property` — его нет), справочники `get_filter_options`, локация `search_locations` | **без фото** (нужен Storage-bucket+RLS = P-5b); живой INSERT не проверен | `[~]`  |
 | P-6  | 🟡        | Профиль агента (`/profile`): мои объекты, реф-ссылка                                  | без бейджа/баллов/прогресса                                             | `[ ]`  |
 | P-7  | 🟡        | Избранное (`/saved`): `get_saved_properties`, toggle `save_property`                  | —                                                                       | `[ ]`  |
 | P-8  | 🟡        | Сеть коллег (`/network`): список агентов, поиск, добавить                             | —                                                                       | `[ ]`  |
@@ -55,7 +55,7 @@
 | ---- | --------- | --------------------------------------------------------------------- | ------ |
 | P-3b | 🟡        | Карточка: блок «Похожие объекты» (`get_similar_properties`) + галерея | `[ ]`  |
 | P-4b | 🟡        | Фильтры: цена мин/макс + количество комнат                            | `[ ]`  |
-| P-5b | 🟡        | Добавить объект: полные поля (до 10 фото)                             | `[ ]`  |
+| P-5b | 🟡        | Добавить объект: загрузка фото (Storage-bucket `property_photos` + RLS, compress thumb/full webp, INSERT в `property_photos`). Образец логики — React-проект nazarovitalii/dubai-realtors-app- (AddPropertyPage.jsx). Bucket пока НЕ создан (есть только `avatars`) | `[ ]`  |
 | W-2  | 🟢        | Service Worker — кэш статики                                          | `[ ]`  |
 
 ---
