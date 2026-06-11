@@ -82,6 +82,9 @@ export interface PropertyInsert {
   is_distress: boolean;
   is_negotiable: boolean;
   visibility: string;
+  // status: network → 'active' сразу, public → 'pending_review' (модерация).
+  // Модерации в БД нет — статус задаёт клиент по visibility (продуктовое правило).
+  status: PropertyStatus;
   description: string | null;
 }
 // Значения сверены с CHECK-констрейнтами БД (properties_*_check).

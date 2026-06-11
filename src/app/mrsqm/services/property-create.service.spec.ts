@@ -53,6 +53,7 @@ const samplePayload = (): PropertyInsert => ({
   is_distress: false,
   is_negotiable: false,
   visibility: 'public',
+  status: 'pending_review',
   description: null,
 });
 

@@ -236,6 +236,8 @@ export class AddPropertyPageComponent {
       is_distress: this.isDistress(),
       is_negotiable: this.isNegotiable(),
       visibility: this.visibility(),
+      // network — публикуется сразу (active); public — на модерацию (pending_review).
+      status: this.visibility() === 'network' ? 'active' : 'pending_review',
       description: this.description().trim() || null,
     };
 
