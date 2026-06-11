@@ -8,6 +8,7 @@ import { FeedFilterService } from '../../services/feed-filter.service';
 import { FeedParams, FeedResponse, PropertyFeedItem } from '../../types/database';
 import { PropertyCardComponent } from '../../components/property-card/property-card.component';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { PropertyCreateService } from '../../services/property-create.service';
 import { signal } from '@angular/core';
 
 const PAGE_SIZE = 20;
@@ -29,7 +30,11 @@ const PAGE_SIZE = 20;
 export class FeedPageComponent {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _panels = inject(PanelContentService);
+  private readonly _createService = inject(PropertyCreateService);
   readonly filter = inject(FeedFilterService);
+
+  // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
+  private _typeLabels: Map<string, string> | null = null;
 
   readonly properties = signal<PropertyFeedItem[]>([]);
   readonly isLoading = signal(false);
@@ -83,7 +88,7 @@ export class FeedPageComponent {
     this.loadError.set(false);
     try {
       const res = await this._supabase.rpc<FeedResponse>('get_feed', this._buildParams());
-      const items = res.results ?? [];
+      const items = await this._withTypeLabels(res.results ?? []);
       // Пустой результат — валиден (объектов нет), показываем empty-state.
       this.properties.set(append ? [...this.properties(), ...items] : items);
       this.countTotal.set(res.count_total ?? 0);
@@ -97,5 +102,37 @@ export class FeedPageComponent {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  // Резолвим название типа: get_feed отдаёт только unit_type_id/sub_type_id (uuid),
+  // а карточка показывает property_type. Берём label из справочников (кэш).
+  private async _withTypeLabels(items: PropertyFeedItem[]): Promise<PropertyFeedItem[]> {
+    if (!items.length) {
+      return items;
+    }
+    const labels = await this._getTypeLabels();
+    return items.map((it) => {
+      const label =
+        (it.sub_type_id && labels.get(it.sub_type_id)) ||
+        (it.unit_type_id && labels.get(it.unit_type_id)) ||
+        null;
+      return label ? { ...it, property_type: label } : it;
+    });
+  }
+
+  private async _getTypeLabels(): Promise<Map<string, string>> {
+    if (this._typeLabels) {
+      return this._typeLabels;
+    }
+    const map = new Map<string, string>();
+    try {
+      const opts = await this._createService.getFilterOptions();
+      for (const u of opts.unit_types) map.set(u.id, u.label_en);
+      for (const s of opts.sub_types) map.set(s.id, s.label_en);
+    } catch {
+      // Справочники недоступны — тип просто останется пустым, не критично.
+    }
+    this._typeLabels = map;
+    return map;
   }
 }

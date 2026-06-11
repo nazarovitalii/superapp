@@ -107,7 +107,12 @@ export interface PropertyFeedItem {
   owner_id: string;
   deal_type: DealType;
   listing_type: ListingType;
+  // property_type — НЕ из get_feed (там unit_type_id uuid); резолвится в ленте
+  // в название через get_filter_options. location_level — уровень leaf-локации.
   property_type: string | null;
+  unit_type_id?: string | null;
+  sub_type_id?: string | null;
+  location_level?: string | null;
   price: number;
   price_currency: string;
   price_period: string | null;
