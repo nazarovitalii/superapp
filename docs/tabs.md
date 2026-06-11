@@ -7,10 +7,14 @@ CRM-платформа для риелторов Dubai. Дизайн — Super P
 
 ## Login — `/login`
 
-- Форма входа: email + пароль
-- Supabase Auth → проверка в таблице `users` (is_active = true)
-- При успехе: редирект на `/`; при ошибке: inline-сообщение
-- Доступ: публичный
+- Форма входа: email + пароль (`login-page.component`, стиль модалки SP).
+- Supabase Auth (`signInWithPassword`) → SELECT из `users` по `auth.uid()` с
+  `is_active = true` (через RLS `users_select_own`). Нет/деактивирован →
+  принудительный `signOut` + inline-ошибка.
+- При успехе: редирект на `/mrsqm/feed`.
+- Доступ: публичный. Все `mrsqm/*` закрыты `mrsqmAuthGuard` (ждёт восстановления
+  сессии при F5, иначе → `/login`).
+- Выход: пункт «Выйти» в боковой навигации (`MrsqmAuthService.signOut` → `/login`).
 
 ---
 

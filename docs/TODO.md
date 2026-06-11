@@ -16,7 +16,7 @@
 | M-0 | 🔴        | Система документирования: `.claude/` (skills deploy/export-convo/daily-summary/migrate/test-prod, hooks, rules), export-convo скрипт, git (origin→свой репо, upstream→SuperProductivity, master→main), CLAUDE.md MrSQM-секция | ✅     |
 | M-1 | 🔴        | Документация MrSQM в docs/\*.md (README, architecture, database, tabs, TODO)                                                                                                                                                  | ✅     |
 | M-2 | 🔴        | Supabase клиент: `src/app/mrsqm/services/supabase.service.ts` + env (anon-ключ в `environment*.ts`)                                                                                                                           | ✅     |
-| M-3 | 🔴        | Auth: LoginPage + AuthGuard + AuthService (Supabase Auth + users.is_active)                                                                                                                                                   | `[ ]`  |
+| M-3 | 🔴        | Auth: LoginPage + AuthGuard + AuthService (Supabase Auth + users.is_active) + logout в nav                                                                                                                                    | ✅     |
 | M-4 | 🟡        | Базовый routing: `/mrsqm/feed`,`/add`,`/saved`,`/network`,`/profile`,`/chat` + stub-страницы                                                                                                                                  | ✅     |
 | M-5 | 🔴        | Полный справочник схемы БД (`docs/database.md`): RPC+тела, триггеры, RLS, enum                                                                                                                                                | ✅     |
 | M-6 | 🟡        | Инструкция деплоя в Coolify (`docs/deploy-coolify.md`, домен sapp.mrsqm.com)                                                                                                                                                  | ✅     |
@@ -80,7 +80,7 @@
 
 | #     | Приоритет | Описание                                                                                                                                                              | Статус |
 | ----- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| API-1 | 🔴        | `get_feed` требует `city_id` (из `p_city_id` или `user_context`); без города → **ошибка**. Значит лента работает только с залогиненным юзером → зависит от M-3 (Auth) | `[ ]`  |
+| API-1 | 🔴        | `get_feed` требует `city_id` (из `p_city_id` или `user_context`); без города → **ошибка**. M-3 (Auth) ✅ — теперь юзер залогинен; осталось подключить реальный `get_feed` вместо мока и прокинуть город из контекста юзера | `[ ]`  |
 | API-2 | 🟡        | `p_bedrooms`/`p_bathrooms` — **массивы** `int[]` (мультивыбор), в текущих фильтрах одно значение                                                                      | `[ ]`  |
 | API-3 | 🟡        | Ответ `get_feed` — `count_total`/`count_nearby` (нет `count_hidden`); типы объектов — id+lookup из `get_filter_options`, не строка                                    | `[ ]`  |
 | API-4 | 🟢        | `properties.status` имеет 7 значений (draft/pending_review/active/rejected/expired/archived_sold/archived_withdrawn)                                                  | `[ ]`  |
@@ -91,6 +91,7 @@
 
 | Дата       | Что                                                                                                                                                                           |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-11 | M-3: auth (Supabase email+пароль). LoginPage `/login`, `mrsqmAuthService` (проверка users.is_active по auth.uid через RLS), `mrsqmAuthGuard` на всех mrsqm/*, «Выйти» в nav. 4 unit-теста. |
 | 2026-06-11 | M-7: web-клиент задеплоен → **https://sapp.mrsqm.com** (HTTPS валиден, SPA-роуты ок), образ public в GHCR, Coolify тип Docker Image                                                                                                |
 | 2026-06-11 | M-8: CI-сборка образа в GHCR через GitHub Actions (`.github/workflows/build-web-image.yml`) — после инцидента, когда сборка на VPS уронила общую Supabase. Coolify тип ресурса → Docker Image. Инструкция деплоя переписана. |
 | 2026-06-10 | M-7-инфра: инструкция деплоя Coolify (`docs/deploy-coolify.md`, sapp.mrsqm.com, приватный репо через GitHub App)                                                              |
