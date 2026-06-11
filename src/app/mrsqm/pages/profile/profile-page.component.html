@@ -1,0 +1,118 @@
+<div class="profile-wrap">
+  @if (isLoading()) {
+    <div class="center"><mat-spinner [diameter]="32" /></div>
+  } @else if (error()) {
+    <div class="center error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  } @else {
+    <!-- Шапка: аватар, имя, агентство, эмират -->
+    <div class="card head">
+      <div class="avatar">{{ initial }}</div>
+      <div class="head-info">
+        <div class="name">{{ profile()?.full_name || 'Агент' }}</div>
+        @if (profile()?.agency_name) {
+          <div class="agency">{{ profile()?.agency_name }}</div>
+        }
+        @if (profile()?.emirate_name) {
+          <div class="emirate">
+            <mat-icon>place</mat-icon>{{ profile()?.emirate_name }}
+          </div>
+        }
+      </div>
+      @if (profile()?.plan === 'pro') {
+        <span class="plan-badge">PRO</span>
+      }
+    </div>
+
+    <!-- Статистика -->
+    <div class="card stats">
+      <div class="stat">
+        <span class="stat-val">{{ profile()?.active_listings ?? 0 }}</span>
+        <span class="stat-label">активных</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ profile()?.total_listings_ever ?? 0 }}</span>
+        <span class="stat-label">всего</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ profile()?.friends_count ?? 0 }}</span>
+        <span class="stat-label">в сети</span>
+      </div>
+    </div>
+
+    <!-- Реферальный код -->
+    @if (profile()?.referral_code) {
+      <div class="card">
+        <div class="card-title">Реферальный код</div>
+        <div class="referral">
+          <span class="ref-code">{{ profile()?.referral_code }}</span>
+          <button
+            mat-stroked-button
+            (click)="copyReferral()"
+          >
+            <mat-icon>{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
+            {{ copied() ? 'Скопировано' : 'Копировать' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Лицензия -->
+    @if (profile()?.broker_license) {
+      <div class="card">
+        <div class="row">
+          <span class="row-label">Лицензия брокера</span>
+          <span class="row-value">{{ profile()?.broker_license }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- Мои объекты -->
+    <div class="card">
+      <div class="card-title">Мои объекты ({{ listings().length }})</div>
+      @if (listings().length === 0) {
+        <div class="empty">Объектов пока нет</div>
+      } @else {
+        <div class="listings">
+          @for (l of listings(); track l.id) {
+            <div class="listing">
+              <div class="listing-main">
+                <span class="listing-loc">{{ l.location_name || '—' }}</span>
+                <span class="listing-meta">
+                  {{ typeLabel(l.unit_type_id) }}
+                  @if (l.bedrooms !== null) {
+                    · {{ l.bedrooms === 0 ? 'Studio' : l.bedrooms + ' BR' }}
+                  }
+                  @if (l.area_sqft !== null) {
+                    · {{ l.area_sqft | number: '1.0-0' }} sqft
+                  }
+                </span>
+              </div>
+              <div class="listing-side">
+                <span class="listing-price">
+                  {{ l.price | number: '1.0-0' }} {{ l.price_currency }}
+                </span>
+                <span
+                  class="status-badge"
+                  [attr.data-status]="l.status"
+                >
+                  {{ statusLabel(l.status) }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <button
+      mat-stroked-button
+      class="logout-btn"
+      (click)="logout()"
+    >
+      <mat-icon>logout</mat-icon> Выйти
+    </button>
+  }
+</div>

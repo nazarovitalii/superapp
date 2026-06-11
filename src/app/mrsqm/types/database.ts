@@ -11,6 +11,39 @@ export interface MrsqmUser {
   is_active: boolean;
 }
 
+// Денормализованный профиль из VIEW/таблицы user_context (страница профиля).
+export interface UserProfile {
+  full_name: string | null;
+  agency_name: string | null;
+  emirate_name: string | null;
+  plan: string | null;
+  subscription_status: string | null;
+  referral_code: string | null;
+  friends_count: number | null;
+  active_listings: number | null;
+  total_listings_ever: number | null;
+  broker_license: string | null;
+}
+
+// Мой объект (прямой запрос к properties под RLS owner_id=auth.uid()).
+// Берём свои объекты любого статуса (включая draft/pending) — get_agent_listings
+// сейчас сломан (превышение лимита аргументов jsonb_build_object).
+export interface MyListing {
+  id: string;
+  deal_type: DealType;
+  listing_type: string;
+  status: PropertyStatus;
+  visibility: string;
+  price: number;
+  price_currency: string;
+  price_period: string | null;
+  bedrooms: number | null;
+  area_sqft: number | null;
+  unit_type_id: string | null;
+  created_at: string;
+  location_name: string | null;
+}
+
 export type SubStatus = 'active' | 'expired';
 export type DealType = 'sale' | 'rent';
 export type ListingType = 'official' | 'pocket';

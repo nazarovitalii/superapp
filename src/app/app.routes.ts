@@ -180,7 +180,9 @@ export const APP_ROUTES: Routes = [
   {
     path: 'mrsqm/profile',
     loadComponent: () =>
-      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
+      import('./mrsqm/pages/profile/profile-page.component').then(
+        (m) => m.ProfilePageComponent,
+      ),
     data: { page: 'mrsqm-profile', title: 'Профиль', icon: 'person' },
     canActivate: [mrsqmAuthGuard],
   },
