@@ -9,6 +9,7 @@ import { FeedParams, FeedResponse, PropertyFeedItem } from '../../types/database
 import { PropertyCardComponent } from '../../components/property-card/property-card.component';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { signal } from '@angular/core';
 
 const PAGE_SIZE = 20;
@@ -31,6 +32,7 @@ export class FeedPageComponent {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _panels = inject(PanelContentService);
   private readonly _createService = inject(PropertyCreateService);
+  private readonly _saved = inject(SavedPropertiesService);
   readonly filter = inject(FeedFilterService);
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
@@ -42,12 +44,15 @@ export class FeedPageComponent {
   readonly countTotal = signal(0);
   readonly offset = signal(0);
   readonly hasMore = signal(false);
+  // id объектов в избранном (для иконки-закладки).
+  readonly savedIds = signal<Set<string>>(new Set());
 
   get selectedPropertyId(): string | null {
     return this._panels.selectedProperty()?.id ?? null;
   }
 
   constructor() {
+    void this._loadSaved();
     // Перезагружаем при смене dealType или фильтров.
     effect(() => {
       this.filter.dealType();
@@ -56,6 +61,38 @@ export class FeedPageComponent {
       this.properties.set([]);
       void this._load();
     });
+  }
+
+  private async _loadSaved(): Promise<void> {
+    try {
+      this.savedIds.set(await this._saved.getSavedIds());
+    } catch {
+      // Избранное недоступно — иконки просто будут пустыми.
+    }
+  }
+
+  // Toggle избранного по клику на закладку. Оптимистично обновляем Set.
+  async toggleSaved(property: PropertyFeedItem): Promise<void> {
+    const id = property.id;
+    const next = new Set(this.savedIds());
+    const wasSaved = next.has(id);
+    // оптимистично
+    if (wasSaved) next.delete(id);
+    else next.add(id);
+    this.savedIds.set(next);
+    try {
+      const isSaved = await this._saved.toggle(id);
+      const fixed = new Set(this.savedIds());
+      if (isSaved) fixed.add(id);
+      else fixed.delete(id);
+      this.savedIds.set(fixed);
+    } catch {
+      // откат при ошибке
+      const revert = new Set(this.savedIds());
+      if (wasSaved) revert.add(id);
+      else revert.delete(id);
+      this.savedIds.set(revert);
+    }
   }
 
   async loadMore(): Promise<void> {

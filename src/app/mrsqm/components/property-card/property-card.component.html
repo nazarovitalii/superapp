@@ -58,7 +58,7 @@
       </span>
     </div>
 
-    <!-- Pocket / Official -->
+    <!-- Pocket / Official + закладка -->
     <div class="col col-listing">
       @if (property().listing_type === 'pocket') {
         <span class="badge badge--pocket">Pocket</span>
@@ -68,6 +68,15 @@
       @if (property().is_distress) {
         <span class="badge badge--distress">Срочно</span>
       }
+      <button
+        type="button"
+        class="save-btn"
+        [class.saved]="isSaved()"
+        (click)="saveClick.emit(); $event.stopPropagation()"
+        [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+      >
+        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+      </button>
     </div>
   </div>
 </div>

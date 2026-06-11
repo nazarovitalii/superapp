@@ -43,3 +43,6 @@
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
 | `a94395ce0` | 15:58 | feat(mrsqm): profile page (P-6) — info, stats, referral, my listings |
 | `624d19994` | 15:58 | docs: P-6 профиль готов; API-7 (get_agent_listings сломан), API-8 (нет self-UPDATE на users) |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `763225b7d` | 16:20 | feat(mrsqm): rich tabbed profile + fix get_agent_listings |
+| `fede9e935` | 16:20 | docs: API-7 get_agent_listings починен; профиль с вкладками |

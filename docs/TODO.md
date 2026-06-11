@@ -40,7 +40,7 @@
 | P-4  | 🔴        | Фильтры ленты: sidebar (тип/беды/цена/листинг/distress) + тогл Sale/Rent в хедере     | на **mock**; district через `search_locations` не подключён             | `[~]`  |
 | P-5  | 🟡        | Добавить объект (`/add`): 5-шаг. форма → INSERT в `properties` под RLS (НЕ `publish_property` — его нет), справочники `get_filter_options`, локация `search_locations`. **Боевой INSERT проверен** (status→draft, значения сверены с CHECK) | **без фото** (P-5b) | ✅     |
 | P-6  | 🟡        | Профиль (`/profile`): инфо из `user_context`, статистика, реф-код+копир., мои объекты (прямой запрос к properties + статус), выход | на чтение; правка контактов нет (на users только admins_update RLS); фото нет (user_settings пуст) | ✅     |
-| P-7  | 🟡        | Избранное (`/saved`): `get_saved_properties`, toggle `save_property`                  | —                                                                       | `[ ]`  |
+| P-7  | 🟡        | Избранное — **в ленте** (закладка на карточке, не отдельный экран): toggle `save_property` + чтение `saved_properties`. Экран `/saved` и nav-пункт убраны | по решению 2026-06-11 | ✅     |
 | P-8  | 🟡        | Сеть коллег (`/network`): список агентов, поиск, добавить                             | —                                                                       | `[ ]`  |
 | P-9  | 🟢        | AI Чат (`/chat`): заглушка интерфейса                                                 | статичная заглушка                                                      | `[ ]`  |
 | P-10 | 🟢        | Мобильный sidebar — drawer на < 768px                                                 | —                                                                       | `[ ]`  |

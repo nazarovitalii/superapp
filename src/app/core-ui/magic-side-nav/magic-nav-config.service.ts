@@ -157,13 +157,6 @@ export class MagicNavConfigService {
       } as NavItem,
       {
         type: 'route',
-        id: 'crm-saved',
-        label: 'Избранное',
-        icon: 'bookmark',
-        route: '/mrsqm/saved',
-      } as NavItem,
-      {
-        type: 'route',
         id: 'crm-network',
         label: 'Сеть',
         icon: 'group',

@@ -137,6 +137,33 @@
   gap: 2px;
 }
 
+// Закладка «в избранное».
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-color-muted);
+
+  mat-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  &:hover {
+    color: var(--c-primary);
+  }
+
+  &.saved {
+    color: var(--c-primary);
+  }
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

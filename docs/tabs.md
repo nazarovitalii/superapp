@@ -144,14 +144,17 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 
 ---
 
-## Избранное — `/saved`
+## Избранное — В ЛЕНТЕ (не отдельный экран)
 
-**RPC:** `get_saved_properties()`
+**RPC:** `save_property()` (toggle), `saved_properties` (чтение состояния)
 
-- Список сохранённых объектов
-- Карточки как в ленте + дата сохранения
-- Кнопка «Убрать из избранного» (toggle)
-- Пагинация
+Решение (2026-06-11): отдельного экрана `/saved` НЕТ. Избранное — иконка-закладка
+(`bookmark`/`bookmark_border`) прямо на карточке объекта в ленте. Клик → toggle
+через `save_property`, состояние из прямого чтения `saved_properties` (Set id).
+Оптимистичное обновление с откатом при ошибке.
+
+> RPC `get_saved_properties()` существует в БД (на будущее — если понадобится
+> отдельный список), но в MVP не используется.
 
 ---
 
@@ -189,13 +192,12 @@ _(план после MVP)_
 | --------- | --------------- | ---------------- |
 | apartment | Лента           | `/mrsqm/feed`    |
 | add_home  | Добавить объект | `/mrsqm/add`     |
-| bookmark  | Избранное       | `/mrsqm/saved`   |
 | group     | Сеть            | `/mrsqm/network` |
 | smart_toy | AI Чат          | `/mrsqm/chat`    |
 | person    | Профиль         | `/mrsqm/profile` |
 
-- `/add`, `/saved`, `/network`, `/chat`, `/profile` — пока **stub-страницы**
-  (`stub-page.component`, «Раздел в разработке»).
+- `/add` и `/profile` — реализованы; `/network`, `/chat` — пока **stub-страницы**
+  (`stub-page.component`). Экрана `/saved` нет — избранное в ленте (закладка).
 - Сворачивается в режим иконок (поведение SP).
 
 ### Header (`main-header`)

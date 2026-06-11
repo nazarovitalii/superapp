@@ -14,7 +14,9 @@
       <mrsqm-property-card
         [property]="p"
         [isActive]="selectedPropertyId === p.id"
+        [isSaved]="savedIds().has(p.id)"
         (cardClick)="openDetail(p)"
+        (saveClick)="toggleSaved(p)"
       />
     } @empty {
       @if (!isLoading() && !loadError()) {

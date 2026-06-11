@@ -14,5 +14,8 @@ import { PropertyFeedItem } from '../../types/database';
 export class PropertyCardComponent {
   readonly property = input.required<PropertyFeedItem>();
   readonly isActive = input(false);
+  readonly isSaved = input(false);
   readonly cardClick = output<void>();
+  // Клик по закладке — отдельно от клика по карточке (stopPropagation в шаблоне).
+  readonly saveClick = output<void>();
 }

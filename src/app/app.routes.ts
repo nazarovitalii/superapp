@@ -157,13 +157,6 @@ export const APP_ROUTES: Routes = [
     canActivate: [mrsqmAuthGuard],
   },
   {
-    path: 'mrsqm/saved',
-    loadComponent: () =>
-      import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
-    data: { page: 'mrsqm-saved', title: 'Избранное', icon: 'bookmark' },
-    canActivate: [mrsqmAuthGuard],
-  },
-  {
     path: 'mrsqm/network',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
