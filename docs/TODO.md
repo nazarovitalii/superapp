@@ -95,6 +95,7 @@
 
 | Дата       | Что                                                                                                                                                                           |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-11 | DB-фикс: `activate_user()` лезла к `NEW.user_id`, а у `properties` поле `owner_id` → любой INSERT объекта падал (42703). Ветка по `TG_TABLE_NAME`. Миграция `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql`. Реферальная логика не тронута. INSERT проверен (201, status=active) |
 | 2026-06-11 | M-3: auth (Supabase email+пароль). LoginPage `/login`, `mrsqmAuthService` (проверка users.is_active по auth.uid через RLS), `mrsqmAuthGuard` на всех mrsqm/*, «Выйти» в nav. 4 unit-теста. |
 | 2026-06-11 | M-7: web-клиент задеплоен → **https://sapp.mrsqm.com** (HTTPS валиден, SPA-роуты ок), образ public в GHCR, Coolify тип Docker Image                                                                                                |
 | 2026-06-11 | M-8: CI-сборка образа в GHCR через GitHub Actions (`.github/workflows/build-web-image.yml`) — после инцидента, когда сборка на VPS уронила общую Supabase. Coolify тип ресурса → Docker Image. Инструкция деплоя переписана. |

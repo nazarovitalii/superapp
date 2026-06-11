@@ -28,3 +28,7 @@
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
 | ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `114847ecf` | 15:04 | feat(mrsqm): set property status by visibility (network→active, public→pending) |
+| `ba9aef4fc` | 15:06 | ci: auto-trigger Coolify redeploy after image build |
+| `f73fa52ba` | 15:13 | ci: trigger build to verify Coolify autodeploy |
