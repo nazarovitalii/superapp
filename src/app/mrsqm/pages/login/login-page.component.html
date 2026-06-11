@@ -1,0 +1,56 @@
+<div class="login-wrap">
+  <form
+    class="login-card"
+    (ngSubmit)="submit()"
+  >
+    <h1 class="login-title">MrSQM</h1>
+    <p class="login-sub">Вход для риелторов</p>
+
+    <label class="field">
+      <span class="field-label">Email</span>
+      <input
+        type="email"
+        name="email"
+        autocomplete="username"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        [disabled]="isLoading()"
+        placeholder="you@agency.com"
+      />
+    </label>
+
+    <label class="field">
+      <span class="field-label">Пароль</span>
+      <input
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        [ngModel]="password()"
+        (ngModelChange)="password.set($event)"
+        [disabled]="isLoading()"
+        placeholder="••••••••"
+      />
+    </label>
+
+    @if (errorMsg()) {
+      <div class="login-error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMsg() }}</span>
+      </div>
+    }
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      class="login-btn"
+      [disabled]="isLoading()"
+    >
+      @if (isLoading()) {
+        <mat-spinner [diameter]="20"></mat-spinner>
+      } @else {
+        Войти
+      }
+    </button>
+  </form>
+</div>

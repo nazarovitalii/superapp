@@ -10,6 +10,8 @@ import {
 
 import { TagTaskPageComponent } from './pages/tag-task-page/tag-task-page.component';
 
+import { mrsqmAuthGuard } from './mrsqm/guards/auth.guard';
+
 export const APP_ROUTES: Routes = [
   // Eagerly loaded — this is the main view
   {
@@ -128,42 +130,57 @@ export const APP_ROUTES: Routes = [
       import('./routes/pages.routes').then((m) => m.ConfigPageComponent),
   },
   // ─── MrSQM — риелторская CRM ─────────────────────────────────────────────
+  // Публичный вход.
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./mrsqm/pages/login/login-page.component').then(
+        (m) => m.LoginPageComponent,
+      ),
+    data: { page: 'mrsqm-login' },
+  },
+  // Все mrsqm/* — только для залогиненного пользователя (mrsqmAuthGuard).
   {
     path: 'mrsqm/feed',
     loadComponent: () =>
       import('./mrsqm/pages/feed/feed-page.component').then((m) => m.FeedPageComponent),
     data: { page: 'mrsqm-feed' },
-    canActivate: [FocusOverlayOpenGuard],
+    canActivate: [mrsqmAuthGuard, FocusOverlayOpenGuard],
   },
   {
     path: 'mrsqm/add',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
     data: { page: 'mrsqm-add', title: 'Добавить объект', icon: 'add_home' },
+    canActivate: [mrsqmAuthGuard],
   },
   {
     path: 'mrsqm/saved',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
     data: { page: 'mrsqm-saved', title: 'Избранное', icon: 'bookmark' },
+    canActivate: [mrsqmAuthGuard],
   },
   {
     path: 'mrsqm/network',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
     data: { page: 'mrsqm-network', title: 'Сеть', icon: 'group' },
+    canActivate: [mrsqmAuthGuard],
   },
   {
     path: 'mrsqm/chat',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
     data: { page: 'mrsqm-chat', title: 'AI Chat', icon: 'smart_toy' },
+    canActivate: [mrsqmAuthGuard],
   },
   {
     path: 'mrsqm/profile',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),
     data: { page: 'mrsqm-profile', title: 'Профиль', icon: 'person' },
+    canActivate: [mrsqmAuthGuard],
   },
   // Wildcard — redirects to default start page
   {

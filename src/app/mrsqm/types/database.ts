@@ -1,5 +1,16 @@
 export type UserRole = 'agent' | 'admin' | 'moderator' | 'superadmin';
 export type Plan = 'free' | 'pro';
+
+// Профиль пользователя из таблицы `users` (id = auth.uid()).
+// Только поля, нужные клиенту; чтение под RLS users_select_own.
+export interface MrsqmUser {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  role: UserRole;
+  is_active: boolean;
+}
+
 export type SubStatus = 'active' | 'expired';
 export type DealType = 'sale' | 'rent';
 export type ListingType = 'official' | 'pocket';
