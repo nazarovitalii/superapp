@@ -87,7 +87,7 @@
 | API-3 | 🟡        | Ответ `get_feed` = `{results, count_total, limit, offset}` (НЕ count_hidden/count_nearby/plan — тип исправлен ✅). Pro-апселл «ещё N на Pro» в ленте убран (не было в API) | ✅     |
 | API-4 | 🟢        | `properties.status` имеет 7 значений (draft/pending_review/active/rejected/expired/archived_sold/archived_withdrawn). Типы обновлены ✅                                | ✅     |
 | API-5 | 🟡        | На `properties` НЕТ DELETE-RLS-политики (есть только insert/select по owner). Юзер не может удалить свой объект с клиента → для «удалить объявление» нужна политика или RPC | `[ ]`  |
-| API-7 | 🟡        | `get_agent_listings` СЛОМАН: `cannot pass more than 100 arguments` (один jsonb_build_object с >50 полями, как было в get_feed). Обойдено прямым запросом к properties. Починить = split jsonb_build_object (как в get_feed) | `[ ]`  |
+| API-7 | 🟡        | `get_agent_listings` ПОЧИНЕН ✅ — split jsonb_build_object (был >100 args). Миграция `applied/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`. Профиль всё равно на прямом запросе (RPC отдаёт только active, а владельцу нужны draft/pending) | ✅     |
 | API-8 | 🟡        | На `users` нет self-UPDATE RLS (только `admins_update`) → агент не может редактировать свои контакты. Для правки профиля нужна политика `users_update_own` или RPC | `[ ]`  |
 | API-6 | 🟢        | CHECK-значения enum-полей: `furnished`=furnished/unfurnished (НЕ yes/no), `occupancy_status`=vacant/occupied/vacant_on_transfer. Брать из `get_filter_options`, не хардкодить | ✅     |
 
