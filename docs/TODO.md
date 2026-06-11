@@ -95,6 +95,7 @@
 
 | Дата       | Что                                                                                                                                                                           |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-11 | Лента-фиксы: «Тип» резолвится из unit_type_id/sub_type_id→label (фронт); `community_name` добавлен в `get_feed` (LEFT JOIN на родителя-комьюнити). Миграция `applied/2026-06-11-get-feed-add-community-name.sql`. Проверено (DAMAC Hills отдаётся) |
 | 2026-06-11 | DB-фикс: `activate_user()` лезла к `NEW.user_id`, а у `properties` поле `owner_id` → любой INSERT объекта падал (42703). Ветка по `TG_TABLE_NAME`. Миграция `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql`. Реферальная логика не тронута. INSERT проверен (201, status=active) |
 | 2026-06-11 | M-3: auth (Supabase email+пароль). LoginPage `/login`, `mrsqmAuthService` (проверка users.is_active по auth.uid через RLS), `mrsqmAuthGuard` на всех mrsqm/*, «Выйти» в nav. 4 unit-теста. |
 | 2026-06-11 | M-7: web-клиент задеплоен → **https://sapp.mrsqm.com** (HTTPS валиден, SPA-роуты ок), образ public в GHCR, Coolify тип Docker Image                                                                                                |
