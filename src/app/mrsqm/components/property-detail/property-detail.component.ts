@@ -32,6 +32,25 @@ export class PropertyDetailComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
 
+  // Табы карточки: Инфо / Комментарии (item 13).
+  readonly activeTab = signal<'info' | 'comments'>('info');
+  // Подтабы комментариев: All (видны всем) / Private (только мне).
+  readonly commentsScope = signal<'all' | 'private'>('all');
+
+  setTab(tab: 'info' | 'comments'): void {
+    this.activeTab.set(tab);
+  }
+
+  setCommentsScope(scope: 'all' | 'private'): void {
+    this.commentsScope.set(scope);
+  }
+
+  // Счётчик комментариев в табе. Реальные данные подключим, когда появятся
+  // RPC get_comments/add_comment (см. DB-батч). Пока — из comments_count объекта.
+  get commentsCount(): number {
+    return this.property().comments_count ?? 0;
+  }
+
   async ngOnInit(): Promise<void> {
     this.isLoading.set(true);
     try {

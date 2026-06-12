@@ -1,4 +1,112 @@
 <div class="feed-container">
+  <!-- Тулбар ленты: охват+счётчик слева, переключатели/сортировка/фильтры справа -->
+  <div class="feed-toolbar">
+    <!-- Охват Public / Friends / My / Favourites + счётчик одной пилюлей -->
+    <button
+      type="button"
+      class="scope-btn"
+      [class.isActive]="filter.scope() !== 'public'"
+      [matMenuTriggerFor]="scopeMenu"
+      [attr.aria-label]="'Охват ленты'"
+    >
+      <span>{{ scopeLabel() }}</span>
+      <span class="scope-count">· {{ foundCount() | number }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #scopeMenu="matMenu">
+      @for (o of scopeOptions; track o.value) {
+        <button
+          mat-menu-item
+          (click)="setScope(o.value)"
+        >
+          <mat-icon>{{
+            filter.scope() === o.value ? 'radio_button_checked' : ''
+          }}</mat-icon>
+          <span>{{ o.label }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    <span class="toolbar-spacer"></span>
+
+    <!-- Готовность: Ready / Off-Plan -->
+    <mat-button-toggle-group
+      class="deal-toggle"
+      [value]="filter.handover()"
+      (change)="setHandover($event.value)"
+    >
+      <mat-button-toggle value="ready">Ready</mat-button-toggle>
+      <mat-button-toggle value="offplan">Off-Plan</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <!-- Категория: Residential / Commercial -->
+    <mat-button-toggle-group
+      class="deal-toggle"
+      [value]="filter.category()"
+      (change)="setCategory($event.value)"
+    >
+      <mat-button-toggle value="residential">Resid</mat-button-toggle>
+      <mat-button-toggle value="commercial">Comm</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <!-- Сделка: Sale / Rent -->
+    <mat-button-toggle-group
+      class="deal-toggle"
+      [value]="filter.dealType()"
+      (change)="setDealType($event.value)"
+    >
+      <mat-button-toggle value="sale">Sale</mat-button-toggle>
+      <mat-button-toggle value="rent">Rent</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <!-- Сортировка -->
+    <button
+      class="toolbar-icon-btn"
+      mat-icon-button
+      [matMenuTriggerFor]="sortMenu"
+      [attr.aria-label]="'Сортировка'"
+      title="Сортировка"
+    >
+      <mat-icon>swap_vert</mat-icon>
+    </button>
+    <mat-menu #sortMenu="matMenu">
+      @for (o of sortOptions; track o.value) {
+        <button
+          mat-menu-item
+          (click)="setSort(o.value)"
+        >
+          <mat-icon>{{
+            filter.sortBy() === o.value ? 'radio_button_checked' : ''
+          }}</mat-icon>
+          <span>{{ o.label }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    <!-- Фильтры: при активных — чип с количеством -->
+    @if (filter.activeFilterCount() > 0) {
+      <button
+        type="button"
+        class="filter-chip"
+        (click)="toggleFilterPanel()"
+        [attr.aria-label]="'Фильтры (активны)'"
+      >
+        <mat-icon>tune</mat-icon>
+        <span>{{ filter.activeFilterCount() }}</span>
+      </button>
+    } @else {
+      <button
+        class="toolbar-icon-btn"
+        mat-icon-button
+        (click)="toggleFilterPanel()"
+        [attr.aria-label]="'Фильтры'"
+        title="Фильтры"
+      >
+        <mat-icon>tune</mat-icon>
+      </button>
+    }
+  </div>
+
   <!-- Шапка таблицы — колонки -->
   <div class="table-header">
     <div class="th th-select"></div>
@@ -9,6 +117,7 @@
     <div class="th th-price">Цена</div>
     <div class="th th-photo"></div>
     <div class="th th-agency">Агентство</div>
+    <div class="th th-date">Дата</div>
   </div>
 
   <div class="property-list">
@@ -19,6 +128,7 @@
         [isSaved]="savedIds().has(p.id)"
         [isSelected]="selection.selectedIds().has(p.id)"
         (cardClick)="openDetail(p)"
+        (toggleClick)="toggleDetail(p)"
         (saveClick)="toggleSaved(p)"
         (selectToggle)="selection.toggle(p.id)"
       />

@@ -20,12 +20,17 @@
   </div>
 
   <div class="filter-scroll">
-    <!-- Тип недвижимости — все типы из справочника БД -->
     @if (options(); as opts) {
+      <!-- Тип недвижимости — каскад по категории из хедера (item 5/6) -->
       <div class="filter-group">
-        <div class="filter-label"><mat-icon>apartment</mat-icon>Тип недвижимости</div>
+        <div class="filter-label">
+          <mat-icon>apartment</mat-icon>Тип
+          @if (category()) {
+            ({{ category() === 'residential' ? 'Residential' : 'Commercial' }})
+          }
+        </div>
         <div class="chip-row">
-          @for (u of opts.unit_types; track u.id) {
+          @for (u of unitTypes(); track u.id) {
             <button
               type="button"
               class="chip"
@@ -37,6 +42,25 @@
           }
         </div>
       </div>
+
+      <!-- Подтип — появляется после выбора типа (item 5) -->
+      @if (subTypes().length) {
+        <div class="filter-group">
+          <div class="filter-label"><mat-icon>category</mat-icon>Подтип</div>
+          <div class="chip-row">
+            @for (s of subTypes(); track s.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="draft().subTypeIds.includes(s.id)"
+                (click)="toggleSubType(s.id)"
+              >
+                {{ s.label_en }}
+              </button>
+            }
+          </div>
+        </div>
+      }
 
       <!-- Спальни — мультиселект -->
       <div class="filter-group">
@@ -152,29 +176,6 @@
           (click)="setFurnished('unfurnished')"
         >
           Без мебели
-        </button>
-      </div>
-    </div>
-
-    <!-- Готовность -->
-    <div class="filter-group">
-      <div class="filter-label"><mat-icon>home</mat-icon>Готовность</div>
-      <div class="chip-row">
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="draft().handover === 'ready'"
-          (click)="setHandover('ready')"
-        >
-          Ready
-        </button>
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="draft().handover === 'offplan'"
-          (click)="setHandover('offplan')"
-        >
-          Off-plan
         </button>
       </div>
     </div>

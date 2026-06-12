@@ -44,12 +44,17 @@
       }
     </div>
 
-    <!-- Size -->
+    <!-- Size: BUA сверху, Plot ниже серым (для домов/вилл) -->
     <div class="col col-size">
       @if (property().area_sqft !== null) {
-        <span>{{ property().area_sqft | number: '1.0-0' }} sqft</span>
+        <span class="size-bua">{{ property().area_sqft | number: '1.0-0' }} sqft</span>
       } @else {
         <span>—</span>
+      }
+      @if (property().plot_sqft) {
+        <span class="size-plot"
+          >Plot {{ property().plot_sqft | number: '1.0-0' }} sqft</span
+        >
       }
     </div>
 
@@ -63,19 +68,24 @@
       </span>
     </div>
 
-    <!-- Фото: плашка фотоаппарата, если у листинга есть фотки -->
+    <!-- Иконки: фото + комментарии (если есть хотя бы один) -->
     <div class="col col-photo">
       @if (property().photos?.length) {
         <mat-icon class="photo-ico">photo_camera</mat-icon>
       }
+      @if (property().comments_count) {
+        <mat-icon class="photo-ico comments-ico">chat_bubble_outline</mat-icon>
+      }
     </div>
 
-    <!-- Агентство + дата публикации/актуализации -->
+    <!-- Агентство -->
     <div class="col col-agency">
       <span class="agency-name">{{ property().owner_agency_name || '—' }}</span>
-      <span class="agency-date">{{
-        property().last_actualized_at || property().published_at | date: 'dd.MM.yy'
-      }}</span>
+    </div>
+
+    <!-- Дата публикации/актуализации (отдельная колонка, item 1) -->
+    <div class="col col-date">
+      {{ property().last_actualized_at || property().published_at | date: 'dd.MM.yy' }}
     </div>
 
     <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->
@@ -92,11 +102,11 @@
       <button
         mat-icon-button
         class="ico-btn"
-        (click)="cardClick.emit(); $event.stopPropagation()"
-        aria-label="Открыть карточку объекта"
-        title="Открыть карточку объекта"
+        (click)="toggleClick.emit(); $event.stopPropagation()"
+        [attr.aria-label]="isActive() ? 'Свернуть sidebar' : 'Открыть карточку объекта'"
+        [title]="isActive() ? 'Свернуть sidebar' : 'Открыть карточку объекта'"
       >
-        <mat-icon>right_panel_open</mat-icon>
+        <mat-icon>{{ isActive() ? 'right_panel_close' : 'right_panel_open' }}</mat-icon>
       </button>
     </div>
   </div>

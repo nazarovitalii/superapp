@@ -31,6 +31,23 @@
         <div class="block-content">
           <!-- ШАГ 0: Тип -->
           @if (step() === 0) {
+            <!-- Сделка идёт первой (item 15) -->
+            <div class="field">
+              <span class="field-label">Сделка</span>
+              <div class="chips">
+                @for (d of options()!.deal_types; track d.value) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.sel]="dealType() === d.value"
+                    (click)="dealType.set($any(d.value))"
+                  >
+                    {{ d.label_en }}
+                  </button>
+                }
+              </div>
+            </div>
+
             <div class="field">
               <span class="field-label">Категория</span>
               <div class="chips">
@@ -82,22 +99,6 @@
                 </div>
               </div>
             }
-
-            <div class="field">
-              <span class="field-label">Сделка</span>
-              <div class="chips">
-                @for (d of options()!.deal_types; track d.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="dealType() === d.value"
-                    (click)="dealType.set($any(d.value))"
-                  >
-                    {{ d.label_en }}
-                  </button>
-                }
-              </div>
-            </div>
           }
 
           <!-- ШАГ 1: Локация -->

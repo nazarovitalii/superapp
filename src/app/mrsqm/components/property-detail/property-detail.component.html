@@ -12,9 +12,86 @@
     <span class="panel-title">Объект</span>
   </div>
 
+  <!-- Табы Инфо / Комментарии (item 13) -->
+  <div class="detail-tabs">
+    <button
+      type="button"
+      class="detail-tab"
+      [class.is-active]="activeTab() === 'info'"
+      (click)="setTab('info')"
+    >
+      Инфо
+    </button>
+    <button
+      type="button"
+      class="detail-tab"
+      [class.is-active]="activeTab() === 'comments'"
+      (click)="setTab('comments')"
+    >
+      Комментарии
+      @if (commentsCount) {
+        <span class="tab-count">{{ commentsCount }}</span>
+      }
+    </button>
+  </div>
+
   @if (isLoading()) {
     <div class="loading-state">
       <mat-spinner diameter="40" />
+    </div>
+  } @else if (activeTab() === 'comments') {
+    <!-- ── Таб «Комментарии» ──────────────────────────────────────────── -->
+    <div class="detail-scroll comments-tab">
+      <!-- Переключатель All / Private -->
+      <div class="comments-scope">
+        <button
+          type="button"
+          class="scope-seg"
+          [class.is-active]="commentsScope() === 'all'"
+          (click)="setCommentsScope('all')"
+        >
+          All
+          <span class="seg-count">{{
+            commentsScope() === 'all' ? commentsCount : 0
+          }}</span>
+        </button>
+        <button
+          type="button"
+          class="scope-seg"
+          [class.is-active]="commentsScope() === 'private'"
+          (click)="setCommentsScope('private')"
+        >
+          Private
+          <span class="seg-count">0</span>
+        </button>
+      </div>
+
+      <!-- Поле ввода нового комментария -->
+      <div class="comment-compose">
+        <textarea
+          class="comment-input"
+          rows="2"
+          [placeholder]="
+            commentsScope() === 'all'
+              ? 'Ваш комментарий видят все'
+              : 'Ваш комментарий не видит никто'
+          "
+        ></textarea>
+        <button
+          mat-flat-button
+          color="primary"
+          class="comment-send"
+          disabled
+        >
+          Отправить
+        </button>
+      </div>
+
+      <!-- Список комментариев: реальные данные подключим с RPC get_comments -->
+      <div class="comments-empty">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        <p>Комментариев пока нет</p>
+      </div>
     </div>
   } @else {
     <div class="detail-scroll">
@@ -63,16 +140,14 @@
             }
           </span>
           <div class="type-chips">
-            <span class="type-chip type-chip--deal">
+            <span class="type-chip">
               {{ displayData.deal_type === 'sale' ? 'Продажа' : 'Аренда' }}
             </span>
             @if (displayData.listing_type === 'pocket') {
-              <span class="type-chip type-chip--pocket">
-                <mat-icon>star</mat-icon>Pocket
-              </span>
+              <span class="type-chip"> <mat-icon>star</mat-icon>Pocket </span>
             }
             @if (displayData.is_distress) {
-              <span class="type-chip type-chip--distress">Срочно</span>
+              <span class="type-chip">Срочно</span>
             }
           </div>
         </div>

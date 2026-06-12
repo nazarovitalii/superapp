@@ -69,8 +69,10 @@ describe('FeedPageComponent', () => {
     await flush();
     filter.dealType.set('rent');
     filter.sortBy.set('price_desc');
+    filter.handover.set('ready');
     filter.filters.set({
       unitTypeId: 'ut-1',
+      subTypeIds: [],
       bedrooms: [2, 3],
       bathrooms: [2],
       priceMin: 1000,
@@ -78,7 +80,6 @@ describe('FeedPageComponent', () => {
       areaMin: 500,
       areaMax: 2000,
       furnished: 'furnished',
-      handover: 'ready',
       listingType: 'pocket',
     });
     await flush();

@@ -45,16 +45,9 @@ import { DateService } from '../../core/date/date.service';
 import { UserProfileButtonComponent } from '../../features/user-profile/user-profile-button/user-profile-button.component';
 import { UserProfileService } from '../../features/user-profile/user-profile.service';
 import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
-import {
-  FeedFilterService,
-  FeedScope,
-  FeedSortBy,
-} from '../../mrsqm/services/feed-filter.service';
+import { FeedFilterService } from '../../mrsqm/services/feed-filter.service';
+import { FormsModule } from '@angular/forms';
 import { FeedSelectionService } from '../../mrsqm/services/feed-selection.service';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatMenuModule } from '@angular/material/menu';
-import { DealType } from '../../mrsqm/types/database';
-import { PanelContentService } from '../../features/panels/panel-content.service';
 
 @Component({
   selector: 'main-header',
@@ -73,8 +66,7 @@ import { PanelContentService } from '../../features/panels/panel-content.service
     PluginSidePanelBtnsComponent,
     DesktopPanelButtonsComponent,
     UserProfileButtonComponent,
-    MatButtonToggleModule,
-    MatMenuModule,
+    FormsModule,
   ],
 })
 export class MainHeaderComponent implements OnDestroy {
@@ -99,7 +91,6 @@ export class MainHeaderComponent implements OnDestroy {
   private readonly _focusModeService = inject(FocusModeService);
   readonly feedFilter = inject(FeedFilterService);
   readonly feedSelection = inject(FeedSelectionService);
-  private readonly _panelContentService = inject(PanelContentService);
 
   readonly isDataLoaded = toSignal(this._dataInitStateService.isAllDataLoadedInitially$, {
     initialValue: false,
@@ -144,41 +135,21 @@ export class MainHeaderComponent implements OnDestroy {
     { initialValue: this._router.url.startsWith('/mrsqm/feed') },
   );
 
-  setDealType(type: DealType): void {
-    this.feedFilter.set(type);
+  // Поиск по лупе: строка разворачивается на всю ширину при активации.
+  // Остальные контролы ленты (охват, тогглы, сортировка, фильтры) — в тулбаре
+  // самой ленты (feed-page), хедер остаётся чистым.
+  isSearchOpen = signal(false);
+
+  toggleSearch(): void {
+    const next = !this.isSearchOpen();
+    this.isSearchOpen.set(next);
+    if (!next) {
+      this.feedFilter.searchQuery.set('');
+    }
   }
 
-  toggleFilterPanel(): void {
-    this._panelContentService.toggleFilterPanel();
-  }
-
-  // Охват ленты (фильтр в хедере)
-  readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
-    { value: 'all', label: 'Все' },
-    { value: 'mine', label: 'Мои объекты' },
-    { value: 'network', label: 'Объекты сети' },
-    { value: 'public', label: 'Public' },
-  ];
-
-  readonly scopeLabel = computed(
-    () =>
-      this.scopeOptions.find((o) => o.value === this.feedFilter.scope())?.label ?? 'Все',
-  );
-
-  setScope(scope: FeedScope): void {
-    this.feedFilter.scope.set(scope);
-  }
-
-  // Сортировка ленты (p_sort_by в get_feed)
-  readonly sortOptions: ReadonlyArray<{ value: FeedSortBy; label: string }> = [
-    { value: 'default', label: 'Сначала новые' },
-    { value: 'price_desc', label: 'Сначала дорогие' },
-    { value: 'price_asc', label: 'Сначала дешёвые' },
-    { value: 'date_asc', label: 'Сначала давние' },
-  ];
-
-  setSort(sort: FeedSortBy): void {
-    this.feedFilter.sortBy.set(sort);
+  onSearchInput(value: string): void {
+    this.feedFilter.searchQuery.set(value);
   }
 
   private _isRouteWithSidePanel$ = this._router.events.pipe(

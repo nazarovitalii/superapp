@@ -63,8 +63,8 @@
   }
 }
 
-// Одна строка = чекбокс + 7 колонок (фото-плашка между ценой и агентством).
-// Все тексты — один размер (14px), один цвет, без жирности/курсива.
+// Одна строка = чекбокс + 8 колонок (фото между ценой и агентством,
+// агентство и дата — отдельные колонки). Тексты один размер/цвет.
 .first-line {
   position: relative;
   display: grid;
@@ -76,7 +76,8 @@
     80px
     minmax(90px, 1fr)
     28px
-    minmax(90px, 1.2fr);
+    minmax(80px, 1.2fr)
+    56px;
   align-items: center;
   min-height: var(--task-first-line-min-height);
   padding: 0 var(--s) 0 var(--s-half);
@@ -110,19 +111,37 @@
   text-overflow: ellipsis;
 }
 
+// Название комьюнити — чуть серее (item 11)
+.addr-community {
+  color: var(--text-color-muted);
+}
+
 .col-beds,
 .col-size {
   text-align: right;
+}
+
+// Площадь: BUA + Plot (серее) для домов/вилл (item 11)
+.col-size {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .size-plot {
+    color: var(--text-color-muted);
+  }
 }
 
 .col-price {
   text-align: right;
 }
 
-// Плашка «есть фото»
+// Иконки «есть фото» / «есть комментарии»
 .col-photo {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: var(--s-quarter);
   overflow: visible;
 
   .photo-ico {
@@ -133,19 +152,19 @@
   }
 }
 
-// Агентство + дата публикации/актуализации
+// Агентство (отдельная колонка)
 .col-agency {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .agency-name,
-  .agency-date {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+// Дата (отдельная колонка, item 1)
+.col-date {
+  text-align: right;
+  color: var(--text-color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // ─── Выезжающие кнопки при ховере — повторяют task-hover-controls ──────────

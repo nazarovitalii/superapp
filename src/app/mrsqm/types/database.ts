@@ -172,8 +172,12 @@ export interface PropertyFeedItem {
   bedrooms: number | null;
   bathrooms: number | null;
   area_sqft: number | null;
+  // Площадь участка — для домов/вилл (выводим под BUA в карточке).
+  plot_sqft?: number | null;
   location_name: string | null;
   community_name: string | null;
+  // Кол-во комментариев — иконка комментариев в строке ленты при > 0.
+  comments_count?: number | null;
   description: string | null;
   furnished: Furnished | null;
   handover: Handover | null;
@@ -227,6 +231,9 @@ export type FeedParams = {
   p_listing_type?: string | null;
   // default | price_asc | price_desc | date_asc | date_desc (см. get_feed ORDER BY)
   p_sort_by?: string;
+  p_category_id?: string | null;
+  p_sub_type_ids?: string[] | null;
+  p_description?: string | null;
 } & Record<string, unknown>;
 
 export interface LocationSearchResult {

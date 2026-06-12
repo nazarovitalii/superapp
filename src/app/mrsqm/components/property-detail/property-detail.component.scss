@@ -47,6 +47,128 @@
   justify-content: center;
 }
 
+// ─── Табы Инфо / Комментарии (item 13) ─────────────────────────────────────
+.detail-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--extra-border-color);
+  flex: 0 0 auto;
+}
+
+.detail-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-quarter);
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+
+  &.is-active {
+    color: var(--text-color);
+    border-bottom-color: var(--c-primary);
+  }
+
+  .tab-count {
+    font-size: 0.6875rem;
+    background: var(--surface-0);
+    border-radius: 10px;
+    padding: 0 6px;
+    line-height: 18px;
+  }
+}
+
+// ─── Таб комментариев ──────────────────────────────────────────────────────
+.comments-tab {
+  display: flex;
+  flex-direction: column;
+  padding: var(--s);
+  gap: var(--s);
+}
+
+// Переключатель All / Private — сегменты как у деал-тоггла
+.comments-scope {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--extra-border-color);
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.scope-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-quarter);
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  & + & {
+    border-left: 1px solid var(--extra-border-color);
+  }
+
+  &.is-active {
+    background: var(--c-primary);
+    color: var(--palette-primary-contrast-500, #fff);
+  }
+
+  .seg-count {
+    opacity: 0.8;
+  }
+}
+
+.comment-compose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half);
+}
+
+.comment-input {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--extra-border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  padding: var(--s-half);
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--text-color-muted);
+  }
+}
+
+.comment-send {
+  align-self: flex-end;
+}
+
+.comments-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-half);
+  color: var(--text-color-muted);
+  padding: var(--s2) 0;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .detail-scroll {
   flex: 1;
   overflow-y: auto;
@@ -123,7 +245,7 @@
   flex-wrap: wrap;
   gap: var(--s);
   padding: var(--s) var(--s2);
-  border-bottom: 2px solid var(--c-primary);
+  border-bottom: 1px solid var(--extra-border-color);
 }
 
 .price-main {
@@ -146,6 +268,7 @@
   padding-top: 4px;
 }
 
+// Все плашки одного нейтрального цвета (item 13)
 .type-chip {
   display: inline-flex;
   align-items: center;
@@ -154,26 +277,13 @@
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
+  background: var(--surface-0);
+  color: var(--ink-muted);
 
   mat-icon {
     font-size: 13px;
     width: 13px;
     height: 13px;
-  }
-
-  &--deal {
-    background: var(--surface-0);
-    color: var(--ink-muted);
-  }
-
-  &--pocket {
-    background: rgba(255, 160, 0, 0.18);
-    color: #f57c00;
-  }
-
-  &--distress {
-    background: rgba(244, 67, 54, 0.15);
-    color: #f44336;
   }
 }
 

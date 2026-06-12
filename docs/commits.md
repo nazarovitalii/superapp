@@ -60,3 +60,4 @@
 | `f7b6d4409` | —     | feat(mrsqm): лента v3 — активная строка как в инбоксе, агентство+дата, сортировка и охват в хедере, фильтры 1:1 с get_feed |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                              |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                              |
+| `18c8fbf68` | 12:54 | docs: документация + переписка + резюме 2026-06-12 (лента v3)                                                              |

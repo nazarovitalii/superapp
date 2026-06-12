@@ -47,7 +47,8 @@ import { GlobalConfigService } from '../../../features/config/global-config.serv
       </button>
     }
 
-    @if (isProjectNotesEnabled()) {
+    <!-- MrSQM: на ленте кнопка Notes скрыта — её место занимает лупа поиска -->
+    @if (isProjectNotesEnabled() && !isFeedRoute()) {
       <button
         class="panel-btn e2e-toggle-notes-btn"
         [disabled]="!isRouteWithSidePanel()"
@@ -119,6 +120,8 @@ export class DesktopPanelButtonsComponent {
   readonly isShowScheduleDayPanel = input.required<boolean>();
   readonly isShowIssuePanel = input.required<boolean>();
   readonly isShowNotes = input.required<boolean>();
+  // На ленте MrSQM кнопку Notes прячем (вместо неё — лупа поиска в хедере).
+  readonly isFeedRoute = input(false);
 
   readonly isIssuesPanelEnabled = computed(
     () => this._configService.appFeatures().isIssuesPanelEnabled,

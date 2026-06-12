@@ -23,4 +23,6 @@ export class PropertyCardComponent {
   // Клик по закладке — отдельно от клика по карточке (stopPropagation в шаблоне).
   readonly saveClick = output<void>();
   readonly selectToggle = output<void>();
+  // Hover-кнопка «развернуть/свернуть» правый sidebar (item 2).
+  readonly toggleClick = output<void>();
 }

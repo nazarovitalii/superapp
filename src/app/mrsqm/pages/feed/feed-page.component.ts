@@ -9,9 +9,22 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatMenuModule } from '@angular/material/menu';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
-import { FeedFilterService } from '../../services/feed-filter.service';
-import { FeedParams, FeedResponse, PropertyFeedItem } from '../../types/database';
+import {
+  FeedFilterService,
+  FeedScope,
+  FeedSortBy,
+  PropertyCategory,
+  FeedHandover,
+} from '../../services/feed-filter.service';
+import {
+  DealType,
+  FeedParams,
+  FeedResponse,
+  PropertyFeedItem,
+} from '../../types/database';
 import { PropertyCardComponent } from '../../components/property-card/property-card.component';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { PropertyCreateService } from '../../services/property-create.service';
@@ -31,6 +44,8 @@ const PAGE_SIZE = 20;
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
+    MatButtonToggleModule,
+    MatMenuModule,
     PropertyCardComponent,
   ],
   templateUrl: './feed-page.component.html',
@@ -48,6 +63,8 @@ export class FeedPageComponent {
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
   private _typeLabels: Map<string, string> | null = null;
+  // value категории ('residential'|'commercial') → uuid для p_category_id.
+  private _categoryIds: Map<string, string> | null = null;
 
   readonly properties = signal<PropertyFeedItem[]>([]);
   readonly isLoading = signal(false);
@@ -62,30 +79,88 @@ export class FeedPageComponent {
     return this._panels.selectedProperty()?.id ?? null;
   }
 
-  // Охват «Мои / Сеть / Public» — фильтр на клиенте по полям get_feed
-  // (owner_id / is_network / visibility): серверного параметра в RPC пока нет.
+  // Охват Public / Friends / My / Favourites — фильтр на клиенте по полям
+  // get_feed (visibility / is_network / owner_id) и savedIds: серверного
+  // параметра охвата в RPC пока нет.
   readonly visibleProperties = computed<PropertyFeedItem[]>(() => {
     const items = this.properties();
     const scope = this.filter.scope();
-    if (scope === 'all') {
-      return items;
-    }
     const myId = this._auth.currentUser()?.id ?? null;
     switch (scope) {
-      case 'mine':
-        return items.filter((p) => p.owner_id === myId);
-      case 'network':
-        return items.filter((p) => p.is_network);
       case 'public':
         return items.filter((p) => p.visibility === 'public');
+      case 'friends':
+        return items.filter((p) => p.is_network);
+      case 'my':
+        return items.filter((p) => p.owner_id === myId);
+      case 'favourites':
+        return items.filter((p) => this.savedIds().has(p.id));
     }
   });
 
+  // Счётчик в пилюле охвата («Public ▾ · 1 154»).
+  // Для public — серверный count_total; для остальных охватов считаем
+  // отфильтрованные на клиенте (серверного count по охвату нет).
+  readonly foundCount = computed(() =>
+    this.filter.scope() === 'public'
+      ? this.countTotal()
+      : this.visibleProperties().length,
+  );
+
+  // Охват ленты — пилюля слева в тулбаре.
+  readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
+    { value: 'public', label: 'Public' },
+    { value: 'friends', label: 'Friends' },
+    { value: 'my', label: 'My' },
+    { value: 'favourites', label: 'Favourites' },
+  ];
+
+  readonly scopeLabel = computed(
+    () =>
+      this.scopeOptions.find((o) => o.value === this.filter.scope())?.label ?? 'Public',
+  );
+
+  setScope(scope: FeedScope): void {
+    this.filter.scope.set(scope);
+  }
+
+  setDealType(type: DealType): void {
+    this.filter.set(type);
+  }
+
+  setCategory(value: PropertyCategory): void {
+    this.filter.setCategory(value);
+  }
+
+  setHandover(value: FeedHandover): void {
+    this.filter.setHandover(value);
+  }
+
+  // Сортировка ленты (p_sort_by в get_feed)
+  readonly sortOptions: ReadonlyArray<{ value: FeedSortBy; label: string }> = [
+    { value: 'default', label: 'Сначала новые' },
+    { value: 'price_desc', label: 'Сначала дорогие' },
+    { value: 'price_asc', label: 'Сначала дешёвые' },
+    { value: 'date_asc', label: 'Сначала давние' },
+  ];
+
+  setSort(sort: FeedSortBy): void {
+    this.filter.sortBy.set(sort);
+  }
+
+  toggleFilterPanel(): void {
+    this._panels.toggleFilterPanel();
+  }
+
   constructor() {
     void this._loadSaved();
-    // Перезагружаем при смене dealType, фильтров или сортировки.
+    // Перезагружаем при смене dealType, категории, готовности, поиска,
+    // фильтров или сортировки. Охват (scope) — клиентский, перезагрузки не требует.
     effect(() => {
       this.filter.dealType();
+      this.filter.category();
+      this.filter.handover();
+      this.filter.searchQuery();
       this.filter.filters();
       this.filter.sortBy();
       this.offset.set(0);
@@ -135,15 +210,29 @@ export class FeedPageComponent {
     this._panels.openProperty(property);
   }
 
+  // Тоггл правого sidebar по hover-кнопке: если карточка уже открыта —
+  // сворачиваем панель, иначе открываем (item 2).
+  toggleDetail(property: PropertyFeedItem): void {
+    if (this.selectedPropertyId === property.id) {
+      this._panels.closeProperty();
+    } else {
+      this._panels.openProperty(property);
+    }
+  }
+
   // Маппинг фильтров ленты в параметры RPC get_feed.
-  private _buildParams(): FeedParams {
+  private async _buildParams(): Promise<FeedParams> {
     const f = this.filter.filters();
+    const categoryVal = this.filter.category();
+    const search = this.filter.searchQuery().trim();
     return {
       p_deal_type: this.filter.dealType(),
       p_limit: PAGE_SIZE,
       p_offset: this.offset(),
       p_sort_by: this.filter.sortBy(),
+      p_category_id: categoryVal ? await this._getCategoryId(categoryVal) : null,
       p_unit_type_id: f.unitTypeId,
+      p_sub_type_ids: f.subTypeIds.length ? f.subTypeIds : null,
       p_bedrooms: f.bedrooms.length ? f.bedrooms : null,
       p_bathrooms: f.bathrooms.length ? f.bathrooms : null,
       p_price_min: f.priceMin,
@@ -151,8 +240,10 @@ export class FeedPageComponent {
       p_area_sqft_min: f.areaMin,
       p_area_sqft_max: f.areaMax,
       p_furnished: f.furnished,
-      p_handover: f.handover,
+      p_handover: this.filter.handover(),
       p_listing_type: f.listingType !== 'all' ? f.listingType : null,
+      // Поиск из лупы — пока только по описанию (агент ФИО/телефон — DB-батч).
+      p_description: search.length >= 2 ? search : null,
     };
   }
 
@@ -160,7 +251,10 @@ export class FeedPageComponent {
     this.isLoading.set(true);
     this.loadError.set(false);
     try {
-      const res = await this._supabase.rpc<FeedResponse>('get_feed', this._buildParams());
+      const res = await this._supabase.rpc<FeedResponse>(
+        'get_feed',
+        await this._buildParams(),
+      );
       const items = await this._withTypeLabels(res.results ?? []);
       // Пустой результат — валиден (объектов нет), показываем empty-state.
       this.properties.set(append ? [...this.properties(), ...items] : items);
@@ -191,6 +285,21 @@ export class FeedPageComponent {
         null;
       return label ? { ...it, property_type: label } : it;
     });
+  }
+
+  // value категории ('residential'|'commercial') → uuid p_category_id.
+  private async _getCategoryId(value: string): Promise<string | null> {
+    if (!this._categoryIds) {
+      const map = new Map<string, string>();
+      try {
+        const opts = await this._createService.getFilterOptions();
+        for (const c of opts.categories) map.set(c.value, c.id);
+      } catch {
+        // Справочник недоступен — фильтр по категории просто не применится.
+      }
+      this._categoryIds = map;
+    }
+    return this._categoryIds.get(value) ?? null;
   }
 
   private async _getTypeLabels(): Promise<Map<string, string>> {

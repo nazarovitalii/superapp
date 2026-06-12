@@ -1,0 +1,133 @@
+,,Residential,,,,,,,,,,,,Commercial,,,,,,,
+,,Apartment,,,,,,House,,,,,Residential Land,Office,Shop,Retail,Warehouse,Building,Factory,Industrial Land,Labour Camp
+Таблицы,,Flat,Hotel Apartment ,Duplex,Penthouse,Triplex,Sky Villa,Townhouse,Semi-detached Villa,Standalone Villa,Compound Villa,Mansion,,,,,,,,,
+Таблица units:,,,,,,,,,,,,,,,,,,,,,
+Идентификация,,,,,,,,,,,,,,,,,,,,,
+id,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+location_id,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+unit_number,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,no,no,no,no,no,no
+tech_number,,no,no,no,no,no,no,yes,yes,yes,yes,yes,no,no,yes,yes,yes,yes,yes,no,yes
+plot_number     ,добавить,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+municipality_number  ,добавить,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+category_id,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+unit_type_id,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+sub_type_id,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+Физ. характеристики,,,,,,,,,,,,,,,,,,,,,
+bedrooms,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+bathrooms,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+is_maid,,yes,no,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+is_hotel_pool,новое поле true/false,no,yes,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no
+size_sqft,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+size_sqm,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+plot_sqft,добавить поле,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,no,no,yes,yes,yes,yes,yes,yes
+plot_sqm,добавить поле,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,no,no,yes,yes,yes,yes,yes,yes
+floor_level,"новое поле - Low, Middle, High",yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,yes,no,no,no,no,no,no,no
+floor_number,,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,yes,no,no,no,no,no,no,no
+floors_in_unit,поле селект ,no,no,no,no,no,no,"G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3",no,no,no,no,no,no,no,no,no
+layout,автокомплит справочников комьюнити - у каждого комьюнити свой справочник layouts,no,no,no,no,no,no,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+Вид и позиция,,,,,,,,,,,,,,,,,,,,,
+view_ids,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,no,no,no,no,no,no,no
+position_ids,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+amenity_ids,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+Юридические,,,,,,,,,,,,,,,,,,,,,
+plot_number,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+municipality_number,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+form_a_urls,множество разных PDF  добавить,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+title_deed_number,множество разных ,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+title_deed_year,множество разных привязка к тайтл дид ,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Медиа,,,,,,,,,,,,,,,,,,,,,
+unit_photos,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+→ floor_plan ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+→ exterior,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+→ interior,,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no
+description,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Системные,,,,,,,,,,,,,,,,,,,,,
+handover,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+developer_id       ,добавить  - наследуется из Локейшн айди - и если локейшн айди поменялся то и юнит поменялся,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,no,no,no
+developer_name     ,добавить  - наследуется из Локейшн айди - и если локейшн айди поменялся то и юнит поменялся,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,no,no,no
+completion_year     ,добавить  - наследуется из Локейшн айди - и если локейшн айди поменялся то и юнит поменялся,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+completion_q      ,добавить  - наследуется из Локейшн айди - и если локейшн айди поменялся то и юнит поменялся,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+ad_ids,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+is_embedded,a,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+created_at,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+last_actualised_at,удалить,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+updated_at,удалить,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Таблица properties,,,,,,,,,,,,,,,,,,,,,
+Идентификация:,,,,,,,,,,,,,,,,,,,,,
+id                 ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+owner_id           ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+agency_id          ,удалить,,,,,,,,,,,,,,,,,,,,
+unit_id          ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+location_id         ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Тип объекта:,,,,,,,,,,,,,,,,,,,,,
+category_id       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+unit_type_id          ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+sub_type_id      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+listing_type        ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+deal_type      ,,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale or Rent,Sale,Sale or Rent
+price_period  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+visibility         ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+status         ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Физические характеристики ,,,,,,,,,,,,,,,,,,,,,
+bedrooms           ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+bathrooms      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+is_maid           ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+is_hotel_pool,новое поле Yes/No,no,yes,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no,no
+area_sqft         ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+area_sqm          ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+plot_sqft,добавить поле,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,no,no,yes,yes,yes,yes,yes,yes
+plot_sqm,добавить поле,no,no,no,no,no,no,yes,yes,yes,yes,yes,yes,no,no,yes,yes,yes,yes,yes,yes
+floor_number,,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,yes,no,no,no,no,no,no,no
+floors_in_unit,поле селект ,no,no,no,no,no,no,"G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3","G+0, G+1, G+2, G+3",no,no,no,no,no,no,no,no,no
+layout,автокомплит справочников комьюнити - у каждого комьюнити свой справочник layouts,no,no,no,no,no,no,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+view_ids        ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,no,no,no,no,no,no,no
+position_ids       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+amenity_ids       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,no,no,no,no,no,no,no,no
+furnished       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,no,no,no,no,no,no,no
+Цена:,,,,,,,,,,,,,,,,,,,,,
+price             ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+previous_price    ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+price_currency     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+price_changed_at    ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+is_negotiable    ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+commission_included  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Дополнительные характеристики:,,,,,,,,,,,,,,,,,,,,,
+is_distress         ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+occupancy_status    ,"Vacant, Vacant on Transfer, Occupied",yes,yes if 'is_hotel_pool' = false,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+available_from     ,удалить,,,,,,,,,,,,,,,,,,,,
+description     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+address_raw       ,удалить,,,,,,,,,,,,,,,,,,,,
+address_from_bayut  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Юридические ,,,,,,,,,,,,,,,,,,,,,
+title_deed_number   ,тут может быть только 1 документ,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+title_deed_year    ,только один год,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+plot_number     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+municipality_number  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+form_a_url        ,несколько ПДФ,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Off-plan:,,,,,,,,,,,,,,,,,,,,,
+developer_id       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,no,no,no
+developer_name     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,no,no,no
+handover        ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+completion_year     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+completion_q      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+completion_month    ,удалить,,,,,,,,,,,,,,,,,,,,
+vacant_on_transfer  ,удалить,,,,,,,,,,,,,,,,,,,,
+lease_until        ,available if 'occupancy_status' = Occupied,yes,yes if 'is_hotel_pool' = false,yes,yes,yes,yes,yes,yes,yes,yes,yes,no,yes,yes,yes,yes,yes,yes,no,yes
+Публикация:,,,,,,,,,,,,,,,,,,,,,
+public_page_slug     ,удалить,,,,,,,,,,,,,,,,,,,,
+needs_moderation  ,удалить,,,,,,,,,,,,,,,,,,,,
+publication_cost     ,удалить,,,,,,,,,,,,,,,,,,,,
+listing_start     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+listing_end       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+last_actualized_at  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Статистика:,,,,,,,,,,,,,,,,,,,,,
+views_count           ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+unique_views_count  ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+contacts_count      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+impressions_count    ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+comments_count     ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+Системные:,,,,,,,,,,,,,,,,,,,,,
+published_at      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+expires_at      ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+created_at        ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes
+updated_at       ,,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes,yes

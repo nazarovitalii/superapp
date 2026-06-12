@@ -311,51 +311,8 @@ page-title {
   display: none !important;
 }
 
-// Компактный toggle Sale/Rent в хедере.
-// Размеры держим на самой группе/кнопке, чтобы верстка не плыла из-за
-// дефолтной высоты строки Material.
-.deal-toggle {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  border-radius: 15px;
-  overflow: hidden;
-  flex: 0 0 auto;
-  border: 1px solid var(--extra-border-color);
-
-  ::ng-deep .mat-button-toggle {
-    display: inline-flex;
-    align-items: center;
-    height: 28px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: none;
-    background: transparent;
-  }
-
-  ::ng-deep .mat-button-toggle + .mat-button-toggle {
-    border-left: 1px solid var(--extra-border-color);
-  }
-
-  ::ng-deep .mat-button-toggle-button {
-    height: 28px;
-    padding: 0 12px;
-  }
-
-  ::ng-deep .mat-button-toggle-label-content {
-    line-height: 28px;
-    padding: 0;
-  }
-
-  // активный сегмент
-  ::ng-deep .mat-button-toggle-checked {
-    background: var(--c-primary);
-    color: var(--palette-primary-contrast-500, #fff);
-  }
-}
-
-// Контекстное меню выбора (чекбоксы в ленте) — те же размеры/шрифт,
-// что у deal-toggle, чтобы хедер не прыгал.
+// Контекстное меню выбора (чекбоксы в ленте) — компактная пилюля,
+// чтобы хедер не прыгал.
 .selection-menu {
   display: inline-flex;
   align-items: center;
@@ -388,65 +345,56 @@ page-title {
   }
 }
 
-// Кнопка охвата (Все / Мои / Сеть / Public) — пилюля как deal-toggle
-.scope-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 var(--s-half) 0 12px;
-  border-radius: 15px;
-  border: 1px solid var(--extra-border-color);
-  background: transparent;
-  color: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  flex: 0 0 auto;
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
-
-  &.isActive {
-    border-color: var(--c-primary);
-    color: var(--c-primary);
-  }
-}
-
-// Иконка сортировки
+// Иконка лупы-поиска
 .sort-btn {
   flex: 0 0 auto;
 }
 
-// Иконка фильтров (нет активных)
-.filter-btn {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-// Чип фильтров (есть активные): tune + количество, в цветах primary
-.filter-chip {
+// Поиск на всю строку (item 8): лупа разворачивает инпут.
+.feed-search {
   display: inline-flex;
   align-items: center;
-  gap: var(--s-quarter);
+  flex: 1 1 auto;
   height: 30px;
-  padding: 0 12px 0 var(--s);
+  padding: 0 var(--s-quarter) 0 12px;
   border-radius: 15px;
-  border: 1px solid var(--c-primary);
+  border: 1px solid var(--extra-border-color);
   background: transparent;
-  color: var(--c-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  flex: 0 0 auto;
 
-  mat-icon {
+  .feed-search-ico {
     font-size: 18px;
     width: 18px;
     height: 18px;
+    opacity: 0.6;
+    flex: 0 0 auto;
+  }
+
+  .feed-search-input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font-size: 0.8125rem;
+    padding: 0 var(--s-half);
+    min-width: 0;
+
+    &::placeholder {
+      opacity: 0.5;
+    }
+  }
+
+  .feed-search-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    flex: 0 0 auto;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
   }
 }
 

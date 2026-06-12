@@ -9,13 +9,14 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
+import { computed } from '@angular/core';
 import {
   EMPTY_FILTERS,
   FeedFilters,
   FeedFilterService,
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
-import { FilterOptions, ListingType } from '../../types/database';
+import { FilterOptions, FilterOptionId, ListingType } from '../../types/database';
 
 @Component({
   selector: 'mrsqm-feed-filter-panel',
@@ -36,6 +37,28 @@ export class FeedFilterPanelComponent {
   // Локальная черновая копия — применяем по кнопке «Применить».
   readonly draft = signal<FeedFilters>({ ...this._filterService.filters() });
 
+  // Категория (Residential/Commercial) выбирается в хедере — каскад типов
+  // фильтруем по ней (item 5/6).
+  readonly category = this._filterService.category;
+
+  // Типы объектов, отфильтрованные по выбранной в хедере категории.
+  readonly unitTypes = computed<FilterOptionId[]>(() => {
+    const opts = this.options();
+    if (!opts) return [];
+    const cats = opts.categories ?? [];
+    const catValue = this.category();
+    const catId = catValue ? (cats.find((c) => c.value === catValue)?.id ?? null) : null;
+    return (opts.unit_types ?? []).filter((u) => !catId || u.parent_id === catId);
+  });
+
+  // Подтипы выбранного типа объекта.
+  readonly subTypes = computed<FilterOptionId[]>(() => {
+    const opts = this.options();
+    const unitId = this.draft().unitTypeId;
+    if (!opts || !unitId) return [];
+    return (opts.sub_types ?? []).filter((s) => s.parent_id === unitId);
+  });
+
   constructor() {
     void this._loadOptions();
   }
@@ -48,10 +71,18 @@ export class FeedFilterPanelComponent {
     }
   }
 
-  // ─── Тип недвижимости (один; повторный клик снимает) ─────────────────────
+  // ─── Тип недвижимости (один; повторный клик снимает; сбрасывает подтипы) ──
   setUnitType(id: string): void {
     const cur = this.draft().unitTypeId;
-    this._patch({ unitTypeId: cur === id ? null : id });
+    this._patch({ unitTypeId: cur === id ? null : id, subTypeIds: [] });
+  }
+
+  // ─── Подтип — мультиселект ────────────────────────────────────────────────
+  toggleSubType(id: string): void {
+    const arr = this.draft().subTypeIds;
+    this._patch({
+      subTypeIds: arr.includes(id) ? arr.filter((v) => v !== id) : [...arr, id],
+    });
   }
 
   // ─── Мультиселекты ────────────────────────────────────────────────────────
@@ -96,10 +127,6 @@ export class FeedFilterPanelComponent {
   // ─── Мебель / готовность / листинг ───────────────────────────────────────
   setFurnished(value: string | null): void {
     this._patch({ furnished: this.draft().furnished === value ? null : value });
-  }
-
-  setHandover(value: string | null): void {
-    this._patch({ handover: this.draft().handover === value ? null : value });
   }
 
   setListingType(type: ListingType | 'all'): void {

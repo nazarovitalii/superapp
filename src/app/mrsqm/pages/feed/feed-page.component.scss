@@ -15,10 +15,141 @@
   width: 100%;
 }
 
+// Тулбар ленты: охват+счётчик слева, переключатели/сортировка/фильтры справа
+.feed-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-half);
+  padding: var(--s) var(--s-half) var(--s-half);
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.toolbar-icon-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+}
+
+// Пилюля охвата: «Public ▾ · 1 154» — охват и счётчик вместе
+.scope-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 var(--s-half) 0 12px;
+  border-radius: 15px;
+  border: 1px solid var(--extra-border-color);
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  .scope-count {
+    margin-left: var(--s-quarter);
+    font-weight: 400;
+    color: var(--text-color-muted);
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.isActive {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+
+    .scope-count {
+      color: var(--c-primary);
+      opacity: 0.7;
+    }
+  }
+}
+
+// Компактные toggle-группы (Ready/Off-Plan, Resid/Comm, Sale/Rent).
+// Размеры держим на самой группе/кнопке, чтобы верстка не плыла из-за
+// дефолтной высоты строки Material.
+.deal-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border-radius: 15px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  border: 1px solid var(--extra-border-color);
+
+  ::ng-deep .mat-button-toggle {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+  }
+
+  ::ng-deep .mat-button-toggle + .mat-button-toggle {
+    border-left: 1px solid var(--extra-border-color);
+  }
+
+  ::ng-deep .mat-button-toggle-button {
+    height: 28px;
+    padding: 0 12px;
+  }
+
+  ::ng-deep .mat-button-toggle-label-content {
+    line-height: 28px;
+    padding: 0;
+  }
+
+  // активный сегмент
+  ::ng-deep .mat-button-toggle-checked {
+    background: var(--c-primary);
+    color: var(--palette-primary-contrast-500, #fff);
+  }
+}
+
+// Чип фильтров (есть активные): tune + количество, в цветах primary
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-quarter);
+  height: 30px;
+  padding: 0 12px 0 var(--s);
+  border-radius: 15px;
+  border: 1px solid var(--c-primary);
+  background: transparent;
+  color: var(--c-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 // Заголовки таблицы — те же пропорции что в grid карточки
 .table-header {
   display: grid;
-  // колонки 1:1 с .first-line карточки (чекбокс … фото, агентство)
+  // колонки 1:1 с .first-line карточки (чекбокс … фото, агентство, дата)
   grid-template-columns:
     34px
     minmax(110px, 2fr)
@@ -27,7 +158,8 @@
     80px
     minmax(90px, 1fr)
     28px
-    minmax(90px, 1.2fr);
+    minmax(80px, 1.2fr)
+    56px;
   gap: var(--s);
   padding: var(--s) calc(var(--s) + 5px) var(--s) calc(var(--s-half) + 5px);
   position: sticky;
@@ -51,7 +183,8 @@
 .th-beds,
 .th-size,
 .th-price,
-.th-agency {
+.th-agency,
+.th-date {
   text-align: right;
 }
 
