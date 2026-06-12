@@ -1,6 +1,7 @@
 <div class="feed-container">
   <!-- Шапка таблицы — колонки -->
   <div class="table-header">
+    <div class="th th-select"></div>
     <div class="th th-address">Адрес</div>
     <div class="th th-type">Тип</div>
     <div class="th th-beds">Beds</div>
@@ -9,14 +10,31 @@
     <div class="th th-listing">Листинг</div>
   </div>
 
+  <!-- Плашка множественного выбора -->
+  @if (selectedIds().size > 0) {
+    <div class="selection-bar">
+      <mat-icon>check_circle</mat-icon>
+      <span class="selection-count">Выбрано: {{ selectedIds().size }}</span>
+      <button
+        mat-button
+        class="selection-clear"
+        (click)="clearSelection()"
+      >
+        Сбросить
+      </button>
+    </div>
+  }
+
   <div class="property-list">
     @for (p of properties(); track p.id) {
       <mrsqm-property-card
         [property]="p"
         [isActive]="selectedPropertyId === p.id"
         [isSaved]="savedIds().has(p.id)"
+        [isSelected]="selectedIds().has(p.id)"
         (cardClick)="openDetail(p)"
         (saveClick)="toggleSaved(p)"
+        (selectToggle)="toggleSelected(p)"
       />
     } @empty {
       @if (!isLoading() && !loadError()) {

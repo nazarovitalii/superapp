@@ -22,7 +22,7 @@
   <div class="filter-scroll">
     <!-- Тип объекта -->
     <div class="filter-group">
-      <div class="filter-label">Тип объекта</div>
+      <div class="filter-label"><mat-icon>apartment</mat-icon>Тип объекта</div>
       <div class="chip-row">
         @for (t of propertyTypes; track t) {
           <button
@@ -39,7 +39,7 @@
 
     <!-- Спальни -->
     <div class="filter-group">
-      <div class="filter-label">Спальни</div>
+      <div class="filter-label"><mat-icon>bed</mat-icon>Спальни</div>
       <div class="chip-row">
         @for (b of bedOptions; track b) {
           <button
@@ -56,7 +56,7 @@
 
     <!-- Цена -->
     <div class="filter-group">
-      <div class="filter-label">Цена</div>
+      <div class="filter-label"><mat-icon>payments</mat-icon>Цена</div>
       <div class="price-inputs">
         <input
           class="price-input"
@@ -80,7 +80,7 @@
 
     <!-- Листинг -->
     <div class="filter-group">
-      <div class="filter-label">Листинг</div>
+      <div class="filter-label"><mat-icon>sell</mat-icon>Листинг</div>
       <mat-button-toggle-group
         class="listing-toggle"
         [value]="draft().listingType"
@@ -95,7 +95,9 @@
     <!-- Срочные -->
     <div class="filter-group">
       <label class="switch-row">
-        <span class="filter-label switch-label">Только срочные</span>
+        <span class="filter-label switch-label"
+          ><mat-icon>bolt</mat-icon>Только срочные</span
+        >
         <input
           type="checkbox"
           [checked]="draft().distressOnly"

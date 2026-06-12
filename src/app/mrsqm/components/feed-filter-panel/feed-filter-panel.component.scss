@@ -49,24 +49,45 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--s2) var(--s2) var(--s);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-}
-
-.filter-group {
+  padding: var(--s) var(--s);
   display: flex;
   flex-direction: column;
   gap: var(--s);
 }
 
+// Группа фильтра — карточка в стиле input-item модалки task-detail инбокса
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s);
+  padding: var(--s) var(--s2);
+  background: var(--task-detail-bg);
+  border: 1px solid transparent;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-detail-shadow);
+
+  @include mq(xs, max) {
+    box-shadow: none;
+    border-color: var(--extra-border-color);
+  }
+}
+
+// Заголовок группы — как input-item__title (иконка + текст, 14px)
 .filter-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-color-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  min-height: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-color-muted);
+  }
 }
 
 // ─── Чипы ────────────────────────────────────────────────────────────────────
@@ -83,7 +104,7 @@
   color: var(--text-color);
   border-radius: 16px;
   padding: 5px 12px;
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition-standard);

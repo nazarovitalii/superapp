@@ -15,17 +15,29 @@
   background: var(--bg);
 }
 
-// Кнопка закрытия — в левом верхнем углу панели
+// ─── Шапка — повторяет panel-header фильтров ────────────────────────────────
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  min-height: var(--bar-height);
+  padding: var(--s-half) var(--s);
+  border-bottom: 1px solid var(--extra-border-color);
+}
+
 .close-btn {
-  position: absolute;
-  top: var(--s);
-  left: var(--s);
-  z-index: 10;
-  color: var(--ink-muted);
+  color: var(--text-color-muted);
 
   &:hover {
-    color: var(--ink);
+    color: var(--text-color);
   }
+}
+
+.panel-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
 }
 
 .loading-state {
@@ -45,7 +57,6 @@
 .gallery {
   width: 100%;
   height: 220px;
-  margin-top: var(--s5);
   position: relative;
   background: var(--surface-0);
   overflow: hidden;
@@ -96,21 +107,23 @@
   white-space: nowrap;
 }
 
-// ─── Тело панели ─────────────────────────────────────────────────────────────
+// ─── Тело панели — карточки-секции как в модалке task-detail инбокса ────────
 .detail-body {
-  padding: var(--s2) var(--s3);
+  padding: var(--s) var(--s) var(--s2);
   display: flex;
   flex-direction: column;
-  gap: var(--s2);
+  gap: var(--s);
 }
 
-// ─── Цена ────────────────────────────────────────────────────────────────────
+// ─── Цена — выделена как заголовок task-detail (нижняя линия primary) ───────
 .price-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--s);
+  padding: var(--s) var(--s2);
+  border-bottom: 2px solid var(--c-primary);
 }
 
 .price-main {
@@ -169,6 +182,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s);
+  padding: var(--s-half) var(--s);
 }
 
 .spec-item {
@@ -189,34 +203,45 @@
   }
 }
 
-// ─── Секции ──────────────────────────────────────────────────────────────────
+// ─── Секции — карточки в стиле input-item из task-detail-panel ──────────────
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--s-half);
+  padding: var(--s) var(--s2);
+  background: var(--task-detail-bg);
+  border: 1px solid transparent;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-detail-shadow);
+  font-size: 14px;
+
+  @include mq(xs, max) {
+    box-shadow: none;
+    border-color: var(--extra-border-color);
+  }
 }
 
 .section-label {
   display: flex;
   align-items: center;
-  gap: var(--s-half);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-muted);
+  gap: var(--s);
+  min-height: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
 
   mat-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-color-muted);
   }
 }
 
 .section-text {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--ink);
+  font-size: 14px;
+  color: var(--task-detail-value-color, var(--ink));
   line-height: 1.5;
 }
 

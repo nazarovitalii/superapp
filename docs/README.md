@@ -38,8 +38,13 @@
 
 ## Auth-модель
 
-**Решение:** Supabase Auth + таблица `users`. При входе: Supabase Auth сессия → SELECT из `users`
-по `email` с `is_active = true`. Если записи нет — принудительный `signOut` + ошибка клиенту.
+> ⚠️ **Паролей в схеме `users` НЕТ.** Регистрация через **Telegram-бота** (потом WhatsApp);
+> `telegram_id`/`channel_origin`/OTP. Целевой вход — Telegram `initData` с серверной проверкой
+> подписи (M-9, не реализовано). См. [`architecture.md`](architecture.md).
+
+**Текущая (dev):** временный email+пароль через Supabase Auth (`MrsqmAuthService` + `mrsqmAuthGuard`):
+Supabase Auth → SELECT из `users` по `id = auth.uid()` с `is_active = true`; нет/деактивирован →
+`signOut` + ошибка. 9 dev-юзеров заведены в `auth.users` для тестов — **удалить перед продом**.
 
 **Роли:** `agent` / `admin` / `moderator` / `superadmin` (поле `users.role`).
 

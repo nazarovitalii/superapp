@@ -1,13 +1,16 @@
 <div class="detail-panel">
-  <!-- Кнопка закрытия — повторяет edge-close-handle из right-panel SP -->
-  <button
-    class="close-btn"
-    (click)="closed.emit()"
-    [attr.aria-label]="'Закрыть'"
-    mat-icon-button
-  >
-    <mat-icon>chevron_right</mat-icon>
-  </button>
+  <!-- Шапка панели — как в фильтрах: стрелка сворачивания + название -->
+  <div class="panel-header">
+    <button
+      class="close-btn"
+      mat-icon-button
+      (click)="closed.emit()"
+      [attr.aria-label]="'Закрыть'"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="panel-title">Объект</span>
+  </div>
 
   @if (isLoading()) {
     <div class="loading-state">

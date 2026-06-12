@@ -20,24 +20,31 @@ CRM-платформа для риелторов Dubai. Дизайн — Super P
 
 ## Лента объектов — `/mrsqm/feed` (главная)
 
-**RPC:** `get_feed({ p_deal_type, … })` — ⚠️ сейчас на **mock** (`feed.mock.ts`),
-реальный вызов не подключён: `get_feed` требует город/авторизацию (см. API-1 в TODO).
+**RPC:** `get_feed({ p_deal_type, p_limit, p_offset, фильтры })` — **подключён** (реальные данные).
+Город берётся из `user_context` автоматически (auth.uid из JWT). Ответ
+`{ results, count_total, limit, offset }`. Моки удалены.
 
 Главная страница. Центрированный фрейм со списком объектов — переиспользует
 task-box стили Super Productivity (тени/токены/радиусы task-list инбокса).
 
-### Реализовано (на mock)
+### Реализовано
 
 - Карточка объекта — **одна строка, без фото**, 6 колонок (CSS grid):
-  1. Адрес (leaf-локация + community ниже), 2. Тип, 3. Beds (Studio/N BR),
-  2. Площадь (sqft), 5. Цена + валюта/период, 6. бейдж Pocket/Official + «Срочно».
-- Sticky-шапка таблицы с заголовками колонок.
-- Переключатель **Sale / Rent** — **в верхнем хедере** (не на странице), виден
-  только на роуте ленты, рядом с «+».
-- Иконка **фильтров** (`tune`) справа в хедере с бейджем кол-ва активных → открывает
-  sidebar фильтров (см. ниже).
-- Пагинация: `p_limit=20`, `p_offset`, кнопка «Загрузить ещё».
-- Подсказка «ещё N объектов на Pro» (на mock; в реале — `count_nearby`, см. API-3).
+  1. Адрес (leaf-локация + community ниже — `community_name` из get_feed),
+  2. Тип (резолв `unit_type_id`/`sub_type_id` → label из `get_filter_options`),
+  3. Beds, 4. Площадь (sqft), 5. Цена, 6. бейдж Pocket/Official + «Срочно» + **закладка**.
+- **Избранное** — иконка `bookmark` на карточке, toggle `save_property`, состояние
+  из `saved_properties`. Отдельного экрана нет.
+- Sticky-шапка таблицы. Переключатель **Sale / Rent** и иконка **фильтров** (`tune`)
+  с бейджем — **в верхнем хедере**, только на роуте ленты.
+- Пагинация: `p_limit=20`, `p_offset`, «Загрузить ещё» (пока `loaded < count_total`).
+- Пустой результат → empty-state; ошибка RPC → error-state (моками не подменяем).
+- **Чекбокс множественного выбора** на каждой записи — переиспользован `done-toggle`
+  из инбокса SP; выбранные строки подсвечены (`--task-c-selected-bg`), над списком
+  плашка «Выбрано: N · Сбросить». Массовых действий пока нет (задел).
+- **Hover-кнопки справа** (как task-hover-controls в инбоксе): при наведении
+  выезжают «закладка» и «открыть карточку» (`right_panel_open`). На таче скрыты —
+  остаётся статичная закладка в колонке «Листинг».
 
 ### Состояние сервиса
 
@@ -54,7 +61,9 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 ## Sidebar фильтров — правая панель (тип `FILTERS`)
 
 Открывается иконкой `tune` в хедере. Стиль = модалка task-detail инбокса
-(`feed-filter-panel.component`). Поля (на mock): тип объекта, спальни (чипы),
+(`feed-filter-panel.component`): каждая группа — карточка `--task-detail-bg` /
+`--task-detail-shadow` с иконкой и названием (14px), как input-item строки модалки.
+Поля (на mock): тип объекта, спальни (чипы),
 цена от/до, листинг (Все/Official/Pocket), «только срочные». Кнопки «Сбросить» /
 «Применить». TODO: district через `search_locations`, беды как массив (API-2).
 
@@ -66,7 +75,10 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 (mock), дозагрузка через `get_property` не подключена.
 
 Открывается по клику из ленты в **нативной правой панели** Super Productivity
-(`PanelContentService` + `slideInFromRight`). Стиль совпадает с task-detail инбокса.
+(`PanelContentService` + `slideInFromRight`). Стиль совпадает с task-detail инбокса:
+шапка как в фильтрах (стрелка сворачивания + заголовок «Объект», фото под шапкой),
+цена — заголовок с нижней линией primary, секции (расположение/описание/агент) —
+карточки `--task-detail-bg` / `--task-detail-shadow`.
 
 ### Содержимое
 
@@ -86,22 +98,28 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 
 ## Добавить объект — `/add`
 
-**RPC:** `publish_property()`
+**Создание:** прямой `INSERT в properties` под RLS `properties_insert (owner_id=auth.uid())`.
+RPC `publish_property` **не существует**. Справочники — `get_filter_options`,
+локация — `search_locations`. Реализовано (5 шагов, без фото — P-5b).
 
-Форма создания нового листинга.
+**Статус при создании (продуктовое правило, в БД модерации нет):**
+`visibility=network` → `status='active'` (сразу в ленте у сети);
+`visibility=public` → `status='pending_review'` (на модерацию).
 
-### Поля формы (MVP)
+### Поля формы (реализовано)
 
-- `deal_type`: sale | rent (переключатель)
-- `listing_type`: official | pocket (radio)
-- `price` + `price_currency` (AED по умолчанию) + `price_period` (для rent)
-- `bedrooms`, `bathrooms`, `area_sqft`
-- `location_id` — автокомплит (`search_locations`)
-- `description` — textarea
-- `furnished`: yes | no
-- `handover`: ready | offplan
-- `visibility`: public | network
-- Фото — upload (1–3 в MVP, до 10 в MVP-2)
+- Шаг 1 — категория / тип / подтип (uuid из `get_filter_options`) + сделка sale|rent
+- Шаг 2 — локация (автокомплит `search_locations` → `location_id` uuid)
+- Шаг 3 — bedrooms/bathrooms (int), area_sqft (+авто area_sqm),
+  furnished (`furnished`/`unfurnished`), handover, occupancy_status
+- Шаг 4 — price (+ period для rent), торг, срочность, описание, visibility
+- Шаг 5 — listing_type (pocket|official)
+- **Фото — НЕ реализовано** (нужен Storage-bucket `property_photos` + RLS — P-5b)
+
+### Значения enum (сверено с CHECK)
+
+- `furnished`: **furnished | unfurnished** (НЕ yes/no)
+- `occupancy_status`: vacant | occupied | vacant_on_transfer
 
 ### Ограничения
 
@@ -112,24 +130,23 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 
 ## Профиль агента — `/profile`
 
-**RPC:** `get_agent_listings(p_agent_id)`
+**Реализовано** (на чтение). Данные из `user_context` (денормализованный профиль) +
+`users` (контакты). Мои объекты — прямой запрос к `properties` под RLS (НЕ
+`get_agent_listings`: та отдаёт только `active`, а владельцу нужны draft/pending).
 
-### Собственный профиль
+**3 вкладки:**
 
-- Фото (из `user_settings.photo_url`)
-- Имя, агентство, эмират
-- _Бейдж / баллы / прогресс — НЕ в MVP_
-- Реферальная ссылка + кнопка «Копировать»
-- Настройки: языки (`user_settings.languages`), зоны обслуживания (`service_areas`)
-- Мои объекты — список (`get_agent_listings`)
-- Переключатель языка интерфейса: RU / EN / AR
+- **Обзор:** контакты (email/phone/whatsapp+verified/telegram), агентство
+  (название/эмират/команда), лицензия+срок, план/подписка+срок, реф-код+копировать.
+- **Объекты:** мои объекты со статусом (Активен/На модерации/Черновик…), типом, ценой.
+- **Активность:** статистика (объекты/сеть/рефералы/фильтры/поиски), даты регистрации/
+  активности, канал.
 
-### Чужой профиль (`/agent/:id`)
+_Бейдж / баллы / score — НЕ показываем (вне MVP)._
 
-- Фото, имя, агентство
-- О себе, языки, зоны
-- Объекты агента
-- Кнопки: «Добавить в сеть», «Написать» (Pro)
+**Не реализовано:** правка контактов (на `users` нет self-UPDATE RLS — только
+`admins_update`, см. API-8), фото (`user_settings` пуст), переключатель языка, чужой
+профиль `/agent/:id` (после MVP).
 
 ---
 

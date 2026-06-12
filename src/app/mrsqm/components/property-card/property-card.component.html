@@ -5,10 +5,19 @@
   role="button"
   tabindex="0"
   [class.is-active]="isActive()"
+  [class.is-selected]="isSelected()"
 >
   <div class="box"></div>
 
   <div class="first-line">
+    <!-- Чекбокс множественного выбора — тот же done-toggle, что в инбоксе -->
+    <done-toggle
+      class="select-toggle"
+      [isDone]="isSelected()"
+      (toggled)="selectToggle.emit()"
+      [attr.aria-label]="isSelected() ? 'Снять выбор' : 'Выбрать объект'"
+    ></done-toggle>
+
     <!-- Адрес: leaf + community -->
     <div class="col col-address">
       <span class="addr-leaf">{{
@@ -76,6 +85,30 @@
         [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
       >
         <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+      </button>
+    </div>
+
+    <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->
+    <div class="hover-controls">
+      <button
+        mat-icon-button
+        class="ico-btn"
+        (click)="saveClick.emit(); $event.stopPropagation()"
+        [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+        [title]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+      >
+        <mat-icon [class.saved-icon]="isSaved()">{{
+          isSaved() ? 'bookmark' : 'bookmark_border'
+        }}</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        class="ico-btn"
+        (click)="cardClick.emit(); $event.stopPropagation()"
+        aria-label="Открыть карточку объекта"
+        title="Открыть карточку объекта"
+      >
+        <mat-icon>right_panel_open</mat-icon>
       </button>
     </div>
   </div>

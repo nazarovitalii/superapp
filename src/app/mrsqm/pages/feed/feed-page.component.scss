@@ -18,7 +18,9 @@
 // Заголовки таблицы — те же пропорции что в grid карточки
 .table-header {
   display: grid;
+  // первая колонка — чекбокс выбора (как done-toggle в карточке)
   grid-template-columns:
+    34px
     minmax(120px, 2fr)
     minmax(80px, 1fr)
     60px
@@ -26,7 +28,7 @@
     minmax(100px, 1.2fr)
     90px;
   gap: var(--s);
-  padding: var(--s) calc(var(--s) + 5px);
+  padding: var(--s) calc(var(--s) + 5px) var(--s) calc(var(--s-half) + 5px);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -50,6 +52,36 @@
 .th-price,
 .th-listing {
   text-align: right;
+}
+
+// Плашка «Выбрано: N» — появляется при отмеченных чекбоксах
+.selection-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  margin: var(--s) 5px 0;
+  padding: var(--s-half) var(--s) var(--s-half) var(--s2);
+  background: var(--task-c-selected-bg);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-shadow);
+  font-size: 14px;
+  color: var(--text-color);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--c-primary);
+  }
+}
+
+.selection-count {
+  flex: 1;
+}
+
+.selection-clear {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
 }
 
 .property-list {

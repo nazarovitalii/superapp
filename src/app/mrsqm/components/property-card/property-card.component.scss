@@ -33,6 +33,12 @@
     box-shadow: var(--task-selected-shadow);
   }
 
+  // Выбрано чекбоксом — фон как у выделенной задачи в инбоксе
+  .inner-wrapper.is-selected > & {
+    background: var(--task-c-selected-bg);
+    box-shadow: var(--task-selected-shadow);
+  }
+
   .inner-wrapper.is-active > & {
     background: var(--task-c-current-bg);
     box-shadow: var(--task-current-shadow, var(--task-selected-shadow));
@@ -40,11 +46,12 @@
   }
 }
 
-// Одна строка = 6 колонок
+// Одна строка = чекбокс + 6 колонок
 .first-line {
   position: relative;
   display: grid;
   grid-template-columns:
+    34px
     minmax(120px, 2fr)
     minmax(80px, 1fr)
     60px
@@ -53,8 +60,13 @@
     90px;
   align-items: center;
   min-height: var(--task-first-line-min-height);
-  padding: 0 var(--s) 0 var(--s);
+  padding: 0 var(--s) 0 var(--s-half);
   gap: var(--s);
+}
+
+// Чекбокс выбора — размер как у задач
+.select-toggle {
+  --done-toggle-size: 34px;
 }
 
 .col {
@@ -137,7 +149,8 @@
   gap: 2px;
 }
 
-// Закладка «в избранное».
+// Закладка «в избранное» (статичная — для тача; на десктопе её
+// перекрывают hover-кнопки, как time-wrapper в задачах инбокса).
 .save-btn {
   display: inline-flex;
   align-items: center;
@@ -161,6 +174,67 @@
 
   &.saved {
     color: var(--c-primary);
+  }
+}
+
+// ─── Выезжающие кнопки при ховере — повторяют task-hover-controls ──────────
+.hover-controls {
+  position: absolute;
+  right: 0;
+  top: 2px;
+  bottom: 2px;
+  z-index: var(--z-hover-controls);
+  display: none;
+  align-items: stretch;
+  border-radius: var(--task-border-radius);
+  padding: 0 var(--s-quarter);
+
+  // разделительная линия слева — как :before у task-hover-controls
+  &:before {
+    content: '';
+    border-left: var(--hover-controls-border);
+    width: 1px;
+    height: 90%;
+    position: absolute;
+    left: 0;
+    top: 5%;
+    opacity: var(--hover-controls-border-opacity);
+  }
+
+  button {
+    height: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
+    border-radius: var(--task-border-radius);
+    color: var(--text-color-muted);
+
+    &:hover {
+      color: var(--text-color);
+    }
+
+    ::ng-deep .mat-mdc-button-persistent-ripple {
+      border-radius: var(--task-border-radius);
+    }
+  }
+
+  .saved-icon {
+    color: var(--c-primary);
+  }
+}
+
+// Показываем только на устройствах с мышью (на таче остаётся статичная закладка)
+@media (hover: hover) {
+  .first-line:hover .hover-controls {
+    display: flex;
+    background: var(--task-c-bg);
+
+    .inner-wrapper.is-selected & {
+      background: var(--task-c-selected-bg);
+    }
+
+    .inner-wrapper.is-active & {
+      background: var(--task-c-current-bg);
+    }
   }
 }
 
