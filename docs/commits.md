@@ -54,3 +54,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                         |
 | `479e05f27` | 01:58 | feat(mrsqm): inbox-style UI — чекбокс-выбор и hover-кнопки в ленте, шапка и карточки-секции в sidebar |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                         |
+| `bd1acd419` | 02:02 | docs: переписка + резюме дня 2026-06-12                                                               |

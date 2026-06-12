@@ -36,56 +36,43 @@
     <!-- Beds -->
     <div class="col col-beds">
       @if (property().bedrooms !== null) {
-        <span class="cell-val">{{
+        <span>{{
           property().bedrooms === 0 ? 'Studio' : property().bedrooms + ' BR'
         }}</span>
       } @else {
-        <span class="cell-muted">—</span>
+        <span>—</span>
       }
     </div>
 
     <!-- Size -->
     <div class="col col-size">
       @if (property().area_sqft !== null) {
-        <span class="cell-val"
-          >{{ property().area_sqft | number: '1.0-0' }}
-          <span class="cell-unit">sqft</span></span
-        >
+        <span>{{ property().area_sqft | number: '1.0-0' }} sqft</span>
       } @else {
-        <span class="cell-muted">—</span>
+        <span>—</span>
       }
     </div>
 
-    <!-- Price -->
+    <!-- Price (без валюты; для аренды — период) -->
     <div class="col col-price">
-      <span class="price-val">{{ property().price | number: '1.0-0' }}</span>
-      <span class="price-cur"
-        >{{ property().price_currency }}
+      <span
+        >{{ property().price | number: '1.0-0' }}
         @if (property().price_period) {
-          /{{ property().price_period }}
+          <ng-container>/{{ property().price_period }}</ng-container>
         }
       </span>
     </div>
 
-    <!-- Pocket / Official + закладка -->
+    <!-- Pocket / Official -->
     <div class="col col-listing">
       @if (property().listing_type === 'pocket') {
-        <span class="badge badge--pocket">Pocket</span>
+        <span class="badge">Pocket</span>
       } @else {
-        <span class="badge badge--official">Official</span>
+        <span class="badge">Official</span>
       }
       @if (property().is_distress) {
-        <span class="badge badge--distress">Срочно</span>
+        <span class="badge">Срочно</span>
       }
-      <button
-        type="button"
-        class="save-btn"
-        [class.saved]="isSaved()"
-        (click)="saveClick.emit(); $event.stopPropagation()"
-        [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
-      >
-        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-      </button>
     </div>
 
     <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->
@@ -97,9 +84,7 @@
         [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
         [title]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
       >
-        <mat-icon [class.saved-icon]="isSaved()">{{
-          isSaved() ? 'bookmark' : 'bookmark_border'
-        }}</mat-icon>
+        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
       </button>
       <button
         mat-icon-button

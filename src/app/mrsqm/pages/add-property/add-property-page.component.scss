@@ -9,71 +9,15 @@
 .add-wrap {
   display: flex;
   justify-content: center;
-  padding: var(--s2) var(--s);
+  padding: var(--s) var(--s) var(--s4);
 }
 
-// Карточка формы — стиль модалки task-detail инбокса (токены SP).
-.add-card {
+// Колонка блоков — как лента блоков в sidebar задачи (task-detail-panel)
+.add-col {
   width: 100%;
-  max-width: 560px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  gap: var(--s2);
-  padding: var(--s3);
-  background: var(--task-detail-bg);
-  border: 1px solid transparent;
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--task-detail-shadow);
-
-  @include mq(xs, max) {
-    box-shadow: none;
-    border-color: var(--extra-border-color);
-  }
-}
-
-// ─── Прогресс шагов ──────────────────────────────────────────────────────
-.steps-row {
-  display: flex;
-  gap: var(--s);
-  justify-content: center;
-}
-
-.step-dot {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-color-muted);
-  background: var(--bg);
-  border: 1px solid var(--extra-border-color);
-
-  mat-icon {
-    font-size: 1rem;
-    width: 1rem;
-    height: 1rem;
-  }
-
-  &.active {
-    color: #fff;
-    background: var(--c-primary);
-    border-color: var(--c-primary);
-  }
-
-  &.done {
-    color: var(--c-primary);
-    border-color: var(--c-primary);
-  }
-}
-
-.step-title {
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-color);
 }
 
 .loading {
@@ -82,28 +26,64 @@
   padding: var(--s4);
 }
 
-// ─── Поля ────────────────────────────────────────────────────────────────
-.step-body {
+// ─── Блок — повторяет input-item/panel из task-detail-panel ──────────────
+.block {
+  margin: var(--s);
+  border: 1px solid transparent;
+  border-radius: var(--card-border-radius);
+  background: var(--task-detail-bg);
+  box-shadow: var(--task-detail-shadow);
+  font-size: 14px;
+  color: var(--text-color);
+
+  @include mq(xs, max) {
+    box-shadow: none;
+    border-color: var(--extra-border-color);
+  }
+}
+
+// Шапка блока — как заголовок строки в sidebar задачи (иконка + текст)
+.block-header {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 0 var(--s3);
+  font-size: 14px;
+  font-weight: 400;
+
+  mat-icon {
+    margin-right: var(--s);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--text-color-muted);
+  }
+}
+
+// Содержимое блока — как panel-content-wrapper
+.block-content {
+  margin: 0 var(--s2) var(--s2);
   display: flex;
   flex-direction: column;
   gap: var(--s2);
 }
 
+// ─── Поля ────────────────────────────────────────────────────────────────
 .field {
   display: flex;
   flex-direction: column;
   gap: var(--s-half, 6px);
 }
 
-// Подпись поля — как input-item__title в модалке инбокса (14px, medium)
 .field-label {
   font-size: 14px;
-  font-weight: 500;
-  color: var(--text-color);
+  font-weight: 400;
+  color: var(--task-detail-value-color, var(--text-color-muted));
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.block-content > textarea {
   width: 100%;
   padding: var(--s) calc(var(--s) + 2px);
   font-size: 14px;
@@ -158,7 +138,7 @@
 
   span {
     flex: 1;
-    font-size: 0.9rem;
+    font-size: 14px;
   }
 
   mat-icon {
@@ -178,7 +158,7 @@
 }
 
 .loc-hint {
-  font-size: 0.8rem;
+  font-size: 13px;
   color: var(--text-color-muted);
 }
 
@@ -211,12 +191,12 @@
 }
 
 .loc-name {
-  font-size: 0.9rem;
+  font-size: 14px;
   color: var(--text-color);
 }
 
 .loc-sub {
-  font-size: 0.75rem;
+  font-size: 13px;
   color: var(--text-color-muted);
 }
 
@@ -229,22 +209,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 14px;
   color: var(--text-color);
 }
 
 .note {
-  font-size: 0.8rem;
+  font-size: 13px;
   color: var(--text-color-muted);
   margin: 0;
 }
 
-// ─── Ошибка и навигация ──────────────────────────────────────────────────
+// ─── Ошибка и отправка ───────────────────────────────────────────────────
 .add-error {
   display: flex;
   align-items: center;
   gap: var(--s-half, 6px);
-  font-size: 0.8rem;
+  margin: 0 var(--s);
+  font-size: 13px;
   color: var(--c-warn, #e53935);
 
   mat-icon {
@@ -256,8 +237,9 @@
 
 .add-nav {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--s);
-  margin-top: var(--s);
+  margin: var(--s);
+}
+
+.submit-btn {
+  width: 100%;
 }

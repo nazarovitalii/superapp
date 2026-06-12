@@ -349,6 +349,40 @@ page-title {
   }
 }
 
+// Контекстное меню выбора (чекбоксы в ленте) — те же размеры/шрифт,
+// что у deal-toggle, чтобы хедер не прыгал.
+.selection-menu {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border-radius: 15px;
+  border: 1px solid var(--extra-border-color);
+  flex: 0 0 auto;
+  padding-left: 12px;
+
+  .selection-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 28px;
+    white-space: nowrap;
+  }
+
+  .selection-clear {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
 // Иконка фильтров + бейдж количества активных фильтров
 .filter-btn {
   position: relative;

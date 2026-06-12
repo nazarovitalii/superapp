@@ -46,7 +46,8 @@
   }
 }
 
-// Одна строка = чекбокс + 6 колонок
+// Одна строка = чекбокс + 6 колонок.
+// Все тексты — один размер (14px), один цвет, без жирности/курсива.
 .first-line {
   position: relative;
   display: grid;
@@ -62,6 +63,9 @@
   min-height: var(--task-first-line-min-height);
   padding: 0 var(--s) 0 var(--s-half);
   gap: var(--s);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-color);
 }
 
 // Чекбокс выбора — размер как у задач
@@ -73,36 +77,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.875rem;
-  color: var(--ink-strong);
 }
 
 .col-address {
   display: flex;
   flex-direction: column;
-  gap: 1px;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.addr-leaf {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--ink-strong);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+.addr-leaf,
 .addr-community {
-  font-size: 0.73rem;
-  color: var(--ink-muted);
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.col-type {
-  font-size: 0.8rem;
-  color: var(--ink-muted);
 }
 
 .col-beds,
@@ -110,36 +97,8 @@
   text-align: right;
 }
 
-.cell-val {
-  font-size: 0.875rem;
-  color: var(--ink-strong);
-}
-
-.cell-unit {
-  font-size: 0.73rem;
-  color: var(--ink-muted);
-}
-
-.cell-muted {
-  color: var(--ink-muted);
-}
-
 .col-price {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  align-items: flex-end;
-}
-
-.price-val {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ink-strong);
-}
-
-.price-cur {
-  font-size: 0.72rem;
-  color: var(--ink-muted);
+  text-align: right;
 }
 
 .col-listing {
@@ -147,34 +106,6 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-}
-
-// Закладка «в избранное» (статичная — для тача; на десктопе её
-// перекрывают hover-кнопки, как time-wrapper в задачах инбокса).
-.save-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--text-color-muted);
-
-  mat-icon {
-    font-size: 1.2rem;
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-
-  &:hover {
-    color: var(--c-primary);
-  }
-
-  &.saved {
-    color: var(--c-primary);
-  }
 }
 
 // ─── Выезжающие кнопки при ховере — повторяют task-hover-controls ──────────
@@ -216,13 +147,9 @@
       border-radius: var(--task-border-radius);
     }
   }
-
-  .saved-icon {
-    color: var(--c-primary);
-  }
 }
 
-// Показываем только на устройствах с мышью (на таче остаётся статичная закладка)
+// Показываем только на устройствах с мышью
 @media (hover: hover) {
   .first-line:hover .hover-controls {
     display: flex;
@@ -238,28 +165,17 @@
   }
 }
 
+// Бейджи Pocket/Official/Срочно — нейтральные, без цвета и жирности
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 0 var(--s);
   border-radius: 10px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1.7;
+  border: 1px solid var(--extra-border-color);
+  background: transparent;
+  color: var(--text-color);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
   white-space: nowrap;
-
-  &--pocket {
-    background: rgba(255, 160, 0, 0.18);
-    color: #f57c00;
-  }
-
-  &--official {
-    background: var(--surface-0);
-    color: var(--ink-muted);
-  }
-
-  &--distress {
-    background: rgba(244, 67, 54, 0.15);
-    color: #e53935;
-  }
 }

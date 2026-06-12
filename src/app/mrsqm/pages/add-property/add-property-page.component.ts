@@ -22,8 +22,6 @@ import {
 } from '../../types/database';
 
 const SQFT_TO_SQM = 0.092903;
-// Шаги формы.
-const STEPS = ['Тип', 'Локация', 'Детали', 'Цена', 'Листинг'] as const;
 
 @Component({
   selector: 'mrsqm-add-property-page',
@@ -44,8 +42,6 @@ export class AddPropertyPageComponent {
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _router = inject(Router);
 
-  readonly steps = STEPS;
-  readonly step = signal(0);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -162,47 +158,21 @@ export class AddPropertyPageComponent {
     this.price.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
 
-  // ─── Навигация по шагам ─────────────────────────────────────────────────
-  private _validateStep(): string | null {
-    switch (this.step()) {
-      case 0:
-        if (!this.categoryId()) return 'Выберите категорию';
-        if (this.unitTypesForCategory().length && !this.unitTypeId())
-          return 'Выберите тип объекта';
-        return null;
-      case 1:
-        if (!this.locationId()) return 'Выберите локацию';
-        return null;
-      case 2:
-        if (!this.areaSqft()) return 'Укажите площадь';
-        return null;
-      case 3:
-        if (!this.price()) return 'Укажите цену';
-        return null;
-      default:
-        return null;
-    }
-  }
-
-  next(): void {
-    const err = this._validateStep();
-    if (err) {
-      this.error.set(err);
-      return;
-    }
-    this.error.set(null);
-    this.step.update((s) => Math.min(s + 1, STEPS.length - 1));
-  }
-
-  prev(): void {
-    this.error.set(null);
-    this.step.update((s) => Math.max(s - 1, 0));
+  // ─── Валидация всей формы (шагов больше нет — всё одной страницей) ──────
+  private _validate(): string | null {
+    if (!this.categoryId()) return 'Выберите категорию';
+    if (this.unitTypesForCategory().length && !this.unitTypeId())
+      return 'Выберите тип объекта';
+    if (!this.locationId()) return 'Выберите локацию';
+    if (!this.areaSqft()) return 'Укажите площадь';
+    if (!this.price()) return 'Укажите цену';
+    return null;
   }
 
   // ─── Отправка ───────────────────────────────────────────────────────────
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    const err = this._validateStep();
+    const err = this._validate();
     if (err) {
       this.error.set(err);
       return;

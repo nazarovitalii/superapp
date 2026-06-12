@@ -33,28 +33,44 @@
         }
       </div>
 
-      <!-- Фильтр Sale/Rent + иконка фильтров — только на странице ленты -->
+      <!-- Фильтр Sale/Rent + иконка фильтров — только на странице ленты.
+           При отмеченных чекбоксах вместо них — контекстное меню выбора. -->
       @if (isFeedRoute()) {
-        <mat-button-toggle-group
-          class="deal-toggle"
-          [value]="feedFilter.dealType()"
-          (change)="setDealType($event.value)"
-        >
-          <mat-button-toggle value="sale">Sale</mat-button-toggle>
-          <mat-button-toggle value="rent">Rent</mat-button-toggle>
-        </mat-button-toggle-group>
+        @if (feedSelection.count() > 0) {
+          <div class="selection-menu">
+            <span class="selection-count">Выбрано: {{ feedSelection.count() }}</span>
+            <button
+              mat-icon-button
+              class="selection-clear"
+              (click)="feedSelection.clear()"
+              [attr.aria-label]="'Сбросить выбор'"
+              title="Сбросить выбор"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        } @else {
+          <mat-button-toggle-group
+            class="deal-toggle"
+            [value]="feedFilter.dealType()"
+            (change)="setDealType($event.value)"
+          >
+            <mat-button-toggle value="sale">Sale</mat-button-toggle>
+            <mat-button-toggle value="rent">Rent</mat-button-toggle>
+          </mat-button-toggle-group>
 
-        <button
-          class="filter-btn"
-          mat-icon-button
-          (click)="toggleFilterPanel()"
-          [attr.aria-label]="'Фильтры'"
-        >
-          <mat-icon>tune</mat-icon>
-          @if (feedFilter.activeFilterCount() > 0) {
-            <span class="filter-badge">{{ feedFilter.activeFilterCount() }}</span>
-          }
-        </button>
+          <button
+            class="filter-btn"
+            mat-icon-button
+            (click)="toggleFilterPanel()"
+            [attr.aria-label]="'Фильтры'"
+          >
+            <mat-icon>tune</mat-icon>
+            @if (feedFilter.activeFilterCount() > 0) {
+              <span class="filter-badge">{{ feedFilter.activeFilterCount() }}</span>
+            }
+          </button>
+        }
       }
 
       <!-- Кнопка добавить задачу — всегда видима -->

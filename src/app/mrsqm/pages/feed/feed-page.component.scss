@@ -54,36 +54,6 @@
   text-align: right;
 }
 
-// Плашка «Выбрано: N» — появляется при отмеченных чекбоксах
-.selection-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--s);
-  margin: var(--s) 5px 0;
-  padding: var(--s-half) var(--s) var(--s-half) var(--s2);
-  background: var(--task-c-selected-bg);
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--task-shadow);
-  font-size: 14px;
-  color: var(--text-color);
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: var(--c-primary);
-  }
-}
-
-.selection-count {
-  flex: 1;
-}
-
-.selection-clear {
-  font-size: 0.8rem;
-  color: var(--text-color-muted);
-}
-
 .property-list {
   display: flex;
   flex-direction: column;

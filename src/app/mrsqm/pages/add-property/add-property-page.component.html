@@ -1,29 +1,15 @@
 <div class="add-wrap">
-  <div class="add-card">
-    <!-- Прогресс шагов -->
-    <div class="steps-row">
-      @for (s of steps; track s; let i = $index) {
-        <div
-          class="step-dot"
-          [class.active]="i === step()"
-          [class.done]="i < step()"
-        >
-          @if (i < step()) {
-            <mat-icon>check</mat-icon>
-          } @else {
-            {{ i + 1 }}
-          }
-        </div>
-      }
-    </div>
-    <div class="step-title">{{ steps[step()] }}</div>
-
+  <div class="add-col">
     @if (!options()) {
       <div class="loading"><mat-spinner [diameter]="28"></mat-spinner></div>
     } @else {
-      <div class="step-body">
-        <!-- ШАГ 0: Тип -->
-        @if (step() === 0) {
+      <!-- Блок: Тип объекта -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>apartment</mat-icon>
+          <span>Тип объекта</span>
+        </div>
+        <div class="block-content">
           <div class="field">
             <span class="field-label">Категория</span>
             <div class="chips">
@@ -42,7 +28,7 @@
 
           @if (unitTypesForCategory().length) {
             <div class="field">
-              <span class="field-label">Тип объекта</span>
+              <span class="field-label">Тип</span>
               <div class="chips">
                 @for (u of unitTypesForCategory(); track u.id) {
                   <button
@@ -91,58 +77,67 @@
               }
             </div>
           </div>
-        }
+        </div>
+      </section>
 
-        <!-- ШАГ 1: Локация -->
-        @if (step() === 1) {
-          <div class="field">
-            <span class="field-label">Локация</span>
-            @if (locationId()) {
-              <div class="loc-selected">
-                <mat-icon>place</mat-icon>
-                <span>{{ locationLabel() }}</span>
-                <button
-                  type="button"
-                  class="loc-clear"
-                  (click)="resetLocation()"
-                >
-                  <mat-icon>close</mat-icon>
-                </button>
-              </div>
-            } @else {
-              <input
-                type="text"
-                [ngModel]="locQuery()"
-                (ngModelChange)="onLocInput($event)"
-                placeholder="Район, комьюнити, здание…"
-              />
-              @if (locLoading()) {
-                <div class="loc-hint">Поиск…</div>
-              }
-              @if (locResults().length) {
-                <div class="loc-dropdown">
-                  @for (r of locResults(); track r.id) {
-                    <button
-                      type="button"
-                      class="loc-item"
-                      (click)="selectLocation(r)"
-                    >
-                      <span class="loc-name">{{ r.name }}</span>
-                      <span class="loc-sub">
-                        {{ r.community_name }}{{ r.community_name ? ' · ' : ''
-                        }}{{ r.city_name }}
-                        <span class="loc-level">({{ r.level }})</span>
-                      </span>
-                    </button>
-                  }
-                </div>
-              }
+      <!-- Блок: Локация -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>place</mat-icon>
+          <span>Локация</span>
+        </div>
+        <div class="block-content">
+          @if (locationId()) {
+            <div class="loc-selected">
+              <mat-icon>place</mat-icon>
+              <span>{{ locationLabel() }}</span>
+              <button
+                type="button"
+                class="loc-clear"
+                (click)="resetLocation()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          } @else {
+            <input
+              type="text"
+              [ngModel]="locQuery()"
+              (ngModelChange)="onLocInput($event)"
+              placeholder="Район, комьюнити, здание…"
+            />
+            @if (locLoading()) {
+              <div class="loc-hint">Поиск…</div>
             }
-          </div>
-        }
+            @if (locResults().length) {
+              <div class="loc-dropdown">
+                @for (r of locResults(); track r.id) {
+                  <button
+                    type="button"
+                    class="loc-item"
+                    (click)="selectLocation(r)"
+                  >
+                    <span class="loc-name">{{ r.name }}</span>
+                    <span class="loc-sub">
+                      {{ r.community_name }}{{ r.community_name ? ' · ' : ''
+                      }}{{ r.city_name }}
+                      <span class="loc-level">({{ r.level }})</span>
+                    </span>
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+      </section>
 
-        <!-- ШАГ 2: Детали -->
-        @if (step() === 2) {
+      <!-- Блок: Детали -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>bed</mat-icon>
+          <span>Детали</span>
+        </div>
+        <div class="block-content">
           <div class="field">
             <span class="field-label">Спальни</span>
             <div class="chips">
@@ -234,12 +229,18 @@
               </div>
             </div>
           }
-        }
+        </div>
+      </section>
 
-        <!-- ШАГ 3: Цена -->
-        @if (step() === 3) {
+      <!-- Блок: Цена -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>payments</mat-icon>
+          <span>Цена</span>
+        </div>
+        <div class="block-content">
           <div class="field">
-            <span class="field-label">Цена (AED)</span>
+            <span class="field-label">Цена</span>
             <input
               [ngModel]="price()"
               (ngModelChange)="onPriceInput($event)"
@@ -282,17 +283,32 @@
               (ngModelChange)="isDistress.set($event)"
             />
           </label>
+        </div>
+      </section>
 
-          <div class="field">
-            <span class="field-label">Описание</span>
-            <textarea
-              rows="4"
-              [ngModel]="description()"
-              (ngModelChange)="description.set($event)"
-              placeholder="Опишите объект…"
-            ></textarea>
-          </div>
+      <!-- Блок: Описание -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>description</mat-icon>
+          <span>Описание</span>
+        </div>
+        <div class="block-content">
+          <textarea
+            rows="4"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            placeholder="Опишите объект…"
+          ></textarea>
+        </div>
+      </section>
 
+      <!-- Блок: Публикация -->
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>visibility</mat-icon>
+          <span>Публикация</span>
+        </div>
+        <div class="block-content">
           <div class="field">
             <span class="field-label">Видимость</span>
             <div class="chips">
@@ -314,10 +330,7 @@
               </button>
             </div>
           </div>
-        }
 
-        <!-- ШАГ 4: Листинг -->
-        @if (step() === 4) {
           <div class="field">
             <span class="field-label">Тип листинга</span>
             <div class="chips">
@@ -333,6 +346,7 @@
               }
             </div>
           </div>
+
           <p class="note">
             @if (visibility() === 'network') {
               Объект для сети публикуется сразу и появится в ленте у ваших коллег.
@@ -340,8 +354,8 @@
               Публичный объект уйдёт на модерацию и появится в ленте после одобрения.
             }
           </p>
-        }
-      </div>
+        </div>
+      </section>
 
       @if (error()) {
         <div class="add-error">
@@ -351,41 +365,20 @@
       }
 
       <div class="add-nav">
-        @if (step() > 0) {
-          <button
-            mat-stroked-button
-            type="button"
-            (click)="prev()"
-          >
-            Назад
-          </button>
-        } @else {
-          <span></span>
-        }
-        @if (step() < steps.length - 1) {
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            (click)="next()"
-          >
-            Далее
-          </button>
-        } @else {
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            [disabled]="submitting()"
-            (click)="submit()"
-          >
-            @if (submitting()) {
-              <mat-spinner [diameter]="20"></mat-spinner>
-            } @else {
-              Отправить
-            }
-          </button>
-        }
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="submit-btn"
+          [disabled]="submitting()"
+          (click)="submit()"
+        >
+          @if (submitting()) {
+            <mat-spinner [diameter]="20"></mat-spinner>
+          } @else {
+            Опубликовать
+          }
+        </button>
       </div>
     }
   </div>

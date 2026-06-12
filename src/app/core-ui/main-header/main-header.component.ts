@@ -50,6 +50,7 @@ import { FocusButtonComponent } from './focus-button/focus-button.component';
 import { UserProfileService } from '../../features/user-profile/user-profile.service';
 import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
 import { FeedFilterService } from '../../mrsqm/services/feed-filter.service';
+import { FeedSelectionService } from '../../mrsqm/services/feed-selection.service';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { DealType } from '../../mrsqm/types/database';
 import { PanelContentService } from '../../features/panels/panel-content.service';
@@ -99,6 +100,7 @@ export class MainHeaderComponent implements OnDestroy {
   private readonly _dataInitStateService = inject(DataInitStateService);
   private readonly _focusModeService = inject(FocusModeService);
   readonly feedFilter = inject(FeedFilterService);
+  readonly feedSelection = inject(FeedSelectionService);
   private readonly _panelContentService = inject(PanelContentService);
 
   readonly isDataLoaded = toSignal(this._dataInitStateService.isAllDataLoadedInitially$, {

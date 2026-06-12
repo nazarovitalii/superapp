@@ -10,31 +10,16 @@
     <div class="th th-listing">Листинг</div>
   </div>
 
-  <!-- Плашка множественного выбора -->
-  @if (selectedIds().size > 0) {
-    <div class="selection-bar">
-      <mat-icon>check_circle</mat-icon>
-      <span class="selection-count">Выбрано: {{ selectedIds().size }}</span>
-      <button
-        mat-button
-        class="selection-clear"
-        (click)="clearSelection()"
-      >
-        Сбросить
-      </button>
-    </div>
-  }
-
   <div class="property-list">
     @for (p of properties(); track p.id) {
       <mrsqm-property-card
         [property]="p"
         [isActive]="selectedPropertyId === p.id"
         [isSaved]="savedIds().has(p.id)"
-        [isSelected]="selectedIds().has(p.id)"
+        [isSelected]="selection.selectedIds().has(p.id)"
         (cardClick)="openDetail(p)"
         (saveClick)="toggleSaved(p)"
-        (selectToggle)="toggleSelected(p)"
+        (selectToggle)="selection.toggle(p.id)"
       />
     } @empty {
       @if (!isLoading() && !loadError()) {

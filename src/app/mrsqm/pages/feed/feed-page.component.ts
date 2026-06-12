@@ -10,6 +10,7 @@ import { PropertyCardComponent } from '../../components/property-card/property-c
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { FeedSelectionService } from '../../services/feed-selection.service';
 import { signal } from '@angular/core';
 
 const PAGE_SIZE = 20;
@@ -34,6 +35,8 @@ export class FeedPageComponent {
   private readonly _createService = inject(PropertyCreateService);
   private readonly _saved = inject(SavedPropertiesService);
   readonly filter = inject(FeedFilterService);
+  // Множественный выбор чекбоксами — общий сервис с меню в главном хедере.
+  readonly selection = inject(FeedSelectionService);
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
   private _typeLabels: Map<string, string> | null = null;
@@ -46,8 +49,6 @@ export class FeedPageComponent {
   readonly hasMore = signal(false);
   // id объектов в избранном (для иконки-закладки).
   readonly savedIds = signal<Set<string>>(new Set());
-  // Множественный выбор чекбоксами (для будущих массовых действий).
-  readonly selectedIds = signal<Set<string>>(new Set());
 
   get selectedPropertyId(): string | null {
     return this._panels.selectedProperty()?.id ?? null;
@@ -95,21 +96,6 @@ export class FeedPageComponent {
       else revert.delete(id);
       this.savedIds.set(revert);
     }
-  }
-
-  // Toggle чекбокса выбора на записи ленты.
-  toggleSelected(property: PropertyFeedItem): void {
-    const next = new Set(this.selectedIds());
-    if (next.has(property.id)) {
-      next.delete(property.id);
-    } else {
-      next.add(property.id);
-    }
-    this.selectedIds.set(next);
-  }
-
-  clearSelection(): void {
-    this.selectedIds.set(new Set());
   }
 
   async loadMore(): Promise<void> {
