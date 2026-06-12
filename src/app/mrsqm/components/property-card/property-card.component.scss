@@ -39,26 +39,44 @@
     box-shadow: var(--task-selected-shadow);
   }
 
+  // Открыта карточка (is-active) — как выбранная задача в инбоксе:
+  // без смены цвета, только тень + строка продлевается вправо до sidebar
+  // (те же отступы/брейкпоинты, что у .isSelected в _task-base.scss).
   .inner-wrapper.is-active > & {
-    background: var(--task-c-current-bg);
-    box-shadow: var(--task-current-shadow, var(--task-selected-shadow));
-    border-color: var(--brand);
+    transition: var(--transition-enter);
+    transition-property: left, right, box-shadow;
+    box-shadow: var(--task-selected-shadow);
+
+    @include mq(xs) {
+      transform-origin: left;
+      left: calc(-1 * var(--task-border-radius));
+      border-top-left-radius: var(--task-border-radius);
+      border-bottom-left-radius: var(--task-border-radius);
+      right: -34px;
+    }
+    @include mq(md) {
+      right: -234px;
+    }
+    @include mq(xl) {
+      right: calc(-1 * var(--task-border-radius));
+    }
   }
 }
 
-// Одна строка = чекбокс + 6 колонок.
+// Одна строка = чекбокс + 7 колонок (фото-плашка между ценой и агентством).
 // Все тексты — один размер (14px), один цвет, без жирности/курсива.
 .first-line {
   position: relative;
   display: grid;
   grid-template-columns:
     34px
-    minmax(120px, 2fr)
-    minmax(80px, 1fr)
-    60px
-    90px
-    minmax(100px, 1.2fr)
-    90px;
+    minmax(110px, 2fr)
+    minmax(76px, 1fr)
+    56px
+    80px
+    minmax(90px, 1fr)
+    28px
+    minmax(90px, 1.2fr);
   align-items: center;
   min-height: var(--task-first-line-min-height);
   padding: 0 var(--s) 0 var(--s-half);
@@ -101,11 +119,33 @@
   text-align: right;
 }
 
-.col-listing {
+// Плашка «есть фото»
+.col-photo {
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+
+  .photo-ico {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-color-muted);
+  }
+}
+
+// Агентство + дата публикации/актуализации
+.col-agency {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  text-align: right;
+
+  .agency-name,
+  .agency-date {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 // ─── Выезжающие кнопки при ховере — повторяют task-hover-controls ──────────
@@ -158,24 +198,5 @@
     .inner-wrapper.is-selected & {
       background: var(--task-c-selected-bg);
     }
-
-    .inner-wrapper.is-active & {
-      background: var(--task-c-current-bg);
-    }
   }
-}
-
-// Бейджи Pocket/Official/Срочно — нейтральные, без цвета и жирности
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--s);
-  border-radius: 10px;
-  border: 1px solid var(--extra-border-color);
-  background: transparent;
-  color: var(--text-color);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.5;
-  white-space: nowrap;
 }

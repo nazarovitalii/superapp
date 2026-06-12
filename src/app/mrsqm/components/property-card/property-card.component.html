@@ -63,16 +63,19 @@
       </span>
     </div>
 
-    <!-- Pocket / Official -->
-    <div class="col col-listing">
-      @if (property().listing_type === 'pocket') {
-        <span class="badge">Pocket</span>
-      } @else {
-        <span class="badge">Official</span>
+    <!-- Фото: плашка фотоаппарата, если у листинга есть фотки -->
+    <div class="col col-photo">
+      @if (property().photos?.length) {
+        <mat-icon class="photo-ico">photo_camera</mat-icon>
       }
-      @if (property().is_distress) {
-        <span class="badge">Срочно</span>
-      }
+    </div>
+
+    <!-- Агентство + дата публикации/актуализации -->
+    <div class="col col-agency">
+      <span class="agency-name">{{ property().owner_agency_name || '—' }}</span>
+      <span class="agency-date">{{
+        property().last_actualized_at || property().published_at | date: 'dd.MM.yy'
+      }}</span>
     </div>
 
     <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->

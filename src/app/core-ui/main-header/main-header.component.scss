@@ -306,6 +306,11 @@ page-title {
   position: relative;
 }
 
+// MrSQM: кнопка провайдеров задач (webhook) в desktop-panel-buttons не нужна
+::ng-deep desktop-panel-buttons .e2e-toggle-issue-provider-panel {
+  display: none !important;
+}
+
 // Компактный toggle Sale/Rent в хедере.
 // Размеры держим на самой группе/кнопке, чтобы верстка не плыла из-за
 // дефолтной высоты строки Material.
@@ -383,27 +388,66 @@ page-title {
   }
 }
 
-// Иконка фильтров + бейдж количества активных фильтров
+// Кнопка охвата (Все / Мои / Сеть / Public) — пилюля как deal-toggle
+.scope-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 var(--s-half) 0 12px;
+  border-radius: 15px;
+  border: 1px solid var(--extra-border-color);
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.isActive {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+  }
+}
+
+// Иконка сортировки
+.sort-btn {
+  flex: 0 0 auto;
+}
+
+// Иконка фильтров (нет активных)
 .filter-btn {
   position: relative;
   flex: 0 0 auto;
 }
 
-.filter-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: var(--c-primary);
-  color: var(--palette-primary-contrast-500, #fff);
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 16px;
-  text-align: center;
-  pointer-events: none;
+// Чип фильтров (есть активные): tune + количество, в цветах primary
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-quarter);
+  height: 30px;
+  padding: 0 12px 0 var(--s);
+  border-radius: 15px;
+  border: 1px solid var(--c-primary);
+  background: transparent;
+  color: var(--c-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .sync-state-ico {

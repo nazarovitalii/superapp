@@ -40,7 +40,7 @@
 }
 
 .reset-btn {
-  font-size: 0.8rem;
+  font-size: 14px;
   color: var(--text-color-muted);
 }
 
@@ -90,7 +90,7 @@
   }
 }
 
-// ─── Чипы ────────────────────────────────────────────────────────────────────
+// ─── Чипы (один стиль для всех групп, включая Листинг) ──────────────────────
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -104,8 +104,8 @@
   color: var(--text-color);
   border-radius: 16px;
   padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   cursor: pointer;
   transition: var(--transition-standard);
   transition-property: background, border-color, color;
@@ -121,60 +121,49 @@
   }
 }
 
-// ─── Цена ────────────────────────────────────────────────────────────────────
-.price-inputs {
+// ─── Диапазоны (цена / площадь): инпут + суффикс AED/sqft ───────────────────
+.range-inputs {
   display: flex;
   align-items: center;
   gap: var(--s);
 }
 
-.price-input {
+.num-field {
   flex: 1;
   min-width: 0;
-  height: 38px;
-  padding: 0 var(--s);
+  display: flex;
+  align-items: center;
+  height: 40px;
   border: 1px solid var(--extra-border-color);
   border-radius: var(--card-border-radius);
   background: var(--bg-lighter);
-  color: var(--text-color);
-  font-size: 0.875rem;
 
-  &:focus {
-    outline: none;
+  &:focus-within {
     border-color: var(--c-primary);
   }
-
-  // прячем стрелки number-инпута
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    appearance: none;
-    margin: 0;
-  }
 }
 
-.price-dash {
+.num-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 var(--s);
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 14px;
+  outline: none;
+}
+
+.num-suffix {
+  padding-right: var(--s);
+  font-size: 14px;
   color: var(--text-color-muted);
+  pointer-events: none;
 }
 
-// ─── Листинг toggle ──────────────────────────────────────────────────────────
-.listing-toggle {
-  width: 100%;
-
-  ::ng-deep .mat-button-toggle {
-    flex: 1;
-  }
-}
-
-// ─── Switch ──────────────────────────────────────────────────────────────────
-.switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-
-.switch-label {
-  margin: 0;
+.range-dash {
+  color: var(--text-color-muted);
 }
 
 // ─── Низ ─────────────────────────────────────────────────────────────────────

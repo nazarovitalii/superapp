@@ -30,7 +30,6 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SimpleCounterButtonComponent } from '../../features/simple-counter/simple-counter-button/simple-counter-button.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { LongPressDirective } from '../../ui/longpress/longpress.directive';
 import { isOnline$ } from '../../util/is-online';
 import { Store } from '@ngrx/store';
 import { DataInitStateService } from '../../core/data-init/data-init-state.service';
@@ -39,19 +38,21 @@ import { SyncStatus } from '../../op-log/sync-exports';
 import { PluginHeaderBtnsComponent } from '../../plugins/ui/plugin-header-btns.component';
 import { PluginWorkContextHeaderBtnsComponent } from '../../plugins/ui/plugin-work-context-header-btns.component';
 import { PluginSidePanelBtnsComponent } from '../../plugins/ui/plugin-side-panel-btns.component';
-import { PageTitleComponent } from './page-title/page-title.component';
-import { PlayButtonComponent } from './play-button/play-button.component';
 import { DesktopPanelButtonsComponent } from './desktop-panel-buttons/desktop-panel-buttons.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MetricService } from '../../features/metric/metric.service';
 import { DateService } from '../../core/date/date.service';
 import { UserProfileButtonComponent } from '../../features/user-profile/user-profile-button/user-profile-button.component';
-import { FocusButtonComponent } from './focus-button/focus-button.component';
 import { UserProfileService } from '../../features/user-profile/user-profile.service';
 import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
-import { FeedFilterService } from '../../mrsqm/services/feed-filter.service';
+import {
+  FeedFilterService,
+  FeedScope,
+  FeedSortBy,
+} from '../../mrsqm/services/feed-filter.service';
 import { FeedSelectionService } from '../../mrsqm/services/feed-selection.service';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatMenuModule } from '@angular/material/menu';
 import { DealType } from '../../mrsqm/types/database';
 import { PanelContentService } from '../../features/panels/panel-content.service';
 
@@ -67,16 +68,13 @@ import { PanelContentService } from '../../features/panels/panel-content.service
     MatTooltip,
     TranslatePipe,
     SimpleCounterButtonComponent,
-    LongPressDirective,
     PluginHeaderBtnsComponent,
     PluginWorkContextHeaderBtnsComponent,
     PluginSidePanelBtnsComponent,
-    PageTitleComponent,
-    PlayButtonComponent,
     DesktopPanelButtonsComponent,
     UserProfileButtonComponent,
-    FocusButtonComponent,
     MatButtonToggleModule,
+    MatMenuModule,
   ],
 })
 export class MainHeaderComponent implements OnDestroy {
@@ -152,6 +150,35 @@ export class MainHeaderComponent implements OnDestroy {
 
   toggleFilterPanel(): void {
     this._panelContentService.toggleFilterPanel();
+  }
+
+  // Охват ленты (фильтр в хедере)
+  readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
+    { value: 'all', label: 'Все' },
+    { value: 'mine', label: 'Мои объекты' },
+    { value: 'network', label: 'Объекты сети' },
+    { value: 'public', label: 'Public' },
+  ];
+
+  readonly scopeLabel = computed(
+    () =>
+      this.scopeOptions.find((o) => o.value === this.feedFilter.scope())?.label ?? 'Все',
+  );
+
+  setScope(scope: FeedScope): void {
+    this.feedFilter.scope.set(scope);
+  }
+
+  // Сортировка ленты (p_sort_by в get_feed)
+  readonly sortOptions: ReadonlyArray<{ value: FeedSortBy; label: string }> = [
+    { value: 'default', label: 'Сначала новые' },
+    { value: 'price_desc', label: 'Сначала дорогие' },
+    { value: 'price_asc', label: 'Сначала дешёвые' },
+    { value: 'date_asc', label: 'Сначала давние' },
+  ];
+
+  setSort(sort: FeedSortBy): void {
+    this.feedFilter.sortBy.set(sort);
   }
 
   private _isRouteWithSidePanel$ = this._router.events.pipe(

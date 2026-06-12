@@ -180,6 +180,9 @@ export interface PropertyFeedItem {
   is_distress: boolean;
   photos: string[] | null;
   published_at: string;
+  // Дата актуализации (поднимает объект в ленте) и видимость — есть в jsonb get_feed.
+  last_actualized_at?: string | null;
+  visibility?: string | null;
   owner_full_name: string | null;
   owner_photo_url: string | null;
   owner_agency_name: string | null;
@@ -212,11 +215,18 @@ export type FeedParams = {
   p_deal_type: DealType;
   p_limit: number;
   p_offset: number;
+  p_unit_type_id?: string | null;
   p_bedrooms?: number[] | null;
+  p_bathrooms?: number[] | null;
   p_price_min?: number | null;
   p_price_max?: number | null;
+  p_area_sqft_min?: number | null;
+  p_area_sqft_max?: number | null;
+  p_furnished?: string | null;
+  p_handover?: string | null;
   p_listing_type?: string | null;
-  p_is_distress?: boolean | null;
+  // default | price_asc | price_desc | date_asc | date_desc (см. get_feed ORDER BY)
+  p_sort_by?: string;
 } & Record<string, unknown>;
 
 export interface LocationSearchResult {

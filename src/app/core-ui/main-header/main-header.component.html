@@ -1,23 +1,8 @@
 <div class="wrapper">
   @if (isDataLoaded()) {
-    <page-title></page-title>
-
+    <!-- MrSQM: page-title (Today + меню), play-button и focus-button скрыты -->
     <nav class="action-nav-right">
       <div class="counters-action-group">
-        @if (isTimeTrackingEnabled()) {
-          <play-button
-            [currentTask]="currentTask()"
-            [currentTaskId]="currentTaskId()"
-            [currentTaskContext]="currentTaskContext()"
-            [hasTrackableTasks]="hasTrackableTasks()"
-          ></play-button>
-        }
-
-        <!-- Focus button: always inline on desktop; on mobile only while a
-             session/break is active, so the running countdown stays reachable. -->
-        @if (isFocusButtonVisible()) {
-          <focus-button></focus-button>
-        }
         @if (showDesktopButtons()) {
           @for (
             simpleCounter of enabledSimpleCounters();
@@ -59,17 +44,76 @@
             <mat-button-toggle value="rent">Rent</mat-button-toggle>
           </mat-button-toggle-group>
 
+          <!-- Охват: Все / Мои объекты / Объекты сети / Public -->
           <button
-            class="filter-btn"
-            mat-icon-button
-            (click)="toggleFilterPanel()"
-            [attr.aria-label]="'Фильтры'"
+            type="button"
+            class="scope-btn"
+            [class.isActive]="feedFilter.scope() !== 'all'"
+            [matMenuTriggerFor]="scopeMenu"
+            [attr.aria-label]="'Охват ленты'"
           >
-            <mat-icon>tune</mat-icon>
-            @if (feedFilter.activeFilterCount() > 0) {
-              <span class="filter-badge">{{ feedFilter.activeFilterCount() }}</span>
-            }
+            <span>{{ scopeLabel() }}</span>
+            <mat-icon>arrow_drop_down</mat-icon>
           </button>
+          <mat-menu #scopeMenu="matMenu">
+            @for (o of scopeOptions; track o.value) {
+              <button
+                mat-menu-item
+                (click)="setScope(o.value)"
+              >
+                <mat-icon>{{
+                  feedFilter.scope() === o.value ? 'radio_button_checked' : ''
+                }}</mat-icon>
+                <span>{{ o.label }}</span>
+              </button>
+            }
+          </mat-menu>
+
+          <!-- Сортировка -->
+          <button
+            class="sort-btn"
+            mat-icon-button
+            [matMenuTriggerFor]="sortMenu"
+            [attr.aria-label]="'Сортировка'"
+            title="Сортировка"
+          >
+            <mat-icon>swap_vert</mat-icon>
+          </button>
+          <mat-menu #sortMenu="matMenu">
+            @for (o of sortOptions; track o.value) {
+              <button
+                mat-menu-item
+                (click)="setSort(o.value)"
+              >
+                <mat-icon>{{
+                  feedFilter.sortBy() === o.value ? 'radio_button_checked' : ''
+                }}</mat-icon>
+                <span>{{ o.label }}</span>
+              </button>
+            }
+          </mat-menu>
+
+          <!-- Фильтры: при активных — чип с количеством -->
+          @if (feedFilter.activeFilterCount() > 0) {
+            <button
+              type="button"
+              class="filter-chip"
+              (click)="toggleFilterPanel()"
+              [attr.aria-label]="'Фильтры (активны)'"
+            >
+              <mat-icon>tune</mat-icon>
+              <span>{{ feedFilter.activeFilterCount() }}</span>
+            </button>
+          } @else {
+            <button
+              class="filter-btn"
+              mat-icon-button
+              (click)="toggleFilterPanel()"
+              [attr.aria-label]="'Фильтры'"
+            >
+              <mat-icon>tune</mat-icon>
+            </button>
+          }
         }
       }
 
@@ -85,38 +129,7 @@
         <mat-icon>add</mat-icon>
       </button>
 
-      @if (isSyncIconEnabled()) {
-        <button
-          class="sync-btn"
-          matTooltip="{{ syncTooltip() | translate }}"
-          (click)="onSyncButtonClick()"
-          (longPress)="setupSync()"
-          (contextmenu)="$event.preventDefault(); setupSync()"
-          mat-icon-button
-        >
-          @if (syncIsEnabledAndReady()) {
-            @if (isOnline()) {
-              @if (syncState() === 'ERROR') {
-                <mat-icon>sync_problem</mat-icon>
-              } @else {
-                <mat-icon [class.spin]="isSyncInProgress()">sync</mat-icon>
-              }
-              @if (hasNoPendingOps()) {
-                @if (superSyncIsConfirmedInSync()) {
-                  <mat-icon class="sync-state-ico">done_all</mat-icon>
-                } @else {
-                  <mat-icon class="sync-state-ico">check</mat-icon>
-                }
-              }
-            } @else {
-              <mat-icon>wifi_off</mat-icon>
-            }
-          } @else {
-            <mat-icon>sync_disabled</mat-icon>
-          }
-        </button>
-      }
-
+      <!-- MrSQM: sync-кнопка скрыта -->
       <plugin-work-context-header-btns></plugin-work-context-header-btns>
       <plugin-header-btns></plugin-header-btns>
 

@@ -3,6 +3,7 @@ import { FeedPageComponent } from './feed-page.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { MrsqmAuthService } from '../../services/auth.service';
 
 // Заглушка Supabase: фиксируем параметры вызова get_feed.
 class FakeSupabase {
@@ -26,6 +27,11 @@ class FakePanels {
   }
 }
 
+// Заглушка auth — нужна для scope-фильтра «Мои объекты».
+class FakeAuth {
+  currentUser = (): null => null;
+}
+
 const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
 describe('FeedPageComponent', () => {
@@ -38,6 +44,7 @@ describe('FeedPageComponent', () => {
         FeedFilterService,
         { provide: MrsqmSupabaseService, useValue: fake },
         { provide: PanelContentService, useClass: FakePanels },
+        { provide: MrsqmAuthService, useClass: FakeAuth },
       ],
     });
     filter = TestBed.inject(FeedFilterService);
@@ -57,25 +64,36 @@ describe('FeedPageComponent', () => {
     expect(fake.lastParams?.['p_limit']).toBe(20);
   });
 
-  it('маппит фильтры в параметры RPC (bedrooms как массив, listing, цена, distress)', async () => {
+  it('маппит фильтры в параметры RPC (мультиселекты, цена, площадь, сортировка)', async () => {
     const c = build();
     await flush();
     filter.dealType.set('rent');
+    filter.sortBy.set('price_desc');
     filter.filters.set({
-      propertyType: null,
-      bedrooms: 3,
+      unitTypeId: 'ut-1',
+      bedrooms: [2, 3],
+      bathrooms: [2],
       priceMin: 1000,
       priceMax: 5000,
+      areaMin: 500,
+      areaMax: 2000,
+      furnished: 'furnished',
+      handover: 'ready',
       listingType: 'pocket',
-      distressOnly: true,
     });
     await flush();
     expect(fake.lastParams?.['p_deal_type']).toBe('rent');
-    expect(fake.lastParams?.['p_bedrooms']).toEqual([3]);
+    expect(fake.lastParams?.['p_sort_by']).toBe('price_desc');
+    expect(fake.lastParams?.['p_unit_type_id']).toBe('ut-1');
+    expect(fake.lastParams?.['p_bedrooms']).toEqual([2, 3]);
+    expect(fake.lastParams?.['p_bathrooms']).toEqual([2]);
     expect(fake.lastParams?.['p_price_min']).toBe(1000);
     expect(fake.lastParams?.['p_price_max']).toBe(5000);
+    expect(fake.lastParams?.['p_area_sqft_min']).toBe(500);
+    expect(fake.lastParams?.['p_area_sqft_max']).toBe(2000);
+    expect(fake.lastParams?.['p_furnished']).toBe('furnished');
+    expect(fake.lastParams?.['p_handover']).toBe('ready');
     expect(fake.lastParams?.['p_listing_type']).toBe('pocket');
-    expect(fake.lastParams?.['p_is_distress']).toBe(true);
     expect(c.properties().length).toBe(0);
   });
 

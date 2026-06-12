@@ -7,11 +7,12 @@
     <div class="th th-beds">Beds</div>
     <div class="th th-size">Площадь</div>
     <div class="th th-price">Цена</div>
-    <div class="th th-listing">Листинг</div>
+    <div class="th th-photo"></div>
+    <div class="th th-agency">Агентство</div>
   </div>
 
   <div class="property-list">
-    @for (p of properties(); track p.id) {
+    @for (p of visibleProperties(); track p.id) {
       <mrsqm-property-card
         [property]="p"
         [isActive]="selectedPropertyId === p.id"

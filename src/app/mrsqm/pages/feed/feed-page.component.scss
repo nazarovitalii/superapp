@@ -18,15 +18,16 @@
 // Заголовки таблицы — те же пропорции что в grid карточки
 .table-header {
   display: grid;
-  // первая колонка — чекбокс выбора (как done-toggle в карточке)
+  // колонки 1:1 с .first-line карточки (чекбокс … фото, агентство)
   grid-template-columns:
     34px
-    minmax(120px, 2fr)
-    minmax(80px, 1fr)
-    60px
-    90px
-    minmax(100px, 1.2fr)
-    90px;
+    minmax(110px, 2fr)
+    minmax(76px, 1fr)
+    56px
+    80px
+    minmax(90px, 1fr)
+    28px
+    minmax(90px, 1.2fr);
   gap: var(--s);
   padding: var(--s) calc(var(--s) + 5px) var(--s) calc(var(--s-half) + 5px);
   position: sticky;
@@ -50,7 +51,7 @@
 .th-beds,
 .th-size,
 .th-price,
-.th-listing {
+.th-agency {
   text-align: right;
 }
 

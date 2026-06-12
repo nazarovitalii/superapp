@@ -20,90 +20,194 @@
   </div>
 
   <div class="filter-scroll">
-    <!-- Тип объекта -->
+    <!-- Тип недвижимости — все типы из справочника БД -->
+    @if (options(); as opts) {
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>apartment</mat-icon>Тип недвижимости</div>
+        <div class="chip-row">
+          @for (u of opts.unit_types; track u.id) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().unitTypeId === u.id"
+              (click)="setUnitType(u.id)"
+            >
+              {{ u.label_en }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Спальни — мультиселект -->
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>bed</mat-icon>Спальни</div>
+        <div class="chip-row">
+          @for (b of opts.bedrooms; track b.value) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().bedrooms.includes(b.value)"
+              (click)="toggleBedroom(b.value)"
+            >
+              {{ b.label_en }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Санузлы — мультиселект -->
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>shower</mat-icon>Санузлы</div>
+        <div class="chip-row">
+          @for (b of opts.bathrooms; track b.value) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().bathrooms.includes(b.value)"
+              (click)="toggleBathroom(b.value)"
+            >
+              {{ b.label_en }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Цена, AED -->
     <div class="filter-group">
-      <div class="filter-label"><mat-icon>apartment</mat-icon>Тип объекта</div>
+      <div class="filter-label"><mat-icon>payments</mat-icon>Цена, AED</div>
+      <div class="range-inputs">
+        <div class="num-field">
+          <input
+            class="num-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="От"
+            [ngModel]="formatNum(draft().priceMin)"
+            (ngModelChange)="setPriceMin($event)"
+          />
+          <span class="num-suffix">AED</span>
+        </div>
+        <span class="range-dash">—</span>
+        <div class="num-field">
+          <input
+            class="num-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="До"
+            [ngModel]="formatNum(draft().priceMax)"
+            (ngModelChange)="setPriceMax($event)"
+          />
+          <span class="num-suffix">AED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Площадь, sqft -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>square_foot</mat-icon>Площадь, sqft</div>
+      <div class="range-inputs">
+        <div class="num-field">
+          <input
+            class="num-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="От"
+            [ngModel]="formatNum(draft().areaMin)"
+            (ngModelChange)="setAreaMin($event)"
+          />
+          <span class="num-suffix">sqft</span>
+        </div>
+        <span class="range-dash">—</span>
+        <div class="num-field">
+          <input
+            class="num-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="До"
+            [ngModel]="formatNum(draft().areaMax)"
+            (ngModelChange)="setAreaMax($event)"
+          />
+          <span class="num-suffix">sqft</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Мебель -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>chair</mat-icon>Мебель</div>
       <div class="chip-row">
-        @for (t of propertyTypes; track t) {
-          <button
-            type="button"
-            class="chip"
-            [class.is-selected]="draft().propertyType === t"
-            (click)="setPropertyType(t)"
-          >
-            {{ t }}
-          </button>
-        }
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().furnished === 'furnished'"
+          (click)="setFurnished('furnished')"
+        >
+          Меблировано
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().furnished === 'unfurnished'"
+          (click)="setFurnished('unfurnished')"
+        >
+          Без мебели
+        </button>
       </div>
     </div>
 
-    <!-- Спальни -->
+    <!-- Готовность -->
     <div class="filter-group">
-      <div class="filter-label"><mat-icon>bed</mat-icon>Спальни</div>
+      <div class="filter-label"><mat-icon>home</mat-icon>Готовность</div>
       <div class="chip-row">
-        @for (b of bedOptions; track b) {
-          <button
-            type="button"
-            class="chip"
-            [class.is-selected]="draft().bedrooms === b"
-            (click)="setBedrooms(b)"
-          >
-            {{ bedLabel(b) }}
-          </button>
-        }
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().handover === 'ready'"
+          (click)="setHandover('ready')"
+        >
+          Ready
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().handover === 'offplan'"
+          (click)="setHandover('offplan')"
+        >
+          Off-plan
+        </button>
       </div>
     </div>
 
-    <!-- Цена -->
-    <div class="filter-group">
-      <div class="filter-label"><mat-icon>payments</mat-icon>Цена</div>
-      <div class="price-inputs">
-        <input
-          class="price-input"
-          type="number"
-          inputmode="numeric"
-          placeholder="От"
-          [ngModel]="draft().priceMin"
-          (ngModelChange)="setPriceMin($event)"
-        />
-        <span class="price-dash">—</span>
-        <input
-          class="price-input"
-          type="number"
-          inputmode="numeric"
-          placeholder="До"
-          [ngModel]="draft().priceMax"
-          (ngModelChange)="setPriceMax($event)"
-        />
-      </div>
-    </div>
-
-    <!-- Листинг -->
+    <!-- Листинг — чипы, как остальные группы -->
     <div class="filter-group">
       <div class="filter-label"><mat-icon>sell</mat-icon>Листинг</div>
-      <mat-button-toggle-group
-        class="listing-toggle"
-        [value]="draft().listingType"
-        (change)="setListingType($event.value)"
-      >
-        <mat-button-toggle value="all">Все</mat-button-toggle>
-        <mat-button-toggle value="official">Official</mat-button-toggle>
-        <mat-button-toggle value="pocket">Pocket</mat-button-toggle>
-      </mat-button-toggle-group>
-    </div>
-
-    <!-- Срочные -->
-    <div class="filter-group">
-      <label class="switch-row">
-        <span class="filter-label switch-label"
-          ><mat-icon>bolt</mat-icon>Только срочные</span
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'all'"
+          (click)="setListingType('all')"
         >
-        <input
-          type="checkbox"
-          [checked]="draft().distressOnly"
-          (change)="setDistress($any($event.target).checked)"
-        />
-      </label>
+          Все
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'official'"
+          (click)="setListingType('official')"
+        >
+          Official
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'pocket'"
+          (click)="setListingType('pocket')"
+        >
+          Pocket
+        </button>
+      </div>
     </div>
   </div>
 

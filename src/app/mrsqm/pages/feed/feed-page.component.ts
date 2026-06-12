@@ -1,4 +1,10 @@
-import { Component, inject, ChangeDetectionStrategy, effect } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectionStrategy,
+  effect,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -11,6 +17,7 @@ import { PanelContentService } from '../../../features/panels/panel-content.serv
 import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { FeedSelectionService } from '../../services/feed-selection.service';
+import { MrsqmAuthService } from '../../services/auth.service';
 import { signal } from '@angular/core';
 
 const PAGE_SIZE = 20;
@@ -37,6 +44,7 @@ export class FeedPageComponent {
   readonly filter = inject(FeedFilterService);
   // Множественный выбор чекбоксами — общий сервис с меню в главном хедере.
   readonly selection = inject(FeedSelectionService);
+  private readonly _auth = inject(MrsqmAuthService);
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
   private _typeLabels: Map<string, string> | null = null;
@@ -54,12 +62,32 @@ export class FeedPageComponent {
     return this._panels.selectedProperty()?.id ?? null;
   }
 
+  // Охват «Мои / Сеть / Public» — фильтр на клиенте по полям get_feed
+  // (owner_id / is_network / visibility): серверного параметра в RPC пока нет.
+  readonly visibleProperties = computed<PropertyFeedItem[]>(() => {
+    const items = this.properties();
+    const scope = this.filter.scope();
+    if (scope === 'all') {
+      return items;
+    }
+    const myId = this._auth.currentUser()?.id ?? null;
+    switch (scope) {
+      case 'mine':
+        return items.filter((p) => p.owner_id === myId);
+      case 'network':
+        return items.filter((p) => p.is_network);
+      case 'public':
+        return items.filter((p) => p.visibility === 'public');
+    }
+  });
+
   constructor() {
     void this._loadSaved();
-    // Перезагружаем при смене dealType или фильтров.
+    // Перезагружаем при смене dealType, фильтров или сортировки.
     effect(() => {
       this.filter.dealType();
       this.filter.filters();
+      this.filter.sortBy();
       this.offset.set(0);
       this.properties.set([]);
       void this._load();
@@ -114,12 +142,17 @@ export class FeedPageComponent {
       p_deal_type: this.filter.dealType(),
       p_limit: PAGE_SIZE,
       p_offset: this.offset(),
-      // p_bedrooms — массив (мультивыбор в API); пока одно значение.
-      p_bedrooms: f.bedrooms !== null ? [f.bedrooms] : null,
+      p_sort_by: this.filter.sortBy(),
+      p_unit_type_id: f.unitTypeId,
+      p_bedrooms: f.bedrooms.length ? f.bedrooms : null,
+      p_bathrooms: f.bathrooms.length ? f.bathrooms : null,
       p_price_min: f.priceMin,
       p_price_max: f.priceMax,
+      p_area_sqft_min: f.areaMin,
+      p_area_sqft_max: f.areaMax,
+      p_furnished: f.furnished,
+      p_handover: f.handover,
       p_listing_type: f.listingType !== 'all' ? f.listingType : null,
-      p_is_distress: f.distressOnly ? true : null,
     };
   }
 
