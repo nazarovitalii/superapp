@@ -29,48 +29,52 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 
 ### Реализовано
 
-- Карточка объекта — **одна строка, без фото**, 6 колонок (CSS grid):
-  1. Адрес (leaf-локация + community ниже — `community_name` из get_feed),
-  2. Тип (резолв `unit_type_id`/`sub_type_id` → label из `get_filter_options`),
-  3. Beds, 4. Площадь (sqft), 5. Цена, 6. бейдж Pocket/Official + «Срочно» + **закладка**.
-- **Избранное** — иконка `bookmark` на карточке, toggle `save_property`, состояние
-  из `saved_properties`. Отдельного экрана нет.
-- Sticky-шапка таблицы. Переключатель **Sale / Rent** и иконка **фильтров** (`tune`)
-  с бейджем — **в верхнем хедере**, только на роуте ленты.
-- Пагинация: `p_limit=20`, `p_offset`, «Загрузить ещё» (пока `loaded < count_total`).
-- Пустой результат → empty-state; ошибка RPC → error-state (моками не подменяем).
-- **Чекбокс множественного выбора** на каждой записи — переиспользован `done-toggle`
-  из инбокса SP; выбранные строки подсвечены (`--task-c-selected-bg`). Состояние —
-  в `FeedSelectionService`; при выборе в **главном хедере** вместо Sale/Rent
-  появляется контекстное меню «Выбрано: N» + сброс (размеры/шрифт как у deal-toggle).
-  Массовых действий пока нет (задел).
-- **Hover-кнопки справа** (как task-hover-controls в инбоксе): при наведении
-  выезжают «закладка» и «открыть карточку» (`right_panel_open`). Статичной закладки
-  в строке больше нет.
-- **Типографика строки:** все тексты 14px, один цвет (`--text-color`), без
-  жирности/курсива; цена без валюты (для аренды — `/период`).
-- **Колонки:** чекбокс · Адрес · Тип · Beds · Площадь · Цена · 📷 (есть фото) ·
-  Агентство (имя + дата `last_actualized_at || published_at`). Бейджей
-  Pocket/Official в строке нет.
+**Строка (8 колонок, CSS grid):**
+
+1. Чекбокс (`done-toggle`) — множественный выбор через `FeedSelectionService`
+2. Адрес: leaf-локация + community (`community_name` из get_feed)
+3. Тип (резолв `unit_type_id`/`sub_type_id` → label из `get_filter_options`)
+4. Beds
+5. Площадь (sqft)
+6. Цена (без валюты; для аренды — `/период`)
+7. 📷 (фотоаппарат, если у листинга есть фото)
+8. Агентство: имя агентства + дата `last_actualized_at || published_at`
+
+Бейджей Pocket/Official и «Срочно» в строке нет.
+
 - **Активная строка** (открыта карточка) — как выбранная задача в инбоксе: без
   смены цвета, тень `--task-selected-shadow` + box продлевается вправо до sidebar
-  (те же брейкпоинты, что `.isSelected` в `_task-base.scss`).
-- **Сортировка** в хедере (меню `swap_vert`): Сначала новые (`default`) / дорогие
-  (`price_desc`) / дешёвые (`price_asc`) / давние (`date_asc`) → `p_sort_by`.
-- **Охват** в хедере (пилюля-меню): Все / Мои объекты / Объекты сети / Public.
+  (те же брейкпоинты и CSS, что `.isSelected` в `_task-base.scss`).
+- **Hover-кнопки справа** (как task-hover-controls в инбоксе): при наведении
+  выезжают «закладка» и «открыть карточку» (`right_panel_open`). Только на pointer-устройствах.
+- **Типографика строки:** все тексты 14px, один цвет (`--text-color`), без жирности/курсива.
+- **Избранное** — иконка `bookmark` в hover-кнопках, toggle `save_property`, состояние
+  из `saved_properties`. Отдельного экрана нет.
+- Sticky-шапка таблицы. Пагинация: `p_limit=20`, «Загрузить ещё».
+- Пустой результат → empty-state; ошибка RPC → error-state.
+
+**Хедер ленты:**
+
+- Переключатель **Sale / Rent**
+- Пилюля-меню **Охват**: Все / Мои объекты / Объекты сети / Public.
   ⚠️ Фильтруется **на клиенте** (owner_id / is_network / visibility) — в get_feed
-  нет серверного параметра охвата (см. TODO API).
-- **Индикация фильтров:** при ≥1 активном фильтре иконка `tune` превращается в
-  primary-чип «tune N».
+  нет серверного параметра охвата (см. TODO API-9).
+- Меню **сортировки** (иконка `swap_vert`): Сначала новые (`default`) / дорогие
+  (`price_desc`) / дешёвые (`price_asc`) / давние (`date_asc`) → `p_sort_by`.
+- Иконка **фильтров** `tune` → при ≥1 активном фильтре превращается в primary-чип «tune N».
+- При выборе строк (чекбокс) — вместо Sale/Rent в хедере появляется «Выбрано: N» + сброс.
+- Убраны: Today-плашка с точками, Play, Focus Mode, Sync, кнопка провайдеров.
 
-### Состояние сервиса
+### Состояние сервисов
 
-- `FeedFilterService` — глобальный сигнал: `dealType` + `filters` + `activeFilterCount`.
+- `FeedFilterService` — `dealType` + `filters` (FeedFilters) + `sortBy` + `scope` + `activeFilterCount`.
+- `FeedSelectionService` — Set выбранных id, `count`, `toggle`, `clear`.
 - Клик по карточке → `PanelContentService.openProperty()` → нативная правая панель SP.
 
 ### Не сделано
 
-- Реальный `get_feed`, бейдж сети `is_network`, district-автокомплит.
+- District-автокомплит (`search_locations`) — API-2.
+- Серверный фильтр охвата (`p_scope` в get_feed) — API-9.
 - _Бейджи агентов (`owner_badge_level`) — НЕ в MVP._
 
 ---
@@ -81,12 +85,17 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 (`feed-filter-panel.component`): каждая группа — карточка `--task-detail-bg` /
 `--task-detail-shadow` с иконкой и названием (14px), как input-item строки модалки.
 
-Поля — 1:1 с параметрами `get_feed`: тип недвижимости (все `unit_types` из
-`get_filter_options` → `p_unit_type_id`), спальни и санузлы (**мультиселект** →
-`p_bedrooms[]`/`p_bathrooms[]`), цена AED и площадь sqft (диапазоны с
-разделителями-запятыми и суффиксом в поле → `p_price_*`/`p_area_sqft_*`), мебель
-(`p_furnished`), готовность (`p_handover`), листинг чипами (`p_listing_type`).
-«Только срочные» удалён. Все тексты 14px. Кнопки «Сбросить» / «Применить».
+Поля — 1:1 с параметрами `get_feed` (обновлено 2026-06-12):
+
+- Тип недвижимости: все `unit_types` из `get_filter_options` → `p_unit_type_id`
+- Спальни и санузлы: **мультиселект** (чипы) → `p_bedrooms[]` / `p_bathrooms[]`
+- Цена AED: диапазон мин/макс, разделители-запятые, суффикс AED в поле → `p_price_min/max`
+- Площадь sqft: диапазон мин/макс → `p_area_sqft_min/max`
+- Мебель: чипы (furnished / unfurnished) → `p_furnished`
+- Готовность: чипы (Ready / Off-plan) → `p_handover`
+- Листинг: чипы (Все / Official / Pocket) → `p_listing_type`
+
+«Только срочные» удалён (нет в API). Все тексты 14px, uniform. Кнопки «Сбросить» / «Применить».
 TODO: district через `search_locations` (API-2).
 
 ---
@@ -128,10 +137,9 @@ RPC `publish_property` **не существует**. Справочники —
 `visibility=network` → `status='active'` (сразу в ленте у сети);
 `visibility=public` → `status='pending_review'` (на модерацию).
 
-**UI:** визард с шагами убран — форма одной страницей **блоками в стиле sidebar
-задачи** (task-detail-panel): Тип объекта / Локация / Детали / Цена / Описание /
-Публикация. Каждый блок — карточка `--task-detail-bg`/`-shadow` с иконкой и
-заголовком (14px), внизу одна кнопка «Опубликовать».
+**UI:** визард с **5 шагами** (нумерованные точки сверху). Каждый шаг — один крупный
+блок в стиле task-detail-panel с иконкой, заголовком (17px) и «Шаг N/5» справа.
+Поля и чипы на шаге — 15px. Навигация: Назад / Далее / Опубликовать.
 
 ### Поля формы (реализовано)
 
