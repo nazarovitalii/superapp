@@ -65,3 +65,6 @@
 | `bebc690a8` | 18:16 | feat(mrsqm): хедер v4 — тулбар в ленте (охват+счётчик одной пилюлей, тогглы/сортировка/фильтры), глобальный хедер очищен; TODO фидбек 2026-06-12 + матрица полей |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `53bbc95eb` | 18:20 | docs: переписка + резюме дня 2026-06-12 (хедер v4)                                                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `0bac2182b` | 11:19 | feat(mrsqm): форма добавления v2 — 8 шагов, каскад адреса до leaf, поля по типам, building info                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
