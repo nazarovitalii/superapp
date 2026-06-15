@@ -1,0 +1,90 @@
+import { inject, Injectable } from '@angular/core';
+import { MrsqmSupabaseService } from './supabase.service';
+import { PropertyPhotoInsert } from '../types/database';
+
+// Параметры нарезки (в браузере): full ~1600px, thumb ~400px, WebP.
+const FULL_MAX = 1600;
+const FULL_Q = 0.82;
+const THUMB_MAX = 400;
+const THUMB_Q = 0.7;
+const BUCKET = 'property_photos';
+
+interface Sized {
+  blob: Blob;
+  width: number;
+  height: number;
+}
+
+// Загрузка фото объекта: нарезка в браузере → Storage → INSERT в property_photos.
+@Injectable({ providedIn: 'root' })
+export class PropertyPhotoService {
+  private readonly _supabase = inject(MrsqmSupabaseService);
+
+  // Нарезать и загрузить все файлы для объекта, затем записать строки в БД.
+  // Порядок = порядок в массиве. Первый — order_index 0 (главное фото).
+  async uploadAndAttach(propertyId: string, files: File[]): Promise<void> {
+    if (!files.length) return;
+    const rows: PropertyPhotoInsert[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const full = await this._resize(files[i], FULL_MAX, FULL_Q);
+      const thumb = await this._resize(files[i], THUMB_MAX, THUMB_Q);
+      const fullUrl = await this._upload(`${propertyId}/${i}_full.webp`, full.blob);
+      const thumbUrl = await this._upload(`${propertyId}/${i}_thumb.webp`, thumb.blob);
+      rows.push({
+        property_id: propertyId,
+        photo_type: 'gallery',
+        order_index: i,
+        full_url: fullUrl,
+        thumb_url: thumbUrl,
+        width: full.width,
+        height: full.height,
+        file_size_kb: Math.round(full.blob.size / 1024),
+      });
+    }
+    const { error } = await this._supabase.client.from('property_photos').insert(rows);
+    if (error) throw error;
+  }
+
+  private async _upload(path: string, blob: Blob): Promise<string> {
+    const { error } = await this._supabase.client.storage
+      .from(BUCKET)
+      .upload(path, blob, { contentType: 'image/webp', upsert: true });
+    if (error) throw error;
+    return this._supabase.client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  }
+
+  // Масштабирование через canvas → WebP. Не увеличиваем (scale ≤ 1).
+  private async _resize(file: File, maxDim: number, quality: number): Promise<Sized> {
+    const img = await this._loadImage(file);
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const width = Math.max(1, Math.round(img.width * scale));
+    const height = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas недоступен');
+    ctx.drawImage(img, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', quality),
+    );
+    if (!blob) throw new Error('Не удалось сжать изображение');
+    return { blob, width, height };
+  }
+
+  private _loadImage(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Не удалось прочитать изображение'));
+      };
+      img.src = url;
+    });
+  }
+}

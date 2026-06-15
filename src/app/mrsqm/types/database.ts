@@ -154,6 +154,18 @@ export interface CommunityLayout {
   name: string;
 }
 
+// Строка для INSERT в property_photos после загрузки в Storage.
+export interface PropertyPhotoInsert {
+  property_id: string;
+  photo_type: string; // gallery | primary | floor_plan | exterior | interior
+  order_index: number;
+  full_url: string;
+  thumb_url: string;
+  width: number | null;
+  height: number | null;
+  file_size_kb: number | null;
+}
+
 // ─── Результат RPC search_locations (p_mode='search') ────────────────────
 export interface LocationSearchItem {
   id: string;
@@ -168,6 +180,8 @@ export interface LocationSearchItem {
 export interface PropertyInsert {
   owner_id: string;
   location_id: string;
+  // Уровень адреса, раскрываемый публично (бегунок). NULL = полный адрес.
+  public_location_id: string | null;
   category_id: string | null;
   unit_type_id: string | null;
   sub_type_id: string | null;

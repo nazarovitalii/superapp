@@ -236,11 +236,38 @@
                     <span class="addr-crumb">{{ p.name }}</span>
                   }
                 </div>
-                <p class="note">
-                  Регулятор приватности адреса (показывать соседям только до выбранного
-                  уровня) появится здесь позже.
-                </p>
               </div>
+
+              <!-- Бегунок приватности адреса (F-12b) -->
+              @if (canSlide()) {
+                <div class="field">
+                  <span class="field-label">Что видят соседи</span>
+                  <input
+                    type="range"
+                    class="reveal-range"
+                    [min]="communityIndex()"
+                    [max]="leafIndex()"
+                    step="1"
+                    [ngModel]="revealIndex()"
+                    (ngModelChange)="revealIndex.set(+$event)"
+                  />
+                  <div class="reveal-ticks">
+                    @for (p of addrPath(); track p.id; let i = $index) {
+                      <span
+                        class="reveal-tick"
+                        [class.muted]="i < communityIndex()"
+                        [class.on]="i <= revealIndex()"
+                      >
+                        {{ p.name }}
+                      </span>
+                    }
+                  </div>
+                  <p class="note">
+                    В ленте всем (и вам) показывается: <b>{{ revealLabel() }}</b
+                    >. Точный адрес виден только вам. Ниже комьюнити скрыть нельзя.
+                  </p>
+                </div>
+              }
 
               <!-- Building info из location_developers -->
               @if (buildingInfo(); as bi) {
@@ -704,7 +731,7 @@
             </p>
           }
 
-          <!-- ШАГ 8: Описание -->
+          <!-- ШАГ 8: Описание + фото -->
           @if (step() === 7) {
             <div class="field">
               <span class="field-label">Описание</span>
@@ -715,7 +742,47 @@
                 placeholder="Опишите объект…"
               ></textarea>
             </div>
-            <p class="note">Загрузка фотографий объекта появится здесь позже.</p>
+
+            <div class="field">
+              <span class="field-label">Фотографии</span>
+              <label class="photo-add">
+                <mat-icon>add_photo_alternate</mat-icon>
+                <span>Добавить фото</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  (change)="onPhotosSelected($event)"
+                />
+              </label>
+              @if (previews().length) {
+                <div class="photo-grid">
+                  @for (src of previews(); track src; let i = $index) {
+                    <div class="photo-cell">
+                      <img
+                        [src]="src"
+                        alt="фото"
+                      />
+                      @if (i === 0) {
+                        <span class="photo-main">Главное</span>
+                      }
+                      <button
+                        type="button"
+                        class="photo-del"
+                        (click)="removePhoto(i)"
+                        aria-label="Удалить фото"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <p class="note">
+                  Первое фото — главное. Фото сжимаются в браузере (WebP) перед загрузкой.
+                </p>
+              }
+            </div>
           }
         </div>
       </section>

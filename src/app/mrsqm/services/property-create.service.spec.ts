@@ -35,6 +35,7 @@ class FakeSupabase {
 const samplePayload = (): PropertyInsert => ({
   owner_id: 'u1',
   location_id: 'loc1',
+  public_location_id: null,
   category_id: 'cat1',
   unit_type_id: 'ut1',
   sub_type_id: null,

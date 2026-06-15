@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { PropertyPhotoService } from '../../services/property-photo.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import {
   BuildingInfo,
@@ -68,6 +69,7 @@ const CHILDREN_SELECT_THRESHOLD = 10;
 })
 export class AddPropertyPageComponent {
   private readonly _service = inject(PropertyCreateService);
+  private readonly _photoService = inject(PropertyPhotoService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _router = inject(Router);
 
@@ -103,6 +105,9 @@ export class AddPropertyPageComponent {
   readonly communityLayouts = signal<CommunityLayout[]>([]);
   // developer_id из developer_ids leaf — для offplan.
   private readonly _developerId = signal<string | null>(null);
+  // Бегунок приватности адреса: индекс уровня в addrPath, до которого
+  // адрес виден публично. По умолчанию = leaf (полный адрес).
+  readonly revealIndex = signal<number>(0);
 
   // ─── Шаг 4: Параметры (зависят от типа) ────────────────────────────────
   readonly bedrooms = signal<number | null>(null);
@@ -141,8 +146,10 @@ export class AddPropertyPageComponent {
   readonly plotNumber = signal<string>('');
   readonly municipalityNumber = signal<string>('');
 
-  // ─── Шаг 8: Описание ───────────────────────────────────────────────────
+  // ─── Шаг 8: Описание + фото ────────────────────────────────────────────
   readonly description = signal<string>('');
+  readonly photos = signal<File[]>([]);
+  readonly previews = signal<string[]>([]);
 
   // ─── Производные ────────────────────────────────────────────────────────
   readonly unitTypesForCategory = computed<FilterOptionId[]>(() => {
@@ -192,6 +199,27 @@ export class AddPropertyPageComponent {
   });
   readonly childrenAsSearch = computed(
     () => this.children().length > CHILDREN_SELECT_THRESHOLD,
+  );
+
+  // ─── Бегунок приватности адреса ─────────────────────────────────────────
+  // Минимум бегунка — индекс комьюнити (ниже нельзя). Если комьюнити нет в
+  // цепочке (адрес = сам комьюнити/выше) — минимум 0.
+  readonly communityIndex = computed<number>(() => {
+    const idx = this.addrPath().findIndex((p) => p.level === 'community');
+    return idx < 0 ? 0 : idx;
+  });
+  readonly leafIndex = computed<number>(() => Math.max(0, this.addrPath().length - 1));
+  // Есть что двигать: leaf глубже комьюнити.
+  readonly canSlide = computed<boolean>(() => this.leafIndex() > this.communityIndex());
+  // Уровень адреса, который увидят все. revealIndex == leaf → полный (null).
+  readonly publicLocationId = computed<string | null>(() => {
+    const ri = this.revealIndex();
+    if (ri >= this.leafIndex()) return null;
+    return this.addrPath()[ri]?.id ?? null;
+  });
+  // Подпись: что увидят соседи (имя уровня по revealIndex).
+  readonly revealLabel = computed<string>(
+    () => this.addrPath()[this.revealIndex()]?.name ?? '',
   );
 
   private _locTimer: ReturnType<typeof setTimeout> | null = null;
@@ -266,6 +294,8 @@ export class AddPropertyPageComponent {
       if (info.children.length === 0) {
         // leaf достигнут.
         this.locationId.set(id);
+        // Бегунок по умолчанию на leaf (полный адрес).
+        this.revealIndex.set(this.addrPath().length - 1);
         await this._afterLeaf(id);
       } else {
         this.locationId.set(null);
@@ -299,6 +329,25 @@ export class AddPropertyPageComponent {
     this.communityLayouts.set([]);
     this._developerId.set(null);
     this.layoutId.set(null);
+    this.revealIndex.set(0);
+  }
+
+  // ─── Шаг 8: фото ────────────────────────────────────────────────────────
+  onPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const list = input.files;
+    if (!list || !list.length) return;
+    const added = Array.from(list);
+    this.photos.set([...this.photos(), ...added]);
+    this.previews.set([...this.previews(), ...added.map((f) => URL.createObjectURL(f))]);
+    input.value = '';
+  }
+
+  removePhoto(i: number): void {
+    const url = this.previews()[i];
+    if (url) URL.revokeObjectURL(url);
+    this.photos.set(this.photos().filter((_, idx) => idx !== i));
+    this.previews.set(this.previews().filter((_, idx) => idx !== i));
   }
 
   // ─── Мультиселекты (views/positions/amenities) ──────────────────────────
@@ -390,6 +439,7 @@ export class AddPropertyPageComponent {
     const payload: PropertyInsert = {
       owner_id: owner.id,
       location_id: locId,
+      public_location_id: this.publicLocationId(),
       category_id: this.categoryId(),
       unit_type_id: this.unitTypeId(),
       sub_type_id: tf.subType ? this.subTypeId() : null,
@@ -435,7 +485,16 @@ export class AddPropertyPageComponent {
     this.submitting.set(true);
     this.error.set(null);
     try {
-      await this._service.createProperty(payload);
+      const id = await this._service.createProperty(payload);
+      // Фото грузим после создания (нужен id для пути и RLS). Сбой загрузки
+      // не откатывает объект — сообщаем, но переходим в ленту.
+      if (this.photos().length) {
+        try {
+          await this._photoService.uploadAndAttach(id, this.photos());
+        } catch {
+          this.error.set('Объект создан, но часть фото не загрузилась');
+        }
+      }
       await this._router.navigateByUrl('/mrsqm/feed');
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Не удалось создать объект');
