@@ -101,6 +101,57 @@ export interface FilterOptions {
   price_periods: FilterOptionValue[];
   bedrooms: FilterOptionNum[];
   bathrooms: FilterOptionNum[];
+  // Доп. справочники для формы добавления (поля по типам объектов).
+  views: FilterOptionId[];
+  positions: FilterOptionId[];
+  amenities: FilterOptionId[];
+  floor_levels: FilterOptionId[];
+  floors_in_unit_apt: FilterOptionId[];
+  floors_in_unit_house: FilterOptionId[];
+  completion_quarters: FilterOptionValue[];
+}
+
+// ─── RPC search_locations (p_mode='info') — каскад адреса ─────────────────
+export interface LocationChild {
+  id: string;
+  name: string;
+  level: string;
+  stats_listings: number;
+}
+export interface LocationBreadcrumbItem {
+  level: string;
+  id: string;
+  name: string;
+}
+export interface LocationInfo {
+  location: {
+    id: string;
+    name: string;
+    level: string;
+    lat: number | null;
+    lng: number | null;
+    is_popular: boolean;
+    completion_status: string | null;
+    developer_ids: string[];
+  };
+  breadcrumb: LocationBreadcrumbItem[];
+  children: LocationChild[];
+}
+
+// Building info из location_developers по leaf-локации (read-only блок формы).
+export interface BuildingInfo {
+  project_name: string | null;
+  built_year: number | null;
+  completion_year: number | null;
+  completion_q: string | null;
+  total_floors: number | null;
+  total_units: number | null;
+}
+
+// Планировка из справочника комьюнити (community_layouts).
+export interface CommunityLayout {
+  id: string;
+  name: string;
 }
 
 // ─── Результат RPC search_locations (p_mode='search') ────────────────────
@@ -127,13 +178,32 @@ export interface PropertyInsert {
   price_period: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  is_maid: boolean;
+  is_hotel_pool: boolean;
   area_sqft: number | null;
   area_sqm: number | null;
+  plot_sqft: number | null;
+  plot_sqm: number | null;
+  floor_number: number | null;
+  floor_level_id: string | null;
+  floors_in_unit: string | null;
+  layout_id: string | null;
+  view_ids: string[] | null;
+  position_ids: string[] | null;
+  amenity_ids: string[] | null;
   furnished: string | null;
   handover: string | null;
   occupancy_status: string | null;
+  lease_until: string | null; // дата «занято до» (occupied), YYYY-MM-01
+  developer_id: string | null;
+  completion_year: number | null;
+  completion_q: string | null;
   is_distress: boolean;
   is_negotiable: boolean;
+  title_deed_number: string | null;
+  title_deed_year: number | null;
+  plot_number: string | null;
+  municipality_number: string | null;
   visibility: string;
   // status: network → 'active' сразу, public → 'pending_review' (модерация).
   // Модерации в БД нет — статус задаёт клиент по visibility (продуктовое правило).

@@ -20,7 +20,6 @@
     @if (!options()) {
       <div class="loading"><mat-spinner [diameter]="28"></mat-spinner></div>
     } @else {
-      <!-- Один крупный блок на шаг — стиль блока sidebar задачи -->
       <section class="block">
         <div class="block-header">
           <mat-icon>{{ stepIcons[step()] }}</mat-icon>
@@ -29,25 +28,8 @@
         </div>
 
         <div class="block-content">
-          <!-- ШАГ 0: Тип -->
+          <!-- ШАГ 1: Категория → Тип → Подтип -->
           @if (step() === 0) {
-            <!-- Сделка идёт первой (item 15) -->
-            <div class="field">
-              <span class="field-label">Сделка</span>
-              <div class="chips">
-                @for (d of options()!.deal_types; track d.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="dealType() === d.value"
-                    (click)="dealType.set($any(d.value))"
-                  >
-                    {{ d.label_en }}
-                  </button>
-                }
-              </div>
-            </div>
-
             <div class="field">
               <span class="field-label">Категория</span>
               <div class="chips">
@@ -82,7 +64,7 @@
               </div>
             }
 
-            @if (subTypesForUnitType().length) {
+            @if (fields().subType && subTypesForUnitType().length) {
               <div class="field">
                 <span class="field-label">Подтип</span>
                 <div class="chips">
@@ -101,14 +83,146 @@
             }
           }
 
-          <!-- ШАГ 1: Локация -->
+          <!-- ШАГ 2: Сделка -->
           @if (step() === 1) {
             <div class="field">
-              <span class="field-label">Локация</span>
-              @if (locationId()) {
+              <span class="field-label">Тип сделки</span>
+              <div class="chips">
+                @for (d of options()!.deal_types; track d.value) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.sel]="dealType() === d.value"
+                    (click)="dealType.set($any(d.value))"
+                  >
+                    {{ d.label_en }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (dealType() === 'rent') {
+              <div class="field">
+                <span class="field-label">Период оплаты</span>
+                <div class="chips">
+                  @for (p of options()!.price_periods; track p.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="pricePeriod() === p.value"
+                      (click)="pricePeriod.set(p.value)"
+                    >
+                      {{ p.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- ШАГ 3: Адрес (каскад до конечного уровня) -->
+          @if (step() === 2) {
+            @if (!isLeaf()) {
+              <!-- Поиск, пока корневая локация не выбрана -->
+              @if (!addrPath().length) {
+                <div class="field">
+                  <span class="field-label">Локация</span>
+                  <input
+                    type="text"
+                    [ngModel]="locQuery()"
+                    (ngModelChange)="onLocInput($event)"
+                    placeholder="Район, комьюнити, здание…"
+                  />
+                  @if (locLoading()) {
+                    <div class="loc-hint">Поиск…</div>
+                  }
+                  @if (locResults().length) {
+                    <div class="loc-dropdown">
+                      @for (r of locResults(); track r.id) {
+                        <button
+                          type="button"
+                          class="loc-item"
+                          (click)="pickLocation(r.id)"
+                        >
+                          <span class="loc-name">{{ r.name }}</span>
+                          <span class="loc-sub">
+                            {{ r.community_name }}{{ r.community_name ? ' · ' : ''
+                            }}{{ r.city_name }}
+                            <span class="loc-level">({{ r.level }})</span>
+                          </span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Выбранная цепочка уровней -->
+              @if (addrPath().length) {
+                <div class="addr-trail">
+                  @for (p of addrPath(); track p.id) {
+                    <span class="addr-crumb">{{ p.name }}</span>
+                  }
+                  <button
+                    type="button"
+                    class="loc-clear"
+                    (click)="resetLocation()"
+                    title="Сбросить адрес"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+
+                <!-- Выбор следующего уровня: поиск если >10, иначе чипы -->
+                <div class="field">
+                  <span class="field-label">Уточните адрес</span>
+                  @if (childrenAsSearch()) {
+                    <input
+                      type="text"
+                      [ngModel]="childQuery()"
+                      (ngModelChange)="childQuery.set($event)"
+                      placeholder="Начните вводить название…"
+                    />
+                    <div class="loc-dropdown">
+                      @for (c of childrenFiltered(); track c.id) {
+                        <button
+                          type="button"
+                          class="loc-item"
+                          (click)="pickLocation(c.id)"
+                        >
+                          <span class="loc-name">{{ c.name }}</span>
+                          <span class="loc-sub">
+                            <span class="loc-level">({{ c.level }})</span>
+                          </span>
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <div class="chips">
+                      @for (c of childrenFiltered(); track c.id) {
+                        <button
+                          type="button"
+                          class="chip"
+                          (click)="pickLocation(c.id)"
+                        >
+                          {{ c.name }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (locLoading() && addrPath().length) {
+                <div class="loc-hint">Загрузка…</div>
+              }
+            } @else {
+              <!-- leaf выбран -->
+              <div class="field">
+                <span class="field-label">Адрес</span>
                 <div class="loc-selected">
                   <mat-icon>place</mat-icon>
-                  <span>{{ locationLabel() }}</span>
+                  <span>{{ addrLabel() }}</span>
                   <button
                     type="button"
                     class="loc-clear"
@@ -117,98 +231,294 @@
                     <mat-icon>close</mat-icon>
                   </button>
                 </div>
-              } @else {
-                <input
-                  type="text"
-                  [ngModel]="locQuery()"
-                  (ngModelChange)="onLocInput($event)"
-                  placeholder="Район, комьюнити, здание…"
-                />
-                @if (locLoading()) {
-                  <div class="loc-hint">Поиск…</div>
-                }
-                @if (locResults().length) {
-                  <div class="loc-dropdown">
-                    @for (r of locResults(); track r.id) {
-                      <button
-                        type="button"
-                        class="loc-item"
-                        (click)="selectLocation(r)"
-                      >
-                        <span class="loc-name">{{ r.name }}</span>
-                        <span class="loc-sub">
-                          {{ r.community_name }}{{ r.community_name ? ' · ' : ''
-                          }}{{ r.city_name }}
-                          <span class="loc-level">({{ r.level }})</span>
-                        </span>
-                      </button>
+                <div class="addr-trail addr-trail--full">
+                  @for (p of addrPath(); track p.id) {
+                    <span class="addr-crumb">{{ p.name }}</span>
+                  }
+                </div>
+                <p class="note">
+                  Регулятор приватности адреса (показывать соседям только до выбранного
+                  уровня) появится здесь позже.
+                </p>
+              </div>
+
+              <!-- Building info из location_developers -->
+              @if (buildingInfo(); as bi) {
+                <div class="info-card">
+                  <div class="info-card-title">
+                    <mat-icon>apartment</mat-icon>
+                    <span>{{ bi.project_name || 'Информация о здании' }}</span>
+                  </div>
+                  <div class="info-grid">
+                    @if (bi.built_year) {
+                      <div>
+                        <span>Год постройки</span><b>{{ bi.built_year }}</b>
+                      </div>
+                    }
+                    @if (bi.completion_year) {
+                      <div>
+                        <span>Сдача</span
+                        ><b>{{ bi.completion_year }} {{ bi.completion_q }}</b>
+                      </div>
+                    }
+                    @if (bi.total_floors) {
+                      <div>
+                        <span>Этажей</span><b>{{ bi.total_floors }}</b>
+                      </div>
+                    }
+                    @if (bi.total_units) {
+                      <div>
+                        <span>Юнитов</span><b>{{ bi.total_units }}</b>
+                      </div>
                     }
                   </div>
-                }
+                </div>
               }
-            </div>
+            }
           }
 
-          <!-- ШАГ 2: Детали -->
-          @if (step() === 2) {
-            <div class="field">
-              <span class="field-label">Спальни</span>
-              <div class="chips">
-                @for (b of options()!.bedrooms; track b.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="bedrooms() === b.value"
-                    (click)="bedrooms.set(b.value)"
-                  >
-                    {{ b.label_en }}
-                  </button>
-                }
+          <!-- ШАГ 4: Параметры (зависят от типа) -->
+          @if (step() === 3) {
+            @if (fields().rooms) {
+              <div class="field">
+                <span class="field-label">Спальни</span>
+                <div class="chips">
+                  @for (b of options()!.bedrooms; track b.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="bedrooms() === b.value"
+                      (click)="bedrooms.set(b.value)"
+                    >
+                      {{ b.label_en }}
+                    </button>
+                  }
+                </div>
               </div>
-            </div>
 
-            <div class="field">
-              <span class="field-label">Санузлы</span>
-              <div class="chips">
-                @for (b of options()!.bathrooms; track b.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="bathrooms() === b.value"
-                    (click)="bathrooms.set(b.value)"
-                  >
-                    {{ b.label_en }}
-                  </button>
-                }
+              <div class="field">
+                <span class="field-label">Санузлы</span>
+                <div class="chips">
+                  @for (b of options()!.bathrooms; track b.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="bathrooms() === b.value"
+                      (click)="bathrooms.set(b.value)"
+                    >
+                      {{ b.label_en }}
+                    </button>
+                  }
+                </div>
               </div>
-            </div>
 
+              @if (fields().maid || fields().hotelPool) {
+                <div class="field">
+                  @if (fields().maid) {
+                    <label class="toggle-row">
+                      <span>Maid room</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isMaid()"
+                        (ngModelChange)="isMaid.set($event)"
+                      />
+                    </label>
+                  }
+                  @if (fields().hotelPool) {
+                    <label class="toggle-row">
+                      <span>Hotel apartment</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isHotelPool()"
+                        (ngModelChange)="isHotelPool.set($event)"
+                      />
+                    </label>
+                  }
+                </div>
+              }
+            }
+
+            @if (fields().bua) {
+              <div class="field">
+                <span class="field-label">Площадь BUA, sqft</span>
+                <input
+                  type="number"
+                  [ngModel]="areaSqft()"
+                  (ngModelChange)="areaSqft.set($event)"
+                  placeholder="напр. 1200"
+                />
+              </div>
+            }
+            @if (fields().plot) {
+              <div class="field">
+                <span class="field-label">Площадь участка (Plot), sqft</span>
+                <input
+                  type="number"
+                  [ngModel]="plotSqft()"
+                  (ngModelChange)="plotSqft.set($event)"
+                  placeholder="напр. 3500"
+                />
+              </div>
+            }
+
+            @if (fields().floorNumber) {
+              <div class="field">
+                <span class="field-label">Этаж</span>
+                <input
+                  type="number"
+                  [ngModel]="floorNumber()"
+                  (ngModelChange)="floorNumber.set($event)"
+                  placeholder="напр. 12"
+                />
+              </div>
+            }
+            @if (fields().floorLevel) {
+              <div class="field">
+                <span class="field-label">Уровень этажа</span>
+                <div class="chips">
+                  @for (fl of options()!.floor_levels; track fl.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="floorLevelId() === fl.id"
+                      (click)="floorLevelId.set(fl.id)"
+                    >
+                      {{ fl.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().floorsInUnit) {
+              <div class="field">
+                <span class="field-label">Этажность</span>
+                <div class="chips">
+                  @for (fu of floorsInUnitOptions(); track fu.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="floorsInUnit() === fu.value"
+                      (click)="floorsInUnit.set(fu.value)"
+                    >
+                      {{ fu.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (fields().layout && communityLayouts().length) {
+              <div class="field">
+                <span class="field-label">Планировка</span>
+                <div class="chips">
+                  @for (l of communityLayouts(); track l.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="layoutId() === l.id"
+                      (click)="layoutId.set(l.id)"
+                    >
+                      {{ l.name }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (fields().views && options()!.views.length) {
+              <div class="field">
+                <span class="field-label">Вид из окна</span>
+                <div class="chips">
+                  @for (v of options()!.views; track v.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="viewIds().includes(v.id)"
+                      (click)="toggleIn(viewIds, v.id)"
+                    >
+                      {{ v.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().positions && options()!.positions.length) {
+              <div class="field">
+                <span class="field-label">Расположение</span>
+                <div class="chips">
+                  @for (p of options()!.positions; track p.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="positionIds().includes(p.id)"
+                      (click)="toggleIn(positionIds, p.id)"
+                    >
+                      {{ p.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().amenities && options()!.amenities.length) {
+              <div class="field">
+                <span class="field-label">Удобства</span>
+                <div class="chips">
+                  @for (a of options()!.amenities; track a.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="amenityIds().includes(a.id)"
+                      (click)="toggleIn(amenityIds, a.id)"
+                    >
+                      {{ a.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (fields().furnished) {
+              <div class="field">
+                <span class="field-label">Мебель</span>
+                <div class="chips">
+                  @for (fo of options()!.furnished_options; track fo.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="furnished() === fo.value"
+                      (click)="furnished.set(fo.value)"
+                    >
+                      {{ fo.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- ШАГ 5: Цена -->
+          @if (step() === 4) {
             <div class="field">
-              <span class="field-label">Площадь, sqft</span>
+              <span class="field-label">Цена, AED</span>
               <input
-                type="number"
-                [ngModel]="areaSqft()"
-                (ngModelChange)="areaSqft.set($event)"
-                placeholder="напр. 1200"
+                [ngModel]="price()"
+                (ngModelChange)="onPriceInput($event)"
+                inputmode="numeric"
+                placeholder="напр. 1,200,000"
               />
             </div>
+            <label class="toggle-row">
+              <span>Торг уместен</span>
+              <input
+                type="checkbox"
+                [ngModel]="isNegotiable()"
+                (ngModelChange)="isNegotiable.set($event)"
+              />
+            </label>
+          }
 
-            <div class="field">
-              <span class="field-label">Мебель</span>
-              <div class="chips">
-                @for (fo of options()!.furnished_options; track fo.id) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="furnished() === fo.value"
-                    (click)="furnished.set(fo.value)"
-                  >
-                    {{ fo.label_en }}
-                  </button>
-                }
-              </div>
-            </div>
-
+          <!-- ШАГ 6: Состояние -->
+          @if (step() === 5) {
             <div class="field">
               <span class="field-label">Готовность</span>
               <div class="chips">
@@ -224,6 +534,33 @@
                 }
               </div>
             </div>
+
+            @if (handover() === 'offplan') {
+              <div class="field">
+                <span class="field-label">Год сдачи</span>
+                <input
+                  type="number"
+                  [ngModel]="completionYear()"
+                  (ngModelChange)="completionYear.set($event)"
+                  placeholder="напр. 2027"
+                />
+              </div>
+              <div class="field">
+                <span class="field-label">Квартал сдачи</span>
+                <div class="chips">
+                  @for (q of options()!.completion_quarters; track q.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="completionQ() === q.value"
+                      (click)="completionQ.set(q.value)"
+                    >
+                      {{ q.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
 
             @if (handover() === 'ready') {
               <div class="field">
@@ -241,69 +578,58 @@
                   }
                 </div>
               </div>
-            }
-          }
 
-          <!-- ШАГ 3: Цена -->
-          @if (step() === 3) {
-            <div class="field">
-              <span class="field-label">Цена, AED</span>
-              <input
-                [ngModel]="price()"
-                (ngModelChange)="onPriceInput($event)"
-                inputmode="numeric"
-                placeholder="напр. 1,200,000"
-              />
-            </div>
-
-            @if (dealType() === 'rent') {
-              <div class="field">
-                <span class="field-label">Период аренды</span>
-                <div class="chips">
-                  @for (p of options()!.price_periods; track p.value) {
-                    <button
-                      type="button"
-                      class="chip"
-                      [class.sel]="pricePeriod() === p.value"
-                      (click)="pricePeriod.set(p.value)"
-                    >
-                      {{ p.label_en }}
-                    </button>
-                  }
+              @if (occupancy() === 'occupied') {
+                <div class="field">
+                  <span class="field-label">Занято до (необязательно)</span>
+                  <div class="lease-row">
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      [ngModel]="leaseMonth()"
+                      (ngModelChange)="leaseMonth.set($event)"
+                      placeholder="Месяц (1-12)"
+                    />
+                    <input
+                      type="number"
+                      [ngModel]="leaseYear()"
+                      (ngModelChange)="leaseYear.set($event)"
+                      placeholder="Год"
+                    />
+                  </div>
                 </div>
-              </div>
+              }
             }
 
             <label class="toggle-row">
-              <span>Торг уместен</span>
-              <input
-                type="checkbox"
-                [ngModel]="isNegotiable()"
-                (ngModelChange)="isNegotiable.set($event)"
-              />
-            </label>
-            <label class="toggle-row">
-              <span>Срочная продажа</span>
+              <span>Срочная продажа (distress)</span>
               <input
                 type="checkbox"
                 [ngModel]="isDistress()"
                 (ngModelChange)="isDistress.set($event)"
               />
             </label>
-
-            <div class="field">
-              <span class="field-label">Описание</span>
-              <textarea
-                rows="4"
-                [ngModel]="description()"
-                (ngModelChange)="description.set($event)"
-                placeholder="Опишите объект…"
-              ></textarea>
-            </div>
           }
 
-          <!-- ШАГ 4: Публикация -->
-          @if (step() === 4) {
+          <!-- ШАГ 7: Листинг -->
+          @if (step() === 6) {
+            <div class="field">
+              <span class="field-label">Тип листинга</span>
+              <div class="chips">
+                @for (l of options()!.listing_types; track l.value) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.sel]="listingType() === l.value"
+                    (click)="listingType.set(l.value)"
+                  >
+                    {{ l.label_en }}
+                  </button>
+                }
+              </div>
+            </div>
+
             <div class="field">
               <span class="field-label">Видимость</span>
               <div class="chips">
@@ -327,21 +653,48 @@
             </div>
 
             <div class="field">
-              <span class="field-label">Тип листинга</span>
-              <div class="chips">
-                @for (l of options()!.listing_types; track l.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="listingType() === l.value"
-                    (click)="listingType.set(l.value)"
-                  >
-                    {{ l.label_en }}
-                  </button>
-                }
-              </div>
+              <span class="field-label">Title Deed №</span>
+              <input
+                type="text"
+                [ngModel]="titleDeedNumber()"
+                (ngModelChange)="titleDeedNumber.set($event)"
+                placeholder="Номер свидетельства"
+              />
+            </div>
+            <div class="field">
+              <span class="field-label">Год Title Deed</span>
+              <input
+                type="number"
+                [ngModel]="titleDeedYear()"
+                (ngModelChange)="titleDeedYear.set($event)"
+                placeholder="напр. 2022"
+              />
+            </div>
+            <div class="field">
+              <span class="field-label">Plot number</span>
+              <input
+                type="text"
+                [ngModel]="plotNumber()"
+                (ngModelChange)="plotNumber.set($event)"
+                placeholder="Номер участка"
+              />
+            </div>
+            <div class="field">
+              <span class="field-label">Municipality number</span>
+              <input
+                type="text"
+                [ngModel]="municipalityNumber()"
+                (ngModelChange)="municipalityNumber.set($event)"
+                placeholder="Муниципальный номер"
+              />
             </div>
 
+            @if (listingType() === 'official') {
+              <p class="note">
+                Для официального листинга потребуется прикрепить Form A (PDF) — загрузка
+                документов появится здесь позже.
+              </p>
+            }
             <p class="note">
               @if (visibility() === 'network') {
                 Объект для сети публикуется сразу и появится в ленте у ваших коллег.
@@ -349,6 +702,20 @@
                 Публичный объект уйдёт на модерацию и появится в ленте после одобрения.
               }
             </p>
+          }
+
+          <!-- ШАГ 8: Описание -->
+          @if (step() === 7) {
+            <div class="field">
+              <span class="field-label">Описание</span>
+              <textarea
+                rows="5"
+                [ngModel]="description()"
+                (ngModelChange)="description.set($event)"
+                placeholder="Опишите объект…"
+              ></textarea>
+            </div>
+            <p class="note">Загрузка фотографий объекта появится здесь позже.</p>
           }
         </div>
       </section>

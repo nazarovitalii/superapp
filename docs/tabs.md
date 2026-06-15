@@ -136,25 +136,30 @@ TODO: district через `search_locations` (API-2).
 
 **Создание:** прямой `INSERT в properties` под RLS `properties_insert (owner_id=auth.uid())`.
 RPC `publish_property` **не существует**. Справочники — `get_filter_options`,
-локация — `search_locations`. Реализовано (5 шагов, без фото — P-5b).
+локация — `search_locations`. Реализовано (8 шагов, без фото — P-5b).
 
 **Статус при создании (продуктовое правило, в БД модерации нет):**
 `visibility=network` → `status='active'` (сразу в ленте у сети);
 `visibility=public` → `status='pending_review'` (на модерацию).
 
-**UI:** визард с **5 шагами** (нумерованные точки сверху). Каждый шаг — один крупный
-блок в стиле task-detail-panel с иконкой, заголовком (17px) и «Шаг N/5» справа.
+**UI:** визард с **8 шагами** (нумерованные точки сверху). Каждый шаг — один крупный
+блок в стиле task-detail-panel с иконкой, заголовком (17px) и «Шаг N/8» справа.
 Поля и чипы на шаге — 15px. Навигация: Назад / Далее / Опубликовать.
 
-### Поля формы (реализовано)
+### Поля формы (8 шагов, реализовано 2026-06-15)
 
-- Шаг 1 — категория / тип / подтип (uuid из `get_filter_options`) + сделка sale|rent
-- Шаг 2 — локация (автокомплит `search_locations` → `location_id` uuid)
-- Шаг 3 — bedrooms/bathrooms (int), area_sqft (+авто area_sqm),
-  furnished (`furnished`/`unfurnished`), handover, occupancy_status
-- Шаг 4 — price (+ period для rent), торг, срочность, описание, visibility
-- Шаг 5 — listing_type (pocket|official)
-- **Фото — НЕ реализовано** (нужен Storage-bucket `property_photos` + RLS — P-5b)
+1. **Категория** — category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house)
+2. **Сделка** — sale|rent (+ price_period для rent)
+3. **Адрес** — каскад до leaf: `search_locations` (mode=search) → выбор → `search_locations` (mode=info) отдаёт children; поиск если children>10, чипы если ≤10; leaf = children пуст. Building info из `location_developers`. Регулятор приватности адреса (бегунок F-12b) — позже (нужна миграция)
+4. **Параметры** — набор полей зависит от unit_type (`property-type-fields.ts`): beds/baths, чекбоксы `is_maid`/`is_hotel_pool`, BUA `area_sqft`, `plot_sqft`, `floor_number`, `floor_level_id`, `floors_in_unit` (G+…), `layout_id` (community_layouts), мультиселекты `view_ids`/`position_ids`/`amenity_ids`, `furnished`
+5. **Цена** — price (AED) + торг
+6. **Состояние** — handover; off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until` (месяц+год); distress
+7. **Листинг** — listing_type, visibility, Title Deed №/год, plot/municipality number; official → заметка о Form A (P-5b)
+8. **Описание** — текст (+фото позже, P-5b)
+
+**Расхождение таксономии:** в живой БД `hotel_apartment` — коммерческий unit_type
+(в CSV-матрице он был подтипом Apartment); «Residential Land» в БД = `land`.
+Подтипы Apartment уже без Hotel Apartment.
 
 ### Значения enum (сверено с CHECK)
 
