@@ -11,7 +11,6 @@ export interface TypeFields {
   hotelPool: boolean; // чекбокс is_hotel_pool «Hotel apartment»
   bua: boolean; // площадь BUA (area_sqft)
   plot: boolean; // площадь участка (plot_sqft)
-  floorNumber: boolean; // номер этажа
   floorLevel: boolean; // Low / Middle / High (floor_level_id)
   floorsInUnit: boolean; // G+0…G+3 (дома)
   layout: boolean; // планировка из справочника комьюнити (layout_id)
@@ -28,7 +27,6 @@ const NONE: TypeFields = {
   hotelPool: false,
   bua: false,
   plot: false,
-  floorNumber: false,
   floorLevel: false,
   floorsInUnit: false,
   layout: false,
@@ -49,7 +47,6 @@ const CONFIG: Record<string, TypeFields> = {
     maid: true,
     hotelPool: true,
     bua: true,
-    floorNumber: true,
     floorLevel: true,
     views: true,
     positions: true,
@@ -70,7 +67,7 @@ const CONFIG: Record<string, TypeFields> = {
     furnished: true,
   }),
   land: f({ plot: true }),
-  floor: f({ bua: true, floorNumber: true }),
+  floor: f({ bua: true }),
   bulk_unit: f({ bua: true }),
   building: f({ bua: true, plot: true }),
 
@@ -80,19 +77,17 @@ const CONFIG: Record<string, TypeFields> = {
     rooms: true,
     hotelPool: true,
     bua: true,
-    floorNumber: true,
     floorLevel: true,
     views: true,
     furnished: true,
   }),
   office: f({
     bua: true,
-    floorNumber: true,
     floorLevel: true,
     views: true,
     furnished: true,
   }),
-  shop: f({ bua: true, plot: true, floorNumber: true }),
+  shop: f({ bua: true, plot: true }),
   retail: f({ bua: true }),
   warehouse: f({ bua: true, plot: true }),
   labour_camp: f({ bua: true, plot: true }),
@@ -106,12 +101,12 @@ const CONFIG: Record<string, TypeFields> = {
   }),
   bulk_unit_commercial: f({ bua: true }),
   land_commercial: f({ plot: true }),
-  floor_commercial: f({ bua: true, floorNumber: true }),
+  floor_commercial: f({ bua: true }),
   building_commercial: f({ bua: true, plot: true }),
   factory: f({ bua: true, plot: true }),
   industrial_land: f({ plot: true }),
   mixed_use_land: f({ plot: true }),
-  showroom: f({ bua: true, floorNumber: true }),
+  showroom: f({ bua: true }),
   other_commercial: f({ bua: true, furnished: true }),
 };
 

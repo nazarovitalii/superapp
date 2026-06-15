@@ -116,7 +116,6 @@ export class AddPropertyPageComponent {
   readonly isHotelPool = signal(false);
   readonly areaSqft = signal<string>('');
   readonly plotSqft = signal<string>('');
-  readonly floorNumber = signal<string>('');
   readonly floorLevelId = signal<string | null>(null);
   readonly floorsInUnit = signal<string | null>(null);
   readonly layoutId = signal<string | null>(null);
@@ -201,6 +200,28 @@ export class AddPropertyPageComponent {
     () => this.children().length > CHILDREN_SELECT_THRESHOLD,
   );
 
+  // ─── Поиск по всем нижним уровням внутри комьюнити ──────────────────────
+  // Прямые children (mode=info) дают только следующий уровень (sub_community).
+  // Чтобы из комьюнити можно было сразу прыгнуть на building/cluster/любой
+  // нижний уровень, под комьюнити показываем глобальный поиск, отфильтрованный
+  // по этому комьюнити (search_locations несёт community_name).
+  // Комьюнити в цепочке (самый глубокий) — рамка поиска.
+  private readonly _scopeCommunity = computed<LocationBreadcrumbItem | null>(() => {
+    const path = this.addrPath();
+    for (let i = path.length - 1; i >= 0; i--) {
+      if (path[i].level === 'community') return path[i];
+    }
+    return null;
+  });
+  // Под комьюнити с большим числом потомков — режим глобального поиска по
+  // всем уровням. Выше комьюнити (город→комьюнити) остаётся фильтр children.
+  readonly useDescendantSearch = computed(
+    () => this._scopeCommunity() !== null && this.childrenAsSearch(),
+  );
+  readonly descResults = signal<LocationSearchItem[]>([]);
+  readonly descLoading = signal(false);
+  private _descTimer: ReturnType<typeof setTimeout> | null = null;
+
   // ─── Бегунок приватности адреса ─────────────────────────────────────────
   // Минимум бегунка — индекс комьюнити (ниже нельзя). Если комьюнити нет в
   // цепочке (адрес = сам комьюнити/выше) — минимум 0.
@@ -269,11 +290,39 @@ export class AddPropertyPageComponent {
     }, 250);
   }
 
+  // Поиск по всем нижним уровням внутри выбранного комьюнити (debounce).
+  // Глобальный search_locations + клиентский фильтр по community_name и
+  // исключение уже выбранных узлов цепочки.
+  onChildSearchInput(val: string): void {
+    this.childQuery.set(val);
+    if (this._descTimer) clearTimeout(this._descTimer);
+    const comm = this._scopeCommunity();
+    if (val.trim().length < 2 || !comm) {
+      this.descResults.set([]);
+      return;
+    }
+    this._descTimer = setTimeout(async () => {
+      this.descLoading.set(true);
+      try {
+        const all = await this._service.searchLocations(val);
+        const pathIds = new Set(this.addrPath().map((p) => p.id));
+        this.descResults.set(
+          all.filter((r) => r.community_name === comm.name && !pathIds.has(r.id)),
+        );
+      } catch {
+        this.descResults.set([]);
+      } finally {
+        this.descLoading.set(false);
+      }
+    }, 250);
+  }
+
   // Выбор результата поиска или дочернего уровня → углубляемся к leaf.
   async pickLocation(id: string): Promise<void> {
     this.locResults.set([]);
     this.locQuery.set('');
     this.childQuery.set('');
+    this.descResults.set([]);
     this.locLoading.set(true);
     try {
       const info = await this._service.locationInfo(id);
@@ -325,6 +374,7 @@ export class AddPropertyPageComponent {
     this.locResults.set([]);
     this.locQuery.set('');
     this.childQuery.set('');
+    this.descResults.set([]);
     this.buildingInfo.set(null);
     this.communityLayouts.set([]);
     this._developerId.set(null);
@@ -425,16 +475,23 @@ export class AddPropertyPageComponent {
       return;
     }
     const tf = this.fields();
-    const num = (s: string): number | null => (s ? Number(s.replace(/,/g, '')) : null);
+    // Поля числовых input'ов могут прийти как number (type=number + ngModel) или
+    // string — приводим к строке перед разбором, чтобы не упасть на .replace.
+    const num = (v: unknown): number | null => {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(String(v).replace(/,/g, ''));
+      return Number.isFinite(n) ? n : null;
+    };
     const sqft = tf.bua ? num(this.areaSqft()) : null;
     const plot = tf.plot ? num(this.plotSqft()) : null;
     const isOffplan = this.handover() === 'offplan';
     const isOccupied = this.handover() === 'ready' && this.occupancy() === 'occupied';
+    // Документы (Title Deed/Plot/Municipality) — только для официального листинга.
+    const isOfficial = this.listingType() === 'official';
     // lease_until: первое число выбранного месяца/года.
-    const lease =
-      isOccupied && this.leaseYear() && this.leaseMonth()
-        ? `${this.leaseYear()}-${this.leaseMonth().padStart(2, '0')}-01`
-        : null;
+    const lm = String(this.leaseMonth() ?? '');
+    const ly = String(this.leaseYear() ?? '');
+    const lease = isOccupied && ly && lm ? `${ly}-${lm.padStart(2, '0')}-01` : null;
 
     const payload: PropertyInsert = {
       owner_id: owner.id,
@@ -456,7 +513,7 @@ export class AddPropertyPageComponent {
       area_sqm: sqft ? Math.round(sqft * SQFT_TO_SQM * 100) / 100 : null,
       plot_sqft: plot,
       plot_sqm: plot ? Math.round(plot * SQFT_TO_SQM * 100) / 100 : null,
-      floor_number: tf.floorNumber ? num(this.floorNumber()) : null,
+      floor_number: null,
       floor_level_id: tf.floorLevel ? this.floorLevelId() : null,
       floors_in_unit: tf.floorsInUnit ? this.floorsInUnit() : null,
       layout_id: tf.layout ? this.layoutId() : null,
@@ -472,10 +529,10 @@ export class AddPropertyPageComponent {
       completion_q: isOffplan ? this.completionQ() : null,
       is_distress: this.isDistress(),
       is_negotiable: this.isNegotiable(),
-      title_deed_number: this.titleDeedNumber().trim() || null,
-      title_deed_year: num(this.titleDeedYear()),
-      plot_number: this.plotNumber().trim() || null,
-      municipality_number: this.municipalityNumber().trim() || null,
+      title_deed_number: isOfficial ? this.titleDeedNumber().trim() || null : null,
+      title_deed_year: isOfficial ? num(this.titleDeedYear()) : null,
+      plot_number: isOfficial ? this.plotNumber().trim() || null : null,
+      municipality_number: isOfficial ? this.municipalityNumber().trim() || null : null,
       visibility: this.visibility(),
       // network — публикуется сразу (active); public — на модерацию (pending_review).
       status: this.visibility() === 'network' ? 'active' : 'pending_review',

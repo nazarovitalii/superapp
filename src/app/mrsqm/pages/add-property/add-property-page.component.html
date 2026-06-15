@@ -173,10 +173,37 @@
                   </button>
                 </div>
 
-                <!-- Выбор следующего уровня: поиск если >10, иначе чипы -->
+                <!-- Выбор следующего уровня -->
                 <div class="field">
                   <span class="field-label">Уточните адрес</span>
-                  @if (childrenAsSearch()) {
+                  @if (useDescendantSearch()) {
+                    <!-- Поиск по всем нижним уровням внутри комьюнити -->
+                    <input
+                      type="text"
+                      [ngModel]="childQuery()"
+                      (ngModelChange)="onChildSearchInput($event)"
+                      placeholder="Здание, кластер, sub-community…"
+                    />
+                    @if (descLoading()) {
+                      <div class="loc-hint">Поиск…</div>
+                    }
+                    @if (descResults().length) {
+                      <div class="loc-dropdown">
+                        @for (c of descResults(); track c.id) {
+                          <button
+                            type="button"
+                            class="loc-item"
+                            (click)="pickLocation(c.id)"
+                          >
+                            <span class="loc-name">{{ c.name }}</span>
+                            <span class="loc-sub">
+                              <span class="loc-level">({{ c.level }})</span>
+                            </span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  } @else if (childrenAsSearch()) {
                     <input
                       type="text"
                       [ngModel]="childQuery()"
@@ -369,7 +396,8 @@
               <div class="field">
                 <span class="field-label">Площадь BUA, sqft</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
                   [ngModel]="areaSqft()"
                   (ngModelChange)="areaSqft.set($event)"
                   placeholder="напр. 1200"
@@ -380,7 +408,8 @@
               <div class="field">
                 <span class="field-label">Площадь участка (Plot), sqft</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
                   [ngModel]="plotSqft()"
                   (ngModelChange)="plotSqft.set($event)"
                   placeholder="напр. 3500"
@@ -388,17 +417,6 @@
               </div>
             }
 
-            @if (fields().floorNumber) {
-              <div class="field">
-                <span class="field-label">Этаж</span>
-                <input
-                  type="number"
-                  [ngModel]="floorNumber()"
-                  (ngModelChange)="floorNumber.set($event)"
-                  placeholder="напр. 12"
-                />
-              </div>
-            }
             @if (fields().floorLevel) {
               <div class="field">
                 <span class="field-label">Уровень этажа</span>
@@ -566,7 +584,8 @@
               <div class="field">
                 <span class="field-label">Год сдачи</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
                   [ngModel]="completionYear()"
                   (ngModelChange)="completionYear.set($event)"
                   placeholder="напр. 2027"
@@ -611,15 +630,15 @@
                   <span class="field-label">Занято до (необязательно)</span>
                   <div class="lease-row">
                     <input
-                      type="number"
-                      min="1"
-                      max="12"
+                      type="text"
+                      inputmode="numeric"
                       [ngModel]="leaseMonth()"
                       (ngModelChange)="leaseMonth.set($event)"
                       placeholder="Месяц (1-12)"
                     />
                     <input
-                      type="number"
+                      type="text"
+                      inputmode="numeric"
                       [ngModel]="leaseYear()"
                       (ngModelChange)="leaseYear.set($event)"
                       placeholder="Год"
@@ -679,44 +698,47 @@
               </div>
             </div>
 
-            <div class="field">
-              <span class="field-label">Title Deed №</span>
-              <input
-                type="text"
-                [ngModel]="titleDeedNumber()"
-                (ngModelChange)="titleDeedNumber.set($event)"
-                placeholder="Номер свидетельства"
-              />
-            </div>
-            <div class="field">
-              <span class="field-label">Год Title Deed</span>
-              <input
-                type="number"
-                [ngModel]="titleDeedYear()"
-                (ngModelChange)="titleDeedYear.set($event)"
-                placeholder="напр. 2022"
-              />
-            </div>
-            <div class="field">
-              <span class="field-label">Plot number</span>
-              <input
-                type="text"
-                [ngModel]="plotNumber()"
-                (ngModelChange)="plotNumber.set($event)"
-                placeholder="Номер участка"
-              />
-            </div>
-            <div class="field">
-              <span class="field-label">Municipality number</span>
-              <input
-                type="text"
-                [ngModel]="municipalityNumber()"
-                (ngModelChange)="municipalityNumber.set($event)"
-                placeholder="Муниципальный номер"
-              />
-            </div>
-
+            <!-- Документы (Title Deed и пр.) — только для официального листинга.
+                 Для pocket-листинга документы не требуются. -->
             @if (listingType() === 'official') {
+              <div class="field">
+                <span class="field-label">Title Deed №</span>
+                <input
+                  type="text"
+                  [ngModel]="titleDeedNumber()"
+                  (ngModelChange)="titleDeedNumber.set($event)"
+                  placeholder="Номер свидетельства"
+                />
+              </div>
+              <div class="field">
+                <span class="field-label">Год Title Deed</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [ngModel]="titleDeedYear()"
+                  (ngModelChange)="titleDeedYear.set($event)"
+                  placeholder="напр. 2022"
+                />
+              </div>
+              <div class="field">
+                <span class="field-label">Plot number</span>
+                <input
+                  type="text"
+                  [ngModel]="plotNumber()"
+                  (ngModelChange)="plotNumber.set($event)"
+                  placeholder="Номер участка"
+                />
+              </div>
+              <div class="field">
+                <span class="field-label">Municipality number</span>
+                <input
+                  type="text"
+                  [ngModel]="municipalityNumber()"
+                  (ngModelChange)="municipalityNumber.set($event)"
+                  placeholder="Муниципальный номер"
+                />
+              </div>
+
               <p class="note">
                 Для официального листинга потребуется прикрепить Form A (PDF) — загрузка
                 документов появится здесь позже.
