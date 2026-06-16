@@ -55,12 +55,17 @@ export class FeedFilterService {
   readonly sortBy = signal<FeedSortBy>('default');
   // По умолчанию показываем публичную ленту (как раньше показывался охват «Все»).
   readonly scope = signal<FeedScope>('public');
-  // Категория и готовность вынесены в хедер как отдельные переключатели.
+  // Категория и готовность вынесены в тулбар как отдельные селекты.
   readonly category = signal<PropertyCategory | null>(null);
   readonly handover = signal<FeedHandover | null>(null);
-  // Поисковая строка из хедера (лупа): по описанию объекта (p_description).
-  // Поиск по агенту (ФИО/телефон) требует доработки get_feed — см. DB-батч.
+  // Поиск-лупа из глобального хедера: свободный текст по описанию (p_description).
   readonly searchQuery = signal<string>('');
+  // Выбранный адрес из автокомплита тулбара → p_location_ids в get_feed
+  // (реальный серверный фильтр; null = адрес не выбран).
+  readonly locationFilter = signal<{ id: string; name: string } | null>(null);
+  // Выбранный агент (ФИО) из автокомплита → клиентский фильтр загруженных строк
+  // ленты по owner_full_name. Серверного параметра по агенту в get_feed нет (интерим).
+  readonly agentQuery = signal<string>('');
 
   // Сколько фильтров активно — для индикации на кнопке фильтров в хедере.
   readonly activeFilterCount = computed(() => {
@@ -92,6 +97,37 @@ export class FeedFilterService {
   // Переключатель Ready/Off-Plan: повторный клик сбрасывает.
   setHandover(value: FeedHandover): void {
     this.handover.set(this.handover() === value ? null : value);
+  }
+
+  // Сегмент из селекта тулбара: null = All Segments (прямая установка, без toggle).
+  setSegment(value: FeedHandover | null): void {
+    this.handover.set(value);
+  }
+
+  // Мега-дропдаун типа: выбрать всю категорию (без конкретного типа).
+  selectCategoryAll(value: PropertyCategory): void {
+    this.category.set(value);
+    this.patch({ unitTypeId: null, subTypeIds: [] });
+  }
+
+  // Мега-дропдаун типа: выбрать unit_type внутри категории (сбрасывает подтипы).
+  selectUnitType(value: PropertyCategory, unitTypeId: string): void {
+    this.category.set(value);
+    this.patch({ unitTypeId, subTypeIds: [] });
+  }
+
+  // Мега-дропдаун типа: toggle подтипа (мультиселект p_sub_type_ids).
+  toggleSubType(id: string): void {
+    const arr = this.filters().subTypeIds;
+    this.patch({
+      subTypeIds: arr.includes(id) ? arr.filter((v) => v !== id) : [...arr, id],
+    });
+  }
+
+  // Сброс выбора типа (категория + тип + подтипы).
+  clearType(): void {
+    this.category.set(null);
+    this.patch({ unitTypeId: null, subTypeIds: [] });
   }
 
   patch(patch: Partial<FeedFilters>): void {

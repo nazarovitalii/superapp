@@ -1,10 +1,11 @@
 <div class="feed-container">
-  <!-- Тулбар ленты: охват+счётчик слева, переключатели/сортировка/фильтры справа -->
+  <!-- Тулбар ленты (Bayut-style): охват · поиск адрес/агент · сегмент · сделка ·
+       тип (мега-дропдаун) · сортировка · фильтры -->
   <div class="feed-toolbar">
-    <!-- Охват Public / Friends / My / Favourites + счётчик одной пилюлей -->
+    <!-- 1. Охват: Public / Friends / Private / Favourites + счётчик -->
     <button
       type="button"
-      class="scope-btn"
+      class="tb-select scope-select"
       [class.isActive]="filter.scope() !== 'public'"
       [matMenuTriggerFor]="scopeMenu"
       [attr.aria-label]="'Охват ленты'"
@@ -27,39 +28,255 @@
       }
     </mat-menu>
 
+    <!-- 2. Автокомплит «Адрес или агент» -->
+    <div class="tb-search">
+      <mat-icon class="tb-search-icon">place</mat-icon>
+      @if (filter.locationFilter(); as loc) {
+        <span class="tb-chip">
+          <mat-icon>place</mat-icon>{{ loc.name }}
+          <button
+            type="button"
+            class="tb-chip-x"
+            (click)="clearLocation()"
+            [attr.aria-label]="'Сбросить адрес'"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </span>
+      } @else if (filter.agentQuery(); as ag) {
+        <span class="tb-chip">
+          <mat-icon>person</mat-icon>{{ ag }}
+          <button
+            type="button"
+            class="tb-chip-x"
+            (click)="clearAgent()"
+            [attr.aria-label]="'Сбросить агента'"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </span>
+      } @else {
+        <input
+          type="text"
+          class="tb-search-input"
+          placeholder="Адрес или агент"
+          [value]="searchInput()"
+          (input)="onSearchInput($any($event.target).value)"
+          (focus)="onSearchFocus()"
+          (blur)="onSearchBlur()"
+        />
+      }
+
+      <!-- Выпадающие подсказки: адреса + агенты -->
+      @if (showSuggest() && (locationResults().length || agentMatches().length)) {
+        <div class="tb-suggest">
+          @if (locationResults().length) {
+            <div class="tb-suggest-group">Адреса</div>
+            @for (l of locationResults(); track l.id) {
+              <button
+                type="button"
+                class="tb-suggest-item"
+                (mousedown)="pickLocation(l)"
+              >
+                <mat-icon>place</mat-icon>
+                <span class="tb-suggest-name">{{ l.name }}</span>
+                @if (l.community_name || l.city_name) {
+                  <span class="tb-suggest-sub">{{
+                    l.community_name ?? l.city_name
+                  }}</span>
+                }
+              </button>
+            }
+          }
+          @if (agentMatches().length) {
+            <div class="tb-suggest-group">Агенты</div>
+            @for (a of agentMatches(); track a) {
+              <button
+                type="button"
+                class="tb-suggest-item"
+                (mousedown)="pickAgent(a)"
+              >
+                <mat-icon>person</mat-icon>
+                <span class="tb-suggest-name">{{ a }}</span>
+              </button>
+            }
+          }
+        </div>
+      }
+    </div>
+
+    <!-- 3. Сегмент: All Segments / Ready / Off-Plan -->
+    <button
+      type="button"
+      class="tb-select"
+      [class.isActive]="filter.handover() !== null"
+      [matMenuTriggerFor]="segMenu"
+    >
+      <span>{{ segmentLabel() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #segMenu="matMenu">
+      @for (o of segmentOptions; track o.label) {
+        <button
+          mat-menu-item
+          (click)="setSegment(o.value)"
+        >
+          <mat-icon>{{
+            filter.handover() === o.value ? 'radio_button_checked' : ''
+          }}</mat-icon>
+          <span>{{ o.label }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    <!-- 4. Сделка: Sale / Rent -->
+    <button
+      type="button"
+      class="tb-select"
+      [matMenuTriggerFor]="dealMenu"
+    >
+      <span>{{ dealLabel() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #dealMenu="matMenu">
+      @for (o of dealOptions; track o.value) {
+        <button
+          mat-menu-item
+          (click)="setDealType(o.value)"
+        >
+          <mat-icon>{{
+            filter.dealType() === o.value ? 'radio_button_checked' : ''
+          }}</mat-icon>
+          <span>{{ o.label }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    <!-- 5. Тип объекта: мега-дропдаун Residential / Commercial -->
+    <button
+      type="button"
+      class="tb-select tb-type-select"
+      [class.isActive]="hasTypeSelection()"
+      [matMenuTriggerFor]="typeMenu"
+    >
+      <span>{{ typeLabel() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu
+      #typeMenu="matMenu"
+      class="type-mega-panel"
+    >
+      <ng-template matMenuContent>
+        <div
+          class="type-mega"
+          (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()"
+        >
+          <div class="type-cols">
+            <!-- Residential -->
+            <div class="type-col">
+              <button
+                type="button"
+                class="type-cat-head"
+                [class.active]="
+                  filter.category() === 'residential' && !filter.filters().unitTypeId
+                "
+                (click)="selectCategoryAll('residential')"
+              >
+                <mat-icon>home_work</mat-icon>
+                <span>Residential</span>
+                <small>Все</small>
+              </button>
+              @for (u of typeTree().residential.units; track u.id) {
+                <button
+                  type="button"
+                  class="type-unit"
+                  [class.active]="filter.filters().unitTypeId === u.id"
+                  (click)="selectUnitType('residential', u.id)"
+                >
+                  {{ u.label }}
+                </button>
+                @if (filter.filters().unitTypeId === u.id && u.subs.length) {
+                  <div class="type-subs">
+                    @for (s of u.subs; track s.id) {
+                      <button
+                        type="button"
+                        class="type-sub-chip"
+                        [class.active]="isSubTypeActive(s.id)"
+                        (click)="toggleSubType(s.id)"
+                      >
+                        {{ s.label_en }}
+                      </button>
+                    }
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Commercial -->
+            <div class="type-col">
+              <button
+                type="button"
+                class="type-cat-head"
+                [class.active]="
+                  filter.category() === 'commercial' && !filter.filters().unitTypeId
+                "
+                (click)="selectCategoryAll('commercial')"
+              >
+                <mat-icon>storefront</mat-icon>
+                <span>Commercial</span>
+                <small>Все</small>
+              </button>
+              @for (u of typeTree().commercial.units; track u.id) {
+                <button
+                  type="button"
+                  class="type-unit"
+                  [class.active]="filter.filters().unitTypeId === u.id"
+                  (click)="selectUnitType('commercial', u.id)"
+                >
+                  {{ u.label }}
+                </button>
+                @if (filter.filters().unitTypeId === u.id && u.subs.length) {
+                  <div class="type-subs">
+                    @for (s of u.subs; track s.id) {
+                      <button
+                        type="button"
+                        class="type-sub-chip"
+                        [class.active]="isSubTypeActive(s.id)"
+                        (click)="toggleSubType(s.id)"
+                      >
+                        {{ s.label_en }}
+                      </button>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="type-mega-footer">
+            <button
+              type="button"
+              class="type-reset"
+              (click)="clearType()"
+            >
+              Сбросить
+            </button>
+            <!-- Без stopPropagation → клик закрывает меню -->
+            <button
+              type="button"
+              class="type-done"
+            >
+              Готово
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </mat-menu>
+
     <span class="toolbar-spacer"></span>
 
-    <!-- Готовность: Ready / Off-Plan -->
-    <mat-button-toggle-group
-      class="deal-toggle"
-      [value]="filter.handover()"
-      (change)="setHandover($event.value)"
-    >
-      <mat-button-toggle value="ready">Ready</mat-button-toggle>
-      <mat-button-toggle value="offplan">Off-Plan</mat-button-toggle>
-    </mat-button-toggle-group>
-
-    <!-- Категория: Residential / Commercial -->
-    <mat-button-toggle-group
-      class="deal-toggle"
-      [value]="filter.category()"
-      (change)="setCategory($event.value)"
-    >
-      <mat-button-toggle value="residential">Resid</mat-button-toggle>
-      <mat-button-toggle value="commercial">Comm</mat-button-toggle>
-    </mat-button-toggle-group>
-
-    <!-- Сделка: Sale / Rent -->
-    <mat-button-toggle-group
-      class="deal-toggle"
-      [value]="filter.dealType()"
-      (change)="setDealType($event.value)"
-    >
-      <mat-button-toggle value="sale">Sale</mat-button-toggle>
-      <mat-button-toggle value="rent">Rent</mat-button-toggle>
-    </mat-button-toggle-group>
-
-    <!-- Сортировка -->
+    <!-- 6. Сортировка -->
     <button
       class="toolbar-icon-btn"
       mat-icon-button
@@ -83,7 +300,7 @@
       }
     </mat-menu>
 
-    <!-- Фильтры: при активных — чип с количеством -->
+    <!-- 7. Фильтры: при активных — чип с количеством -->
     @if (filter.activeFilterCount() > 0) {
       <button
         type="button"

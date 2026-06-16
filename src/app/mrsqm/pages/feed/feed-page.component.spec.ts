@@ -133,4 +133,43 @@ describe('FeedPageComponent', () => {
     expect(c.hasMore()).toBe(true);
     expect(c.countTotal()).toBe(50);
   });
+
+  it('выбранный адрес → p_location_ids в get_feed', async () => {
+    build();
+    await flush();
+    filter.locationFilter.set({ id: 'loc-1', name: 'Dubai Marina' });
+    await flush();
+    expect(fake.lastParams?.['p_location_ids']).toEqual(['loc-1']);
+  });
+
+  it('агент из автокомплита фильтрует загруженные строки на клиенте', async () => {
+    const c = build();
+    await flush();
+    c.properties.set([
+      { id: 'a', visibility: 'public', owner_full_name: 'Ivan Agent' },
+      { id: 'b', visibility: 'public', owner_full_name: 'Petr Broker' },
+    ] as unknown as Parameters<typeof c.properties.set>[0]);
+    expect(c.visibleProperties().length).toBe(2);
+    filter.agentQuery.set('ivan');
+    expect(c.visibleProperties().length).toBe(1);
+    expect(c.visibleProperties()[0].id).toBe('a');
+  });
+
+  it('выбор unit_type ставит категорию + unitTypeId и чистит подтипы', async () => {
+    const c = build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, subTypeIds: ['old'] }));
+    c.selectUnitType('residential', 'ut-9');
+    expect(filter.category()).toBe('residential');
+    expect(filter.filters().unitTypeId).toBe('ut-9');
+    expect(filter.filters().subTypeIds).toEqual([]);
+  });
+
+  it('toggleSubType добавляет и убирает подтип', () => {
+    const c = build();
+    c.toggleSubType('s1');
+    expect(filter.filters().subTypeIds).toEqual(['s1']);
+    c.toggleSubType('s1');
+    expect(filter.filters().subTypeIds).toEqual([]);
+  });
 });

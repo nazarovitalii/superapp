@@ -8,20 +8,21 @@
   padding: 0 var(--s) var(--s8);
 }
 
-// Контейнер по центру — как лента задач в инбоксе
+// Контейнер по центру — как лента задач в инбоксе.
+// Шире на 20% (800 → 960) ради тулбара и колонок Bayut-стиля.
 .feed-container {
-  max-width: 800px;
+  max-width: 960px;
   margin: 0 auto;
   width: 100%;
 }
 
-// Тулбар ленты: охват+счётчик слева, переключатели/сортировка/фильтры справа
+// Тулбар ленты (Bayut-style): одна строка контролов на всю ширину таблицы.
 .feed-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--s-half);
-  padding: var(--s) var(--s-half) var(--s-half);
+  padding: var(--s) 5px var(--s-half);
 }
 
 .toolbar-spacer {
@@ -41,86 +42,202 @@
   }
 }
 
-// Пилюля охвата: «Public ▾ · 1 154» — охват и счётчик вместе
-.scope-btn {
+// ─── Пилюля-селект (охват / сегмент / сделка / тип) ─────────────────────────
+.tb-select {
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  padding: 0 var(--s-half) 0 12px;
-  border-radius: 15px;
+  gap: var(--s-quarter);
+  height: 36px;
+  padding: 0 var(--s-quarter) 0 var(--s);
+  border-radius: 18px;
   border: 1px solid var(--extra-border-color);
   background: transparent;
   color: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   flex: 0 0 auto;
+  transition: border-color 0.15s ease;
 
-  .scope-count {
-    margin-left: var(--s-quarter);
-    font-weight: 400;
-    color: var(--text-color-muted);
+  &:hover {
+    border-color: var(--text-color-muted);
   }
 
   mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--text-color-muted);
   }
 
   &.isActive {
     border-color: var(--c-primary);
     color: var(--c-primary);
 
-    .scope-count {
+    mat-icon {
       color: var(--c-primary);
-      opacity: 0.7;
     }
   }
 }
 
-// Компактные toggle-группы (Ready/Off-Plan, Resid/Comm, Sale/Rent).
-// Размеры держим на самой группе/кнопке, чтобы верстка не плыла из-за
-// дефолтной высоты строки Material.
-.deal-toggle {
+// Охват: счётчик внутри пилюли («Public · 1 154»)
+.scope-select .scope-count {
+  font-weight: 400;
+  color: var(--text-color-muted);
+}
+
+.scope-select.isActive .scope-count {
+  color: var(--c-primary);
+  opacity: 0.7;
+}
+
+// ─── Автокомплит «Адрес или агент» ──────────────────────────────────────────
+.tb-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  flex: 1 1 220px;
+  min-width: 180px;
+  height: 36px;
+  padding: 0 var(--s);
+  border-radius: 18px;
+  border: 1px solid var(--extra-border-color);
+  background: transparent;
+
+  &:focus-within {
+    border-color: var(--c-primary);
+  }
+}
+
+.tb-search-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-color-muted);
+  flex: 0 0 auto;
+}
+
+.tb-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: var(--text-color-muted);
+  }
+}
+
+// Выбранный адрес/агент — чип внутри поля
+.tb-chip {
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  border-radius: 15px;
+  gap: var(--s-quarter);
+  max-width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-primary);
   overflow: hidden;
-  flex: 0 0 auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  > mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+}
+
+.tb-chip-x {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  padding: 0;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+// Выпадающий список подсказок
+.tb-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg);
   border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-detail-shadow, 0 6px 20px rgba(0, 0, 0, 0.18));
+  padding: var(--s-quarter) 0;
+}
 
-  ::ng-deep .mat-button-toggle {
-    display: inline-flex;
-    align-items: center;
-    height: 28px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: none;
-    background: transparent;
+.tb-suggest-group {
+  padding: var(--s-quarter) var(--s);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color-muted);
+}
+
+.tb-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  width: 100%;
+  padding: var(--s-half) var(--s);
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-lighter, var(--surface-0));
   }
 
-  ::ng-deep .mat-button-toggle + .mat-button-toggle {
-    border-left: 1px solid var(--extra-border-color);
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-color-muted);
+    flex: 0 0 auto;
   }
+}
 
-  ::ng-deep .mat-button-toggle-button {
-    height: 28px;
-    padding: 0 12px;
-  }
+.tb-suggest-name {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  ::ng-deep .mat-button-toggle-label-content {
-    line-height: 28px;
-    padding: 0;
-  }
-
-  // активный сегмент
-  ::ng-deep .mat-button-toggle-checked {
-    background: var(--c-primary);
-    color: var(--palette-primary-contrast-500, #fff);
-  }
+.tb-suggest-sub {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--text-color-muted);
+  white-space: nowrap;
 }
 
 // Чип фильтров (есть активные): tune + количество, в цветах primary
@@ -128,22 +245,174 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-quarter);
-  height: 30px;
-  padding: 0 12px 0 var(--s);
-  border-radius: 15px;
+  height: 36px;
+  padding: 0 var(--s);
+  border-radius: 18px;
   border: 1px solid var(--c-primary);
   background: transparent;
   color: var(--c-primary);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   flex: 0 0 auto;
 
   mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
+}
+
+// ─── Мега-дропдаун Residential / Commercial ─────────────────────────────────
+// Панель меню шире дефолтных 280px (класс задаётся через mat-menu class=).
+::ng-deep .type-mega-panel {
+  max-width: none !important;
+
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+  }
+}
+
+.type-mega {
+  width: 520px;
+  max-width: 90vw;
+}
+
+.type-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.type-col {
+  padding: var(--s-half) 0;
+
+  & + & {
+    border-left: 1px solid var(--extra-border-color);
+  }
+}
+
+// Заголовок-категория («Все Residential/Commercial»)
+.type-cat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  width: 100%;
+  padding: var(--s-half) var(--s);
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--c-primary);
+  }
+
+  small {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-color-muted);
+  }
+
+  &:hover {
+    background: var(--bg-lighter, var(--surface-0));
+  }
+
+  &.active {
+    color: var(--c-primary);
+  }
+}
+
+.type-unit {
+  display: block;
+  width: 100%;
+  padding: var(--s-quarter) var(--s) var(--s-quarter) var(--s2);
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-lighter, var(--surface-0));
+  }
+
+  &.active {
+    color: var(--c-primary);
+    font-weight: 600;
+  }
+}
+
+// Подтипы выбранного типа — чипами
+.type-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-quarter);
+  padding: var(--s-quarter) var(--s) var(--s-half) var(--s2);
+}
+
+.type-sub-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  border: 1px solid var(--extra-border-color);
+  background: transparent;
+  color: var(--text-color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--text-color-muted);
+  }
+
+  &.active {
+    background: var(--c-primary);
+    color: var(--palette-primary-contrast-500, #fff);
+    border-color: var(--c-primary);
+  }
+}
+
+.type-mega-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-half) var(--s);
+  border-top: 1px solid var(--extra-border-color);
+}
+
+.type-reset {
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+.type-done {
+  height: 32px;
+  padding: 0 var(--s2);
+  border: none;
+  border-radius: 16px;
+  background: var(--c-primary);
+  color: var(--palette-primary-contrast-500, #fff);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 // Заголовки таблицы — те же пропорции что в grid карточки

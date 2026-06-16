@@ -53,18 +53,27 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 - Sticky-шапка таблицы. Пагинация: `p_limit=20`, «Загрузить ещё».
 - Пустой результат → empty-state; ошибка RPC → error-state.
 
-**Тулбар ленты** (строка над таблицей, по ширине таблицы; глобальный хедер чистый):
+**Тулбар ленты** (Bayut-style, одна строка над таблицей на всю её ширину; контейнер
+расширен 800→960px; глобальный хедер чистый). Слева направо:
 
-- Слева пилюля **Охват + счётчик**: «Public ▾ · 1 154» (Public / Friends / My / Favourites).
-  При non-Public — бордюр primary. Счётчик: public — серверный `count_total`,
-  остальные — клиентский подсчёт.
-  ⚠️ Охват фильтруется **на клиенте** (owner_id / is_network / visibility) — в get_feed
-  нет серверного параметра охвата (см. TODO API-9).
-- Переключатели: **Ready / Off-Plan** (`p_handover`), **Resid / Comm** (категория),
-  **Sale / Rent**.
-- Меню **сортировки** (иконка `swap_vert`): Сначала новые (`default`) / дорогие
-  (`price_desc`) / дешёвые (`price_asc`) / давние (`date_asc`) → `p_sort_by`.
-- Иконка **фильтров** `tune` → при ≥1 активном фильтре превращается в primary-чип «tune N».
+1. **Охват** — пилюля-селект «Public · 1 154» (Public / Friends / Private / Favourites).
+   При non-Public — бордюр primary. Счётчик: public — серверный `count_total`, остальные —
+   клиентский. ⚠️ Охват фильтруется **на клиенте** (owner_id / is_network / visibility) —
+   серверного параметра нет (TODO API-9).
+2. **Автокомплит «Адрес или агент»** — крупное поле:
+   - **Адрес** → `search_locations` (p_mode=search) → выбор пишет `locationFilter{id,name}`
+     → `p_location_ids=[id]` (реальный серверный фильтр). Выбранный адрес — чип с крестиком.
+   - **Агент** (ФИО) → distinct `owner_full_name` из загруженных строк → `agentQuery` →
+     **клиентский** фильтр `visibleProperties` (интерим; серверного поиска агента нет).
+3. **Сегмент** — селект All Segments / Ready / Off-Plan → `p_handover` (null=all).
+4. **Сделка** — селект Sale / Rent → `p_deal_type`. «Sale + Rent» (обе) — отложено
+   (get_feed требует один deal_type).
+5. **Тип объекта** — крупный **мега-дропдаун** Residential / Commercial (matMenu,
+   широкая панель 2 колонки): категория → unit_types → подтипы чипами. Дерево из
+   `get_filter_options` (parent_id). Маппинг `p_category_id`/`p_unit_type_id`/`p_sub_type_ids`.
+   Состояние общее с sidebar-фильтрами. Футер: Сбросить / Готово.
+6. **Сортировка** (`swap_vert`): новые/дорогие/дешёвые/давние → `p_sort_by`.
+7. **Фильтры** (`tune`) → при ≥1 активном — primary-чип «tune N».
 
 **Глобальный хедер на ленте:** лупа-поиск (разворачивается в инпут на всю строку,
 поиск по описанию `p_description`), «+», профиль. При выборе строк (чекбокс) —
@@ -72,13 +81,17 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 
 ### Состояние сервисов
 
-- `FeedFilterService` — `dealType` + `filters` (FeedFilters) + `sortBy` + `scope` + `activeFilterCount`.
+- `FeedFilterService` — `dealType` + `filters` (FeedFilters) + `sortBy` + `scope` +
+  `handover`/`category` + `locationFilter` (адрес→p_location_ids) + `agentQuery` (клиент) +
+  `searchQuery` (лупа хедера→p_description) + `activeFilterCount`.
 - `FeedSelectionService` — Set выбранных id, `count`, `toggle`, `clear`.
 - Клик по карточке → `PanelContentService.openProperty()` → нативная правая панель SP.
 
 ### Не сделано
 
-- District-автокомплит (`search_locations`) — API-2.
+- Поиск агента — серверный (сейчас клиентский по загруженной странице); нужен параметр
+  в get_feed.
+- «Sale + Rent» (обе сделки разом) — нужен nullable `p_deal_type` в get_feed.
 - Серверный фильтр охвата (`p_scope` в get_feed) — API-9.
 - _Бейджи агентов (`owner_badge_level`) — НЕ в MVP._
 

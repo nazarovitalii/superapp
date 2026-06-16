@@ -9,7 +9,6 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatMenuModule } from '@angular/material/menu';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import {
@@ -23,6 +22,9 @@ import {
   DealType,
   FeedParams,
   FeedResponse,
+  FilterOptionId,
+  FilterOptions,
+  LocationSearchItem,
   PropertyFeedItem,
 } from '../../types/database';
 import { PropertyCardComponent } from '../../components/property-card/property-card.component';
@@ -44,7 +46,6 @@ const PAGE_SIZE = 20;
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
-    MatButtonToggleModule,
     MatMenuModule,
     PropertyCardComponent,
   ],
@@ -86,16 +87,29 @@ export class FeedPageComponent {
     const items = this.properties();
     const scope = this.filter.scope();
     const myId = this._auth.currentUser()?.id ?? null;
+    let scoped: PropertyFeedItem[];
     switch (scope) {
       case 'public':
-        return items.filter((p) => p.visibility === 'public');
+        scoped = items.filter((p) => p.visibility === 'public');
+        break;
       case 'friends':
-        return items.filter((p) => p.is_network);
+        scoped = items.filter((p) => p.is_network);
+        break;
       case 'my':
-        return items.filter((p) => p.owner_id === myId);
+        scoped = items.filter((p) => p.owner_id === myId);
+        break;
       case 'favourites':
-        return items.filter((p) => this.savedIds().has(p.id));
+        scoped = items.filter((p) => this.savedIds().has(p.id));
+        break;
     }
+    // Клиентский фильтр по агенту (ФИО) — интерим, серверного параметра нет.
+    const agent = this.filter.agentQuery().trim().toLowerCase();
+    if (agent) {
+      scoped = scoped.filter((p) =>
+        (p.owner_full_name ?? '').toLowerCase().includes(agent),
+      );
+    }
+    return scoped;
   });
 
   // Счётчик в пилюле охвата («Public ▾ · 1 154»).
@@ -111,7 +125,7 @@ export class FeedPageComponent {
   readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
     { value: 'public', label: 'Public' },
     { value: 'friends', label: 'Friends' },
-    { value: 'my', label: 'My' },
+    { value: 'my', label: 'Private' },
     { value: 'favourites', label: 'Favourites' },
   ];
 
@@ -126,14 +140,6 @@ export class FeedPageComponent {
 
   setDealType(type: DealType): void {
     this.filter.set(type);
-  }
-
-  setCategory(value: PropertyCategory): void {
-    this.filter.setCategory(value);
-  }
-
-  setHandover(value: FeedHandover): void {
-    this.filter.setHandover(value);
   }
 
   // Сортировка ленты (p_sort_by в get_feed)
@@ -152,14 +158,180 @@ export class FeedPageComponent {
     this._panels.toggleFilterPanel();
   }
 
+  // ─── Сегмент (готовность): All Segments / Ready / Off-Plan ─────────────────
+  readonly segmentOptions: ReadonlyArray<{ value: FeedHandover | null; label: string }> =
+    [
+      { value: null, label: 'All Segments' },
+      { value: 'ready', label: 'Ready' },
+      { value: 'offplan', label: 'Off-Plan' },
+    ];
+
+  readonly segmentLabel = computed(
+    () =>
+      this.segmentOptions.find((o) => o.value === this.filter.handover())?.label ??
+      'All Segments',
+  );
+
+  setSegment(value: FeedHandover | null): void {
+    this.filter.setSegment(value);
+  }
+
+  // ─── Сделка: Sale / Rent ───────────────────────────────────────────────────
+  readonly dealOptions: ReadonlyArray<{ value: DealType; label: string }> = [
+    { value: 'sale', label: 'Sale' },
+    { value: 'rent', label: 'Rent' },
+  ];
+
+  readonly dealLabel = computed(
+    () =>
+      this.dealOptions.find((o) => o.value === this.filter.dealType())?.label ?? 'Sale',
+  );
+
+  // ─── Мега-дропдаун Residential / Commercial ────────────────────────────────
+  // Справочники (категории/типы/подтипы) для дерева дропдауна.
+  readonly filterOptions = signal<FilterOptions | null>(null);
+
+  // Дерево категория → unit_types → sub_types (по parent_id из get_filter_options).
+  readonly typeTree = computed(() => {
+    const opts = this.filterOptions();
+    const build = (
+      catValue: PropertyCategory,
+    ): {
+      catId: string | null;
+      units: { id: string; label: string; subs: FilterOptionId[] }[];
+    } => {
+      const cat = opts?.categories?.find((c) => c.value === catValue);
+      if (!opts || !cat) return { catId: null, units: [] };
+      const units = (opts.unit_types ?? [])
+        .filter((u) => u.parent_id === cat.id)
+        .map((u) => ({
+          id: u.id,
+          label: u.label_en,
+          subs: (opts.sub_types ?? []).filter((s) => s.parent_id === u.id),
+        }));
+      return { catId: cat.id, units };
+    };
+    return { residential: build('residential'), commercial: build('commercial') };
+  });
+
+  // Лейбл кнопки типа: выбранный подтип(ы)/тип/категория или плейсхолдер.
+  readonly typeLabel = computed(() => {
+    const opts = this.filterOptions();
+    const f = this.filter.filters();
+    const cat = this.filter.category();
+    if (opts && f.unitTypeId) {
+      const unit = opts.unit_types?.find((u) => u.id === f.unitTypeId);
+      const base = unit?.label_en ?? 'Тип';
+      return f.subTypeIds.length ? `${base} · ${f.subTypeIds.length}` : base;
+    }
+    if (cat) return cat === 'residential' ? 'Residential' : 'Commercial';
+    return 'Тип объекта';
+  });
+
+  readonly hasTypeSelection = computed(
+    () => !!this.filter.category() || !!this.filter.filters().unitTypeId,
+  );
+
+  selectCategoryAll(value: PropertyCategory): void {
+    this.filter.selectCategoryAll(value);
+  }
+
+  selectUnitType(value: PropertyCategory, unitTypeId: string): void {
+    this.filter.selectUnitType(value, unitTypeId);
+  }
+
+  toggleSubType(id: string): void {
+    this.filter.toggleSubType(id);
+  }
+
+  isSubTypeActive(id: string): boolean {
+    return this.filter.filters().subTypeIds.includes(id);
+  }
+
+  clearType(): void {
+    this.filter.clearType();
+  }
+
+  // ─── Автокомплит «Адрес или агент» ─────────────────────────────────────────
+  readonly searchInput = signal<string>('');
+  readonly locationResults = signal<LocationSearchItem[]>([]);
+  readonly showSuggest = signal<boolean>(false);
+  private _searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Совпадения по агенту (ФИО) из уже загруженных строк ленты (distinct, до 6).
+  readonly agentMatches = computed<string[]>(() => {
+    const q = this.searchInput().trim().toLowerCase();
+    if (q.length < 2) return [];
+    const seen = new Set<string>();
+    for (const p of this.properties()) {
+      const name = p.owner_full_name;
+      if (name && name.toLowerCase().includes(q) && !seen.has(name)) {
+        seen.add(name);
+        if (seen.size >= 6) break;
+      }
+    }
+    return [...seen];
+  });
+
+  onSearchInput(value: string): void {
+    this.searchInput.set(value);
+    this.showSuggest.set(true);
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    const q = value.trim();
+    if (q.length < 2) {
+      this.locationResults.set([]);
+      return;
+    }
+    this._searchTimer = setTimeout(() => {
+      void this._createService.searchLocations(q).then((res) => {
+        this.locationResults.set(res);
+      });
+    }, 250);
+  }
+
+  onSearchFocus(): void {
+    if (this.searchInput().trim().length >= 2) this.showSuggest.set(true);
+  }
+
+  // Закрываем подсказки с задержкой, чтобы успел сработать клик по элементу.
+  onSearchBlur(): void {
+    setTimeout(() => this.showSuggest.set(false), 150);
+  }
+
+  pickLocation(item: LocationSearchItem): void {
+    this.filter.locationFilter.set({ id: item.id, name: item.name });
+    this.filter.agentQuery.set('');
+    this.searchInput.set('');
+    this.locationResults.set([]);
+    this.showSuggest.set(false);
+  }
+
+  pickAgent(name: string): void {
+    this.filter.agentQuery.set(name);
+    this.filter.locationFilter.set(null);
+    this.searchInput.set('');
+    this.showSuggest.set(false);
+  }
+
+  clearLocation(): void {
+    this.filter.locationFilter.set(null);
+  }
+
+  clearAgent(): void {
+    this.filter.agentQuery.set('');
+  }
+
   constructor() {
     void this._loadSaved();
-    // Перезагружаем при смене dealType, категории, готовности, поиска,
-    // фильтров или сортировки. Охват (scope) — клиентский, перезагрузки не требует.
+    void this._loadFilterOptions();
+    // Перезагружаем при смене dealType, категории, готовности, выбранного адреса,
+    // фильтров или сортировки. Охват (scope) и агент — клиентские, перезагрузки
+    // не требуют.
     effect(() => {
       this.filter.dealType();
       this.filter.category();
       this.filter.handover();
+      this.filter.locationFilter();
       this.filter.searchQuery();
       this.filter.filters();
       this.filter.sortBy();
@@ -167,6 +339,14 @@ export class FeedPageComponent {
       this.properties.set([]);
       void this._load();
     });
+  }
+
+  private async _loadFilterOptions(): Promise<void> {
+    try {
+      this.filterOptions.set(await this._createService.getFilterOptions());
+    } catch {
+      // Справочники недоступны — мега-дропдаун покажет пустые колонки.
+    }
   }
 
   private async _loadSaved(): Promise<void> {
@@ -224,6 +404,7 @@ export class FeedPageComponent {
   private async _buildParams(): Promise<FeedParams> {
     const f = this.filter.filters();
     const categoryVal = this.filter.category();
+    const loc = this.filter.locationFilter();
     const search = this.filter.searchQuery().trim();
     return {
       p_deal_type: this.filter.dealType(),
@@ -242,7 +423,9 @@ export class FeedPageComponent {
       p_furnished: f.furnished,
       p_handover: this.filter.handover(),
       p_listing_type: f.listingType !== 'all' ? f.listingType : null,
-      // Поиск из лупы — пока только по описанию (агент ФИО/телефон — DB-батч).
+      // Адрес из автокомплита → серверный фильтр по локации.
+      p_location_ids: loc ? [loc.id] : null,
+      // Поиск-лупа из хедера — свободный текст по описанию объекта.
       p_description: search.length >= 2 ? search : null,
     };
   }
