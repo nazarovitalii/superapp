@@ -99,9 +99,10 @@
       @if (currentPhotoUrl(); as url) {
         <div class="gallery">
           <img
-            class="gallery-img"
+            class="gallery-img gallery-img--zoom"
             [src]="url"
             [alt]="vm().locationPath ?? ''"
+            (click)="openLightbox(activePhotoIdx())"
           />
           @if (photos().length > 1) {
             <div class="gallery-controls">
@@ -390,3 +391,12 @@
     </div>
   }
 </div>
+
+<!-- Полноэкранный лайтбокс фото -->
+@if (lightboxOpen() && photos().length) {
+  <mrsqm-property-gallery-lightbox
+    [photos]="photos()"
+    [startIndex]="lightboxStart()"
+    (closed)="closeLightbox()"
+  />
+}

@@ -204,6 +204,11 @@
   display: block;
 }
 
+// Фото открывается в полноэкранном лайтбоксе по клику
+.gallery-img--zoom {
+  cursor: zoom-in;
+}
+
 .gallery-controls {
   position: absolute;
   bottom: var(--s);

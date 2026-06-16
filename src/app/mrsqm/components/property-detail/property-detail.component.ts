@@ -22,12 +22,19 @@ import {
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { PropertyGalleryLightboxComponent } from '../property-gallery-lightbox/property-gallery-lightbox.component';
 
 @Component({
   selector: 'mrsqm-property-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    PropertyGalleryLightboxComponent,
+  ],
   templateUrl: './property-detail.component.html',
   styleUrl: './property-detail.component.scss',
 })
@@ -45,6 +52,9 @@ export class PropertyDetailComponent implements OnInit {
   readonly filterOptions = signal<FilterOptions | null>(null);
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
+  // Полноэкранный лайтбокс: открыт ли + с какого фото.
+  readonly lightboxOpen = signal(false);
+  readonly lightboxStart = signal(0);
 
   // Табы карточки: Инфо / Комментарии (item 13).
   readonly activeTab = signal<'info' | 'comments'>('info');
@@ -165,6 +175,16 @@ export class PropertyDetailComponent implements OnInit {
     const len = this.photos().length;
     if (len <= 1) return;
     this.activePhotoIdx.set((this.activePhotoIdx() - 1 + len) % len);
+  }
+
+  openLightbox(index: number): void {
+    if (!this.photos().length) return;
+    this.lightboxStart.set(index);
+    this.lightboxOpen.set(true);
+  }
+
+  closeLightbox(): void {
+    this.lightboxOpen.set(false);
   }
 
   openWhatsApp(phone: string): void {
