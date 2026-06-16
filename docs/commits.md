@@ -83,3 +83,9 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `d8f888625` | 07:43 | feat(mrsqm): карточка объекта на реальных данных — get_property + фото + все поля                                                                                |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `241ff6080` | 07:49 | docs: переписка + резюме дня 2026-06-16 (карточка объекта)                                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `7be53c861` | 12:15 | feat(mrsqm): тулбар ленты в стиле Bayut + расширение таблицы (F-5)                                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
