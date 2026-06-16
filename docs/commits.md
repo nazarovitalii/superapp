@@ -68,3 +68,18 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `0bac2182b` | 11:19 | feat(mrsqm): форма добавления v2 — 8 шагов, каскад адреса до leaf, поля по типам, building info                                                                  |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `34bdd12ec` | 11:23 | docs: переписка + резюме дня 2026-06-15 (форма v2)                                                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f9615b0af` | 17:52 | feat(mrsqm): слайдер приватности адреса (F-12b) + фото объекта (P-5b)                                                                                            |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `aa1f1af8f` | 18:09 | docs: переписка + резюме дня 2026-06-15 (слайдер + фото)                                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `670bc3c87` | 19:09 | fix(mrsqm): форма объекта — каскад адреса по всем уровням, фикс краша публикации                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `e79a91458` | 19:25 | docs: переписка + резюме дня 2026-06-15 (фиксы формы)                                                                                                            |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `d8f888625` | 07:43 | feat(mrsqm): карточка объекта на реальных данных — get_property + фото + все поля                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
