@@ -107,26 +107,35 @@ TODO: district через `search_locations` (API-2).
 
 ## Карточка объекта — правая панель (тип `PROPERTY`)
 
-**RPC:** `get_property({ p_property_id })` — ⚠️ сейчас показывает данные из ленты
-(mock), дозагрузка через `get_property` не подключена.
+**Данные (3 запроса параллельно при открытии):** `get_property({ p_property_id })`
+(вся карточка + вложенный `agent{}`), `select` из `property_photos` (фото, сорт
+`order_index`), `get_filter_options` (резолв id-массивов → названия). При отказе
+доступа (`get_property` вернул `{error}`) — фолбэк на данные из ленты.
 
 Открывается по клику из ленты в **нативной правой панели** Super Productivity
 (`PanelContentService` + `slideInFromRight`). Стиль совпадает с task-detail инбокса:
 шапка как в фильтрах (стрелка сворачивания + заголовок «Объект», фото под шапкой),
-цена — заголовок с нижней линией primary, секции (расположение/описание/агент) —
-карточки `--task-detail-bg` / `--task-detail-shadow`.
+цена — заголовок с нижней линией primary, секции — карточки `--task-detail-bg` /
+`--task-detail-shadow`.
 
-### Содержимое
+### Содержимое (пустые блоки скрываются)
 
-- Галерея фото
-- Цена + deal_type + price_period (для аренды)
-- Тип: listing_type (Official / Pocket)
-- Параметры: bedrooms, bathrooms, area_sqft, furnished, handover, occupancy_status
-- Локация: полный путь `location_full_path`
-- Описание
-- Данные агента: фото, имя, агентство, языки
-- **WhatsApp кнопка** — только если `agent.whatsapp_phone != null` (Pro или в сети)
-- Если Free и не в сети → заглушка «Доступно на Pro»
+- **Галерея** — реальные фото из `property_photos` (`full_url`), листание + счётчик
+- **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
+  Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
+- **Параметры** — bedrooms, bathrooms, maid (`is_maid`), BUA + участок (`plot_sqft`),
+  этаж-уровень (`floor_level_id`→label), этажность (`floors_in_unit`), мебель,
+  готовность/срок сдачи (`completion_year`/`q`), занятость + «занято до» (`lease_until`)
+- **Особенности** — views/positions/amenities (id → названия через `get_filter_options`)
+- **Локация** — полный путь `location_full_path`
+- **Девелопер** — логотип (`developer_logo_url`) + название
+- **Документы** (только official) — Title Deed, plot, municipality
+- **Описание**
+- **Агент** (из вложенного `agent{}`) — фото, имя, агентство, эмират, языки, «о себе»;
+  **WhatsApp** + **Telegram** только если контакт != null (Pro или в сети), иначе
+  заглушка «Доступно на Pro»
+- **Статистика** — «Обновлено N дней назад» + `views_count`
+- Бейдж агента **не показывается** (вне MVP). Таб «Комментарии» — заглушка (F-13)
 - Кнопка **Сохранить в избранное** (toggle, `save_property`)
 - `track_view(p_property_id)` — fire and forget при открытии
 

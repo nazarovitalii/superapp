@@ -29,8 +29,8 @@
       (click)="setTab('comments')"
     >
       Комментарии
-      @if (commentsCount) {
-        <span class="tab-count">{{ commentsCount }}</span>
+      @if (commentsCount()) {
+        <span class="tab-count">{{ commentsCount() }}</span>
       }
     </button>
   </div>
@@ -52,7 +52,7 @@
         >
           All
           <span class="seg-count">{{
-            commentsScope() === 'all' ? commentsCount : 0
+            commentsScope() === 'all' ? commentsCount() : 0
           }}</span>
         </button>
         <button
@@ -95,15 +95,15 @@
     </div>
   } @else {
     <div class="detail-scroll">
-      <!-- Галерея фото -->
-      @if (displayData.photos?.length) {
+      <!-- ── 1. Галерея фото (property_photos) ───────────────────────────── -->
+      @if (currentPhotoUrl(); as url) {
         <div class="gallery">
           <img
             class="gallery-img"
-            [src]="displayData.photos![activePhotoIdx()]"
-            [alt]="displayData.location_name ?? ''"
+            [src]="url"
+            [alt]="vm().locationPath ?? ''"
           />
-          @if (displayData.photos!.length > 1) {
+          @if (photos().length > 1) {
             <div class="gallery-controls">
               <button
                 mat-icon-button
@@ -112,7 +112,7 @@
                 <mat-icon>chevron_left</mat-icon>
               </button>
               <span class="gallery-counter">
-                {{ activePhotoIdx() + 1 }} / {{ displayData.photos!.length }}
+                {{ activePhotoIdx() + 1 }} / {{ photos().length }}
               </span>
               <button
                 mat-icon-button
@@ -130,91 +130,194 @@
       }
 
       <div class="detail-body">
-        <!-- Цена и тип сделки -->
+        <!-- ── 2. Цена и тип сделки ──────────────────────────────────────── -->
         <div class="price-row">
           <span class="price-main">
-            {{ displayData.price | number: '1.0-0' }}
-            {{ displayData.price_currency }}
-            @if (displayData.price_period) {
-              <span class="price-period">/{{ displayData.price_period }}</span>
+            @if (vm().previousPrice) {
+              <span class="price-old">
+                {{ vm().previousPrice | number: '1.0-0' }}
+              </span>
+            }
+            {{ vm().price | number: '1.0-0' }}
+            {{ vm().currency }}
+            @if (vm().period) {
+              <span class="price-period">/{{ vm().period }}</span>
             }
           </span>
           <div class="type-chips">
             <span class="type-chip">
-              {{ displayData.deal_type === 'sale' ? 'Продажа' : 'Аренда' }}
+              {{ vm().dealType === 'sale' ? 'Продажа' : 'Аренда' }}
             </span>
-            @if (displayData.listing_type === 'pocket') {
-              <span class="type-chip"> <mat-icon>star</mat-icon>Pocket </span>
+            @if (vm().previousPrice) {
+              <span class="type-chip"> <mat-icon>trending_down</mat-icon>Снижение </span>
             }
-            @if (displayData.is_distress) {
+            @if (vm().isDistress) {
               <span class="type-chip">Срочно</span>
+            }
+            @if (vm().isNegotiable) {
+              <span class="type-chip">Торг</span>
+            }
+            @if (vm().commissionIncluded) {
+              <span class="type-chip">Комиссия включена</span>
             }
           </div>
         </div>
 
-        <!-- Параметры объекта -->
+        <!-- ── 3. Параметры объекта ──────────────────────────────────────── -->
         <div class="specs-grid">
-          @if (displayData.bedrooms !== null) {
+          @if (vm().bedrooms !== null) {
             <div class="spec-item">
               <mat-icon>bed</mat-icon>
-              <span>{{ displayData.bedrooms }} спал.</span>
+              <span>{{ vm().bedrooms }} спал.</span>
             </div>
           }
-          @if (displayData.bathrooms !== null) {
+          @if (vm().bathrooms !== null) {
             <div class="spec-item">
               <mat-icon>shower</mat-icon>
-              <span>{{ displayData.bathrooms }} ванн.</span>
+              <span>{{ vm().bathrooms }} ванн.</span>
             </div>
           }
-          @if (displayData.area_sqft !== null) {
+          @if (vm().isMaid) {
+            <div class="spec-item">
+              <mat-icon>cleaning_services</mat-icon>
+              <span>Maid room</span>
+            </div>
+          }
+          @if (vm().areaSqft !== null) {
             <div class="spec-item">
               <mat-icon>square_foot</mat-icon>
-              <span>{{ displayData.area_sqft | number: '1.0-0' }} sqft</span>
+              <span>{{ vm().areaSqft | number: '1.0-0' }} sqft</span>
             </div>
           }
-          @if (displayData.furnished) {
+          @if (vm().plotSqft) {
+            <div class="spec-item">
+              <mat-icon>crop_landscape</mat-icon>
+              <span>{{ vm().plotSqft | number: '1.0-0' }} sqft участок</span>
+            </div>
+          }
+          @if (vm().floorLevel) {
+            <div class="spec-item">
+              <mat-icon>stairs</mat-icon>
+              <span>{{ vm().floorLevel }}</span>
+            </div>
+          }
+          @if (vm().floorsInUnit) {
+            <div class="spec-item">
+              <mat-icon>layers</mat-icon>
+              <span>{{ vm().floorsInUnit }}</span>
+            </div>
+          }
+          @if (vm().furnishedLabel) {
             <div class="spec-item">
               <mat-icon>chair</mat-icon>
-              <span>{{
-                displayData.furnished === 'furnished' ? 'Меблировано' : 'Без мебели'
-              }}</span>
+              <span>{{ vm().furnishedLabel }}</span>
             </div>
           }
-          @if (displayData.handover) {
+          @if (vm().handoverLabel) {
             <div class="spec-item">
               <mat-icon>home</mat-icon>
-              <span>{{
-                displayData.handover === 'ready' ? 'Готово' : 'Строительство'
-              }}</span>
+              <span>{{ vm().handoverLabel }}</span>
+            </div>
+          }
+          @if (vm().completion) {
+            <div class="spec-item">
+              <mat-icon>event</mat-icon>
+              <span>Сдача {{ vm().completion }}</span>
+            </div>
+          }
+          @if (vm().occupancyLabel) {
+            <div class="spec-item">
+              <mat-icon>meeting_room</mat-icon>
+              <span
+                >{{ vm().occupancyLabel
+                }}{{ vm().leaseLabel ? ' · ' + vm().leaseLabel : '' }}</span
+              >
             </div>
           }
         </div>
 
-        <!-- Локация -->
-        @if (detail()?.location_full_path ?? displayData.location_name; as loc) {
+        <!-- ── 3b. Виды / расположение / удобства ─────────────────────────── -->
+        @if (vm().views.length || vm().positions.length || vm().amenities.length) {
+          <div class="section">
+            <div class="section-label"><mat-icon>visibility</mat-icon>Особенности</div>
+            <div class="tag-list">
+              @for (v of vm().views; track v) {
+                <span class="type-chip">{{ v }}</span>
+              }
+              @for (p of vm().positions; track p) {
+                <span class="type-chip">{{ p }}</span>
+              }
+              @for (a of vm().amenities; track a) {
+                <span class="type-chip">{{ a }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- ── 4. Локация ────────────────────────────────────────────────── -->
+        @if (vm().locationPath; as loc) {
           <div class="section">
             <div class="section-label"><mat-icon>place</mat-icon>Расположение</div>
             <p class="section-text">{{ loc }}</p>
           </div>
         }
 
-        <!-- Описание -->
-        @if (displayData.description) {
+        <!-- ── 5. Девелопер ──────────────────────────────────────────────── -->
+        @if (vm().developerName; as dev) {
           <div class="section">
-            <div class="section-label"><mat-icon>description</mat-icon>Описание</div>
-            <p class="section-text description-text">{{ displayData.description }}</p>
+            <div class="section-label"><mat-icon>business</mat-icon>Девелопер</div>
+            <div class="dev-row">
+              @if (vm().developerLogo) {
+                <img
+                  class="dev-logo"
+                  [src]="vm().developerLogo"
+                  [alt]="dev"
+                />
+              }
+              <span class="section-text">{{ dev }}</span>
+            </div>
           </div>
         }
 
-        <!-- Агент -->
+        <!-- ── 6. Документы (только официальный листинг) ─────────────────── -->
+        @if (
+          vm().isOfficial &&
+          (vm().titleDeedNumber || vm().plotNumber || vm().municipalityNumber)
+        ) {
+          <div class="section">
+            <div class="section-label"><mat-icon>verified</mat-icon>Документы</div>
+            @if (vm().titleDeedNumber) {
+              <p class="section-text">
+                Title Deed: {{ vm().titleDeedNumber
+                }}{{ vm().titleDeedYear ? ' / ' + vm().titleDeedYear : '' }}
+              </p>
+            }
+            @if (vm().plotNumber) {
+              <p class="section-text">Plot №: {{ vm().plotNumber }}</p>
+            }
+            @if (vm().municipalityNumber) {
+              <p class="section-text">Municipality №: {{ vm().municipalityNumber }}</p>
+            }
+          </div>
+        }
+
+        <!-- ── Описание ──────────────────────────────────────────────────── -->
+        @if (vm().description) {
+          <div class="section">
+            <div class="section-label"><mat-icon>description</mat-icon>Описание</div>
+            <p class="section-text description-text">{{ vm().description }}</p>
+          </div>
+        }
+
+        <!-- ── 7. Агент ──────────────────────────────────────────────────── -->
         <div class="section agent-section">
           <div class="section-label"><mat-icon>person</mat-icon>Агент</div>
           <div class="agent-row">
-            @if (displayData.owner_photo_url) {
+            @if (vm().agentPhoto) {
               <img
                 class="agent-avatar"
-                [src]="displayData.owner_photo_url"
-                [alt]="displayData.owner_full_name ?? ''"
+                [src]="vm().agentPhoto"
+                [alt]="vm().agentName ?? ''"
               />
             } @else {
               <div class="agent-avatar agent-avatar--placeholder">
@@ -222,20 +325,25 @@
               </div>
             }
             <div class="agent-info">
-              <div class="agent-name">{{ displayData.owner_full_name }}</div>
-              @if (displayData.owner_agency_name) {
-                <div class="agent-agency">{{ displayData.owner_agency_name }}</div>
+              <div class="agent-name">{{ vm().agentName }}</div>
+              @if (vm().agentAgency) {
+                <div class="agent-agency">{{ vm().agentAgency }}</div>
               }
-              @if (detail()?.owner_languages?.length) {
-                <div class="agent-langs">
-                  {{ detail()!.owner_languages!.join(', ') }}
-                </div>
+              @if (vm().agentEmirate) {
+                <div class="agent-agency">{{ vm().agentEmirate }}</div>
+              }
+              @if (vm().agentLangs?.length) {
+                <div class="agent-langs">{{ vm().agentLangs!.join(', ') }}</div>
               }
             </div>
           </div>
 
-          <!-- WhatsApp кнопка -->
-          @if (detail()?.owner_whatsapp_phone; as phone) {
+          @if (vm().agentAbout) {
+            <p class="section-text">{{ vm().agentAbout }}</p>
+          }
+
+          <!-- Контакты: WhatsApp / Telegram (БД отдаёт по правам Pro/сеть) -->
+          @if (vm().whatsapp; as phone) {
             <button
               mat-flat-button
               class="whatsapp-btn"
@@ -244,13 +352,40 @@
               <mat-icon>chat</mat-icon>
               WhatsApp
             </button>
-          } @else {
+          }
+          @if (vm().telegram; as tg) {
+            <button
+              mat-stroked-button
+              class="tg-btn"
+              (click)="openTelegram(tg)"
+            >
+              <mat-icon>send</mat-icon>
+              Telegram
+            </button>
+          }
+          @if (!vm().whatsapp && !vm().telegram) {
             <div class="pro-hint">
               <mat-icon>lock</mat-icon>
               Контакт агента доступен на <strong>Pro</strong>
             </div>
           }
         </div>
+
+        <!-- ── 8. Статистика ─────────────────────────────────────────────── -->
+        @if (vm().updatedLabel || vm().viewsCount !== null) {
+          <div class="stats-row">
+            @if (vm().updatedLabel) {
+              <span class="stat-item">
+                <mat-icon>schedule</mat-icon>Обновлено {{ vm().updatedLabel }}
+              </span>
+            }
+            @if (vm().viewsCount !== null) {
+              <span class="stat-item">
+                <mat-icon>visibility</mat-icon>{{ vm().viewsCount }} просм.
+              </span>
+            }
+          </div>
+        }
       </div>
     </div>
   }

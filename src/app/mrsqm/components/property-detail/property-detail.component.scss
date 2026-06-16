@@ -261,6 +261,15 @@
   color: var(--ink-muted);
 }
 
+// Старая цена (до снижения) — зачёркнута, приглушена
+.price-old {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+  text-decoration: line-through;
+  margin-right: var(--s-half);
+}
+
 .type-chips {
   display: flex;
   gap: var(--s-half);
@@ -361,6 +370,27 @@
   overflow-y: auto;
 }
 
+// Список тегов (виды/расположение/удобства) — переиспользует .type-chip
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-half);
+}
+
+// ─── Девелопер ───────────────────────────────────────────────────────────────
+.dev-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+}
+
+.dev-logo {
+  height: 28px;
+  max-width: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 // ─── Агент ───────────────────────────────────────────────────────────────────
 .agent-section {
   gap: var(--s);
@@ -425,6 +455,38 @@
 
   mat-icon {
     margin-right: var(--s-half);
+  }
+}
+
+// ─── Telegram кнопка ──────────────────────────────────────────────────────────
+.tg-btn {
+  width: 100%;
+  margin-top: var(--s-half);
+
+  mat-icon {
+    margin-right: var(--s-half);
+  }
+}
+
+// ─── Статистика объекта ───────────────────────────────────────────────────────
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  padding: var(--s-half) var(--s2);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+.stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-quarter);
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 }
 

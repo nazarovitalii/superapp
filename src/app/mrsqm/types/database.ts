@@ -278,14 +278,101 @@ export interface PropertyFeedItem {
   developer_name: string | null;
 }
 
-export interface PropertyDetail extends PropertyFeedItem {
-  location_full_path: string | null;
-  completion_year: number | null;
-  completion_q: number | null;
+// Агент-владелец объекта — вложенный объект `agent` в ответе get_property.
+// Контакты (whatsapp_phone, broker_license) БД отдаёт по правам (свой/Pro/сеть),
+// иначе NULL — клиент эту логику НЕ дублирует.
+export interface PropertyAgent {
+  id: string;
+  full_name: string | null;
+  tg_username: string | null;
+  whatsapp_phone: string | null;
+  photo_url: string | null;
+  about: string | null;
+  languages: string[] | null;
+  agency_name: string | null;
+  emirate_name: string | null;
+  broker_license: string | null;
+}
+
+// Фото объекта из таблицы property_photos (прямой select под RLS photos_select).
+export interface PropertyPhoto {
+  full_url: string;
+  thumb_url: string;
+  order_index: number;
+  photo_type: string;
+}
+
+// Полная карточка объекта — ответ RPC get_property (jsonb).
+// Поля сверены с docs/database.md (get_property): плоские поля properties + локация
+// + девелопер + флаги + вложенный agent{}. НЕ содержит photos (грузятся отдельно).
+export interface PropertyDetail {
+  id: string;
+  owner_id: string;
+  unit_id: string | null;
+  location_id: string | null;
+  category_id: string | null;
+  unit_type_id: string | null;
+  sub_type_id: string | null;
+  listing_type: ListingType;
+  deal_type: DealType;
+  price: number;
+  previous_price: number | null;
+  price_currency: string;
+  price_period: string | null;
+  price_changed_at: string | null;
+  is_negotiable: boolean | null;
+  commission_included: boolean | null;
+  visibility: string | null;
+  status: PropertyStatus;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  is_maid: boolean | null;
+  is_hotel_pool: boolean | null;
+  area_sqft: number | null;
+  area_sqm: number | null;
+  plot_sqft: number | null;
+  plot_sqm: number | null;
+  floor_number: number | null;
+  floor_level_id: string | null;
+  floors_in_unit: string | null;
+  layout_id: string | null;
+  view_ids: string[] | null;
+  position_ids: string[] | null;
+  amenity_ids: string[] | null;
+  furnished: Furnished | null;
+  lat: number | null;
+  lng: number | null;
+  is_distress: boolean;
   occupancy_status: string | null;
-  owner_whatsapp_phone: string | null;
-  owner_broker_license: string | null;
-  owner_languages: string[] | null;
+  lease_until: string | null;
+  description: string | null;
+  title_deed_number: string | null;
+  title_deed_year: number | null;
+  plot_number: string | null;
+  municipality_number: string | null;
+  developer_id: string | null;
+  developer_name: string | null;
+  // d.name из JOIN developers (девелопер-справочник) + логотип.
+  developer_name_ref: string | null;
+  developer_logo_url: string | null;
+  handover: Handover | null;
+  completion_year: number | null;
+  completion_q: string | null;
+  last_actualized_at: string | null;
+  published_at: string | null;
+  views_count: number | null;
+  contacts_count: number | null;
+  comments_count: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+  location_name: string | null;
+  location_level: string | null;
+  location_full_path: string | null;
+  is_network: boolean;
+  is_owner: boolean;
+  agent: PropertyAgent | null;
+  // Ошибка доступа: get_property возвращает { error, property_id } вместо объекта.
+  error?: string;
 }
 
 // Ответ RPC get_feed — сверено с живой схемой: только эти 4 ключа.

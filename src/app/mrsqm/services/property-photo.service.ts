@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { MrsqmSupabaseService } from './supabase.service';
-import { PropertyPhotoInsert } from '../types/database';
+import { PropertyPhoto, PropertyPhotoInsert } from '../types/database';
 
 // Параметры нарезки (в браузере): full ~1600px, thumb ~400px, WebP.
 const FULL_MAX = 1600;
@@ -43,6 +43,17 @@ export class PropertyPhotoService {
     }
     const { error } = await this._supabase.client.from('property_photos').insert(rows);
     if (error) throw error;
+  }
+
+  // Фото объекта для карточки (select под RLS photos_select, сорт по order_index).
+  // Ошибка/нет данных → []. Видимость ограничивает сама RLS (вложенный к properties).
+  async getPhotos(propertyId: string): Promise<PropertyPhoto[]> {
+    const { data, error } = await this._supabase.client
+      .from('property_photos')
+      .select('full_url, thumb_url, order_index, photo_type')
+      .eq('property_id', propertyId)
+      .order('order_index', { ascending: true });
+    return error ? [] : ((data as PropertyPhoto[]) ?? []);
   }
 
   private async _upload(path: string, blob: Blob): Promise<string> {
