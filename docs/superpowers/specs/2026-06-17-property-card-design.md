@@ -119,16 +119,27 @@ RPC данных: `get_property` (`docs/database.md:449`).
 
 ## Слой 2 — Обогащение `get_property` (1 миграция)
 
+Прод-сверка 2026-06-17: `properties.public_location_id` — колонка ЕСТЬ (FK `properties_public_location_id_fkey` на `locations`, пока NULL у всех). `is_vastu` — НЕТ. У всех 10 объектов `developer_id = NULL`. `location_developers` сейчас **переделывается в параллельном чате** — текущее состояние таблицы НЕ финальное.
+
 Добавить в `get_property` (соблюдая лимит 100 аргументов — split `jsonb_build_object` + `||`, как уже сделано):
 
-1. **`agent.active_listings_count`** — `COUNT(*)` активных публичных объектов владельца (`status='active'`).
-2. **Project-блок** — JOIN `location_developers` по `location_id`(+`developer_id`): `project_name`, `project_status`/`completion_status`, `completion_year`, `completion_q`.
-3. **`public_location_path`** — резолв пути по `properties.public_location_id` (как `location_full_path`, но до уровня бегунка). Сначала подтвердить наличие колонки на проде.
-4. **`is_vastu`** — миграция: `ALTER TABLE properties ADD COLUMN is_vastu boolean` (поглощает WP-F); вернуть в `get_property` и `get_feed` (для `+v` в ленте); добавить в форму.
+1. **`agent.active_listings_count`** — `COUNT(*)` по `properties` владельца, `status='active'`. Независимо от rework. ✅ готово к работе.
+2. **`public_location_path`** — резолв пути по `properties.public_location_id` тем же `CONCAT_WS`-приёмом, что `location_full_path`, но через JOIN на `public_location_id`. Независимо от rework. ✅ готово.
+3. **`is_vastu`** — `ALTER TABLE properties ADD COLUMN is_vastu boolean NOT NULL DEFAULT false` (поглощает WP-F); вернуть в `get_property` и `get_feed` (для `+v` в ленте); чекбокс в форме. Независимо от rework. ✅ готово.
+4. **Project-блок** — `location_developers` по `location_id = property.location_id` (вернётся **ровно одна строка**; проект висит на leaf-локации). ⚠️ **ЗАВИСИТ от rework `location_developers`** — применять только после новой схемы. Каждая строка блока **скрывается, если её источник NULL**. Маппинг (уточнён 2026-06-17):
+   - **Name** ← `project_group_name`. NULL → строку не показывать.
+   - **Building / Cluster** — значение = `project_name`, подпись зависит от `is_building`:
+     - `is_building = true` → `Building: {project_name}`
+     - `is_building = false` → `Cluster: {project_name}`
+     - `is_building = NULL` (ещё не обогащён) → `Project: {project_name}` (нейтрально)
+     - `project_name` NULL → строку не показывать.
+   - **Developer** ← `developer_name` (поле location_developers напрямую). NULL → не показывать.
+   - **Completion** ← из `project_status`: `under_construction`/`planned` → `Off-Plan`; `completed` → `Ready`; NULL → не показывать.
+   - **Handover**: если `project_status = 'completed'` → `built_year` (напр. «2021»); иначе (`under_construction`/`planned`) → `completion_q` + « » + `completion_year` (напр. «Q4 2029»); нужные поля NULL → не показывать.
 
-Гейт: одна миграция (объяснить → «да» → применяет создатель в Studio). Обновить `database.md` после.
+Гейт: миграция (объяснить → «да» → применяет создатель в Studio). Обновить `database.md` после. Зависимость: п.4 — после rework `location_developers` (карта связей, правило В-3).
 
-### Критерии: `get_property` возвращает 4 новых поля; контракт остальных полей байт-в-байт не изменён; карточка показывает Project/slider-адрес/active-listings/`+vastu`.
+### Критерии: `get_property` возвращает новые поля; контракт остальных байт-в-байт не изменён; карточка показывает active-listings/slider-адрес/`+vastu` сразу, Project — после rework.
 
 ---
 

@@ -171,3 +171,6 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `bbce8aa2e` | 22:01 | style(property-detail): стили таба Metrics + чистка мёртвого specs-grid SCSS + reset isSaved                                                                     |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `0022ff26a` | 22:06 | docs: карточка слой 1 — tabs/TODO/spec (3 таба, Tech, no-photo, избранное)                                                                                       |
+| `2b434408c` | 22:59 | migrate: is_vastu колонка применена (properties.is_vastu)                                                                                                        |
+| `621b689bc` | 22:59 | migrate: is_vastu → applied/                                                                                                                                     |
