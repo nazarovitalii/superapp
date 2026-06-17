@@ -200,6 +200,7 @@ export class PropertyDetailComponent implements OnDestroy {
     this.photos.set([]);
     this.activePhotoIdx.set(0);
     this.activeTab.set('details');
+    this.isSaved.set(false);
     if (this._lightboxDialogEl?.nativeElement.open) {
       this.closeLightbox();
     }
