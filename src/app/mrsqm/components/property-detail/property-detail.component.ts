@@ -27,7 +27,8 @@ import {
   ArchiveStatus,
   PropertyOwnerService,
 } from '../../services/property-owner.service';
-import { PropertyGalleryLightboxComponent } from '../property-gallery-lightbox/property-gallery-lightbox.component';
+import { Gallery, ImageItem } from 'ng-gallery';
+import { Lightbox } from 'ng-gallery/lightbox';
 
 @Component({
   selector: 'mrsqm-property-detail',
@@ -39,7 +40,6 @@ import { PropertyGalleryLightboxComponent } from '../property-gallery-lightbox/p
     MatButtonModule,
     MatMenuModule,
     MatProgressSpinnerModule,
-    PropertyGalleryLightboxComponent,
   ],
   templateUrl: './property-detail.component.html',
   styleUrl: './property-detail.component.scss',
@@ -49,6 +49,8 @@ export class PropertyDetailComponent implements OnInit {
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _createService = inject(PropertyCreateService);
   private readonly _ownerService = inject(PropertyOwnerService);
+  private readonly _gallery = inject(Gallery);
+  private readonly _lightbox = inject(Lightbox);
 
   // Объект из ленты (по нему открыли карточку) — фолбэк, пока грузится detail.
   readonly property = input.required<PropertyFeedItem>();
@@ -59,9 +61,8 @@ export class PropertyDetailComponent implements OnInit {
   readonly filterOptions = signal<FilterOptions | null>(null);
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
-  // Полноэкранный лайтбокс: открыт ли + с какого фото.
-  readonly lightboxOpen = signal(false);
-  readonly lightboxStart = signal(0);
+  // id галереи ng-gallery для лайтбокса этой карточки.
+  private readonly _galleryId = 'property-card';
 
   // Табы карточки: Инфо / Комментарии (item 13).
   readonly activeTab = signal<'info' | 'comments'>('info');
@@ -184,14 +185,22 @@ export class PropertyDetailComponent implements OnInit {
     this.activePhotoIdx.set((this.activePhotoIdx() - 1 + len) % len);
   }
 
+  // Открыть полноэкранный лайтбокс ng-gallery (рисуется через CDK Overlay в body,
+  // поэтому не зависит от transform правой панели — фото на весь экран).
   openLightbox(index: number): void {
-    if (!this.photos().length) return;
-    this.lightboxStart.set(index);
-    this.lightboxOpen.set(true);
-  }
-
-  closeLightbox(): void {
-    this.lightboxOpen.set(false);
+    const photos = this.photos();
+    if (!photos.length) return;
+    const items = photos.map(
+      (p) => new ImageItem({ src: p.full_url, thumb: p.thumb_url }),
+    );
+    this._gallery
+      .ref(this._galleryId, {
+        loop: true,
+        counter: photos.length > 1,
+        imageSize: 'contain',
+      })
+      .load(items);
+    this._lightbox.open(index, this._galleryId, { panelClass: 'mrsqm-lightbox' });
   }
 
   // ─── Действия владельца над своим объектом (is_owner) ──────────────────────

@@ -476,12 +476,3 @@
     </div>
   }
 </div>
-
-<!-- Полноэкранный лайтбокс фото -->
-@if (lightboxOpen() && photos().length) {
-  <mrsqm-property-gallery-lightbox
-    [photos]="photos()"
-    [startIndex]="lightboxStart()"
-    (closed)="closeLightbox()"
-  />
-}
