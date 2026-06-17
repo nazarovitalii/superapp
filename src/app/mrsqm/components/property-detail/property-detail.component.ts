@@ -226,9 +226,18 @@ export class PropertyDetailComponent implements OnDestroy {
     afterNextRender(
       () => {
         this._lightboxDialogEl?.nativeElement.showModal();
-        // Ждём кадр: диалог в top layer должен получить размеры, иначе Swiper
-        // считает ширину слайда = 0 и фото не видно (чёрный экран).
-        requestAnimationFrame(() => this._initLightboxSwiper(index));
+        // Диалог только что поднят в top layer. Высота .lightbox-main (flex:1)
+        // разрешается не сразу: на первом кадре она ещё 0 → главный Swiper стартует
+        // с нулевой высотой (фото невидимо, стрелки обрезаны overflow:hidden), хотя
+        // миниатюры с фикс-высотой видны. Поэтому init на первом кадре, а на втором —
+        // update(), когда раскладка уже посчитана.
+        requestAnimationFrame(() => {
+          this._initLightboxSwiper(index);
+          requestAnimationFrame(() => {
+            this._mainSwiper?.update();
+            this._thumbsSwiper?.update();
+          });
+        });
       },
       { injector: this._injector },
     );

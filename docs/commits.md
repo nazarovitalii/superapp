@@ -114,3 +114,10 @@
 | `7c1ac0269` | 17:31 | build(web): отключить service worker в прод-вебе + self-unregister застрявших                                                                                    |
 | `471f59296` | 17:31 | docs: лайтбокс на <dialog> (top layer) + отключение service worker в вебе                                                                                        |
 | `674198fe0` | 17:33 | docs: переписка + резюме дня 2026-06-17 (фикс лайтбокса <dialog> + отключение SW)                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `dcbe6691b` | 17:58 | fix(mrsqm): перезагрузка детали при смене объекта + чёрный лайтбокс (Swiper sizing)                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
