@@ -36,7 +36,11 @@
               "src/manifest.json",
               "src/static"
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/styles.scss",
+              "node_modules/swiper/swiper.css",
+              "node_modules/swiper/modules/thumbs.css"
+            ],
             "scripts": [],
             "webWorkerTsConfig": "src/tsconfig.worker.json",
             "browser": "src/main.ts",

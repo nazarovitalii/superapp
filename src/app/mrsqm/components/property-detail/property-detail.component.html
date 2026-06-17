@@ -99,29 +99,27 @@
       @if (currentPhotoUrl(); as url) {
         <div class="gallery">
           <img
-            class="gallery-img gallery-img--zoom"
+            class="gallery-img"
             [src]="url"
             [alt]="vm().locationPath ?? ''"
             (click)="openLightbox(activePhotoIdx())"
           />
           @if (photos().length > 1) {
-            <div class="gallery-controls">
-              <button
-                mat-icon-button
-                (click)="prevPhoto()"
-              >
-                <mat-icon>chevron_left</mat-icon>
-              </button>
-              <span class="gallery-counter">
-                {{ activePhotoIdx() + 1 }} / {{ photos().length }}
-              </span>
-              <button
-                mat-icon-button
-                (click)="nextPhoto()"
-              >
-                <mat-icon>chevron_right</mat-icon>
-              </button>
-            </div>
+            <button
+              class="gallery-arrow gallery-arrow--prev"
+              (click)="prevPhoto(); $event.stopPropagation()"
+            >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button
+              class="gallery-arrow gallery-arrow--next"
+              (click)="nextPhoto(); $event.stopPropagation()"
+            >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <span class="gallery-counter"
+              >{{ activePhotoIdx() + 1 }} / {{ photos().length }}</span
+            >
           }
         </div>
       } @else {
@@ -428,7 +426,6 @@
             <p class="section-text">{{ vm().agentAbout }}</p>
           }
 
-          <!-- Контакты: WhatsApp / Telegram (БД отдаёт по правам Pro/сеть) -->
           @if (vm().whatsapp; as phone) {
             <button
               mat-flat-button
@@ -472,6 +469,82 @@
             }
           </div>
         }
+      </div>
+    </div>
+  }
+
+  <!-- ── Lightbox Swiper (fullscreen, рендерится поверх всего) ─────────────── -->
+  @if (lightboxOpen()) {
+    <div
+      class="lightbox-overlay"
+      (click)="closeLightbox()"
+    >
+      <!-- Шапка: счётчик + кнопка закрытия -->
+      <div
+        class="lightbox-header"
+        (click)="$event.stopPropagation()"
+      >
+        <span class="lightbox-counter"
+          >{{ lightboxIdx() + 1 }} / {{ photos().length }}</span
+        >
+        <button
+          class="lightbox-close"
+          (click)="closeLightbox()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Главный слайдер (клик по фото не закрывает оверлей) -->
+      <div
+        class="swiper lightbox-main"
+        #lightboxMain
+        (click)="$event.stopPropagation()"
+      >
+        <div class="swiper-wrapper">
+          @for (photo of photos(); track $index) {
+            <div class="swiper-slide">
+              <img
+                class="lightbox-img"
+                [src]="photo.full_url"
+                [alt]=""
+              />
+            </div>
+          }
+        </div>
+        <!-- Стрелки навигации внутри слайдера -->
+        <button
+          class="lightbox-nav lightbox-nav--prev"
+          #lightboxPrev
+          (click)="$event.stopPropagation()"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button
+          class="lightbox-nav lightbox-nav--next"
+          #lightboxNext
+          (click)="$event.stopPropagation()"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <!-- Полоса миниатюр снизу -->
+      <div
+        class="swiper lightbox-thumbs"
+        #lightboxThumbs
+        (click)="$event.stopPropagation()"
+      >
+        <div class="swiper-wrapper">
+          @for (photo of photos(); track $index) {
+            <div class="swiper-slide lightbox-thumb">
+              <img
+                [src]="photo.thumb_url"
+                [alt]=""
+              />
+            </div>
+          }
+        </div>
       </div>
     </div>
   }

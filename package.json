@@ -194,9 +194,9 @@
     "electron-window-state": "^5.0.3",
     "hash-wasm": "^4.12.0",
     "https-proxy-agent": "^7.0.0",
-    "ng-gallery": "^12.0.0",
     "node-fetch": "^2.7.0",
     "rrule": "^2.8.1",
+    "swiper": "^12.2.0",
     "uuidv7": "^1.2.1"
   },
   "devDependencies": {

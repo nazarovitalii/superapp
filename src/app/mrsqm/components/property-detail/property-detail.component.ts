@@ -7,6 +7,12 @@ import {
   signal,
   computed,
   OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  Injector,
+  HostListener,
+  afterNextRender,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,8 +33,8 @@ import {
   ArchiveStatus,
   PropertyOwnerService,
 } from '../../services/property-owner.service';
-import { Gallery, ImageItem } from 'ng-gallery';
-import { Lightbox } from 'ng-gallery/lightbox';
+import Swiper from 'swiper';
+import { Navigation, Thumbs } from 'swiper/modules';
 
 @Component({
   selector: 'mrsqm-property-detail',
@@ -44,15 +50,21 @@ import { Lightbox } from 'ng-gallery/lightbox';
   templateUrl: './property-detail.component.html',
   styleUrl: './property-detail.component.scss',
 })
-export class PropertyDetailComponent implements OnInit {
+export class PropertyDetailComponent implements OnInit, OnDestroy {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _createService = inject(PropertyCreateService);
   private readonly _ownerService = inject(PropertyOwnerService);
-  private readonly _gallery = inject(Gallery);
-  private readonly _lightbox = inject(Lightbox);
+  private readonly _injector = inject(Injector);
 
-  // Объект из ленты (по нему открыли карточку) — фолбэк, пока грузится detail.
+  @ViewChild('lightboxMain') private _lightboxMainEl?: ElementRef<HTMLElement>;
+  @ViewChild('lightboxThumbs') private _lightboxThumbsEl?: ElementRef<HTMLElement>;
+  @ViewChild('lightboxPrev') private _lightboxPrevEl?: ElementRef<HTMLElement>;
+  @ViewChild('lightboxNext') private _lightboxNextEl?: ElementRef<HTMLElement>;
+
+  private _mainSwiper: Swiper | null = null;
+  private _thumbsSwiper: Swiper | null = null;
+
   readonly property = input.required<PropertyFeedItem>();
   readonly closed = output<void>();
 
@@ -61,26 +73,23 @@ export class PropertyDetailComponent implements OnInit {
   readonly filterOptions = signal<FilterOptions | null>(null);
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
-  // id галереи ng-gallery для лайтбокса этой карточки.
-  private readonly _galleryId = 'property-card';
 
-  // Табы карточки: Инфо / Комментарии (item 13).
   readonly activeTab = signal<'info' | 'comments'>('info');
-  // Подтабы комментариев: All (видны всем) / Private (только мне).
   readonly commentsScope = signal<'all' | 'private'>('all');
+
+  // Состояние лайтбокса Swiper.
+  readonly lightboxOpen = signal(false);
+  readonly lightboxIdx = signal(0);
 
   readonly commentsCount = computed(
     () => this.detail()?.comments_count ?? this.property().comments_count ?? 0,
   );
 
-  // URL текущего фото для галереи.
   readonly currentPhotoUrl = computed(() => {
     const list = this.photos();
     return list.length ? list[this.activePhotoIdx() % list.length].full_url : null;
   });
 
-  // View-model карточки: detail с фолбэком на feed-item, id-массивы резолвятся
-  // в названия через get_filter_options, даты/enum форматируются для шаблона.
   readonly vm = computed(() => {
     const d = this.detail();
     const f = this.property();
@@ -142,6 +151,12 @@ export class PropertyDetailComponent implements OnInit {
     };
   });
 
+  // Escape закрывает лайтбокс.
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.lightboxOpen()) this.closeLightbox();
+  }
+
   setTab(tab: 'info' | 'comments'): void {
     this.activeTab.set(tab);
   }
@@ -152,7 +167,6 @@ export class PropertyDetailComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.isLoading.set(true);
-    // Параллельно: полная карточка, фото, справочники для резолва id→названия.
     const [detailRes, photosRes, optsRes] = await Promise.allSettled([
       this._supabase.rpc<PropertyDetail>('get_property', {
         p_property_id: this.property().id,
@@ -160,7 +174,6 @@ export class PropertyDetailComponent implements OnInit {
       this._photoService.getPhotos(this.property().id),
       this._createService.getFilterOptions(),
     ]);
-    // get_property отдаёт { error } при отказе доступа — тогда показываем feed-item.
     if (detailRes.status === 'fulfilled' && !detailRes.value?.error) {
       this.detail.set(detailRes.value);
     }
@@ -185,29 +198,65 @@ export class PropertyDetailComponent implements OnInit {
     this.activePhotoIdx.set((this.activePhotoIdx() - 1 + len) % len);
   }
 
-  // Открыть полноэкранный лайтбокс ng-gallery (рисуется через CDK Overlay в body,
-  // поэтому не зависит от transform правой панели — фото на весь экран).
+  // Открыть fullscreen лайтбокс Swiper. DOM рендерится через @if, Swiper инициализируется
+  // после следующего рендер-цикла Angular.
   openLightbox(index: number): void {
     const photos = this.photos();
     if (!photos.length) return;
-    const items = photos.map(
-      (p) => new ImageItem({ src: p.full_url, thumb: p.thumb_url }),
-    );
-    this._gallery
-      .ref(this._galleryId, {
-        loop: true,
-        counter: photos.length > 1,
-        imageSize: 'contain',
-      })
-      .load(items);
-    this._lightbox.open(index, this._galleryId, { panelClass: 'mrsqm-lightbox' });
+    this.lightboxIdx.set(index);
+    this.lightboxOpen.set(true);
+    afterNextRender(() => this._initLightboxSwiper(index), { injector: this._injector });
+  }
+
+  closeLightbox(): void {
+    this.lightboxOpen.set(false);
+    this._destroySwipers();
+  }
+
+  private _initLightboxSwiper(startIndex: number): void {
+    this._destroySwipers();
+    const mainEl = this._lightboxMainEl?.nativeElement;
+    const thumbEl = this._lightboxThumbsEl?.nativeElement;
+    const prevEl = this._lightboxPrevEl?.nativeElement;
+    const nextEl = this._lightboxNextEl?.nativeElement;
+    if (!mainEl || !thumbEl) return;
+
+    this._thumbsSwiper = new Swiper(thumbEl, {
+      modules: [Navigation],
+      spaceBetween: 8,
+      slidesPerView: 'auto',
+      watchSlidesProgress: true,
+      slideToClickedSlide: true,
+    });
+
+    this._mainSwiper = new Swiper(mainEl, {
+      modules: [Navigation, Thumbs],
+      initialSlide: startIndex,
+      loop: false,
+      navigation: prevEl && nextEl ? { prevEl, nextEl } : false,
+      thumbs: { swiper: this._thumbsSwiper },
+      keyboard: { enabled: true },
+      on: {
+        slideChange: (swiper: Swiper) => this.lightboxIdx.set(swiper.activeIndex),
+      },
+    });
+  }
+
+  private _destroySwipers(): void {
+    this._mainSwiper?.destroy(true, true);
+    this._mainSwiper = null;
+    this._thumbsSwiper?.destroy(true, true);
+    this._thumbsSwiper = null;
+  }
+
+  ngOnDestroy(): void {
+    this._destroySwipers();
   }
 
   // ─── Действия владельца над своим объектом (is_owner) ──────────────────────
   readonly isOwner = computed(() => this.detail()?.is_owner ?? false);
   readonly ownerBusy = signal(false);
   readonly ownerMsg = signal<string | null>(null);
-  // Inline-редактирование цены/описания.
   readonly isEditing = signal(false);
   readonly editPrice = signal('');
   readonly editDescription = signal('');
@@ -289,15 +338,11 @@ export class PropertyDetailComponent implements OnInit {
     window.open(`https://t.me/${username.replace(/^@/, '')}`, '_blank');
   }
 
-  // ─── Хелперы форматирования (чистые, вызываются из vm-computed) ─────────────
-
-  // Название опции по id из справочника get_filter_options.
   private _label(id: string | null | undefined, list?: FilterOptionId[]): string | null {
     if (!id || !list) return null;
     return list.find((o) => o.id === id)?.label_en ?? null;
   }
 
-  // Названия по массиву id (пустые/ненайденные отбрасываются).
   private _labels(ids: string[] | null | undefined, list?: FilterOptionId[]): string[] {
     if (!ids?.length || !list) return [];
     return ids
@@ -328,14 +373,12 @@ export class PropertyDetailComponent implements OnInit {
     }
   }
 
-  // lease_until хранится как YYYY-MM-01 → «занято до MM.YYYY».
   private _leaseLabel(v: string | null | undefined): string | null {
     if (!v) return null;
     const [y, m] = v.split('-');
     return y && m ? `до ${m}.${y}` : null;
   }
 
-  // Относительная дата актуализации: «сегодня», «вчера», «N дн. назад».
   private _relativeDate(iso: string | null | undefined): string | null {
     if (!iso) return null;
     const then = new Date(iso).getTime();
