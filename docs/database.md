@@ -319,8 +319,14 @@ BEGIN
         -- JOIN поля
         'location_name',       l.name,
         'location_level',      l.level,
+        'community_name',      lc.name,           -- мигр. 2026-06-11
         'developer_name_ref',  d.name,
         'developer_logo_url',  d.logo_url,
+        -- Агент (владелец) — скалярные подзапросы, мигр. 2026-06-17
+        'owner_full_name',     (SELECT full_name   FROM users           WHERE id      = p.owner_id),
+        'owner_agency_name',   (SELECT agency_name FROM user_identities WHERE user_id = p.owner_id LIMIT 1),
+        'owner_photo_url',     (SELECT photo_url   FROM user_settings   WHERE user_id = p.owner_id LIMIT 1),
+        'has_photos',          EXISTS (SELECT 1 FROM property_photos WHERE property_id = p.id),  -- мигр. 2026-06-17
         -- Бейдж владельца
         'owner_badge_level',   ab.badge_level,
         -- Флаг сети
@@ -329,6 +335,7 @@ BEGIN
     ) AS row_data
     FROM properties p
     LEFT JOIN locations l   ON l.id  = p.location_id
+    LEFT JOIN locations lc  ON lc.id = l.community_id  -- мигр. 2026-06-11
     LEFT JOIN developers d  ON d.id  = p.developer_id
     LEFT JOIN agent_badge ab ON ab.user_id = p.owner_id
     WHERE
