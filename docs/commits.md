@@ -99,3 +99,9 @@
 | `105f1a396` | 17:36 | docs: переписка + резюме дня 2026-06-16 (лайтбокс галереи)                                                                                                       |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `3b01dfb34` | 01:24 | feat(mrsqm): действия владельца над своим объектом (редакт/актуализация/архив)                                                                                   |
+| `33fd60713` | 01:26 | docs: переписка + резюме дня 2026-06-17 (действия владельца)                                                                                                     |
+| `9aeee49bc` | 10:54 | ci: форс пересборки образа (предыдущие билды отменялись concurrency)                                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `3d535399b` | 15:18 | feat(mrsqm): галерея карточки на ng-gallery (MIT) вместо самодельного лайтбокса                                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
