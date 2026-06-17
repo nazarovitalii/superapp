@@ -38,13 +38,14 @@
       }
     </div>
 
-    <!-- Beds: «2+m» — число + «+m» если есть комната прислуги (item 5) -->
+    <!-- Beds: число сверху, «maid» серым снизу (vastu в ленте не показываем) -->
     <div class="col col-beds">
       @if (property().bedrooms !== null) {
-        @if (property().bedrooms === 0) {
-          <span>Studio</span>
-        } @else {
-          <span>{{ property().bedrooms }}{{ property().is_maid ? '+m' : '' }}</span>
+        <span class="beds-num">{{
+          property().bedrooms === 0 ? 'Studio' : property().bedrooms
+        }}</span>
+        @if (property().is_maid) {
+          <span class="beds-maid">maid</span>
         }
       } @else {
         <span>—</span>

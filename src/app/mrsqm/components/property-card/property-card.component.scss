@@ -121,6 +121,18 @@
   text-align: right;
 }
 
+// Beds: число сверху, «maid» серым ниже
+.col-beds {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.beds-maid {
+  color: var(--text-color-muted);
+  font-size: 0.78em;
+}
+
 // Тип + Ready/Off-Plan серым ниже (item 4)
 .col-type {
   display: flex;
