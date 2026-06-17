@@ -558,6 +558,7 @@ BEGIN
       'updated_at',          p.updated_at
     ) ||
     jsonb_build_object(
+      'is_vastu',            p.is_vastu,                                    -- мигр. 2026-06-18 (2b)
       -- Локация
       'location_name',       l.name,
       'location_level',      l.level,
@@ -569,6 +570,34 @@ BEGIN
         NULLIF(loc_building.name,     ''),
         CASE WHEN l.level = 'checkpoint' THEN l.name ELSE NULL END
       )),
+
+      -- Slider-адрес по public_location_id (мигр. 2026-06-18 2b)
+      'public_location_path', CASE WHEN p.public_location_id IS NULL THEN NULL
+        ELSE TRIM(BOTH ' > ' FROM CONCAT_WS(' > ',
+          NULLIF(pl_city.name,     ''),
+          NULLIF(pl_comm.name,     ''),
+          NULLIF(pl_sub.name,      ''),
+          NULLIF(pl_cluster.name,  ''),
+          NULLIF(pl_building.name, ''),
+          CASE WHEN pl.level = 'checkpoint' THEN pl.name ELSE NULL END
+        )) END,
+
+      -- Project из location_developers по leaf-локации (мигр. 2026-06-18 2b)
+      'project', (
+        SELECT jsonb_build_object(
+          'project_group_name', ld.project_group_name,
+          'project_name',       ld.project_name,
+          'is_building',        ld.is_building,
+          'developer_name',     ld.developer_name,
+          'project_status',     ld.project_status,
+          'built_year',         ld.built_year,
+          'completion_q',       ld.completion_q,
+          'completion_year',    ld.completion_year
+        )
+        FROM location_developers ld
+        WHERE ld.location_id = p.location_id
+        LIMIT 1
+      ),
 
       -- Девелопер
       'developer_name_ref',  d.name,
@@ -605,7 +634,12 @@ BEGIN
           WHEN v_plan = 'pro'                     THEN ui.broker_license  -- Pro — все объекты
           WHEN p.owner_id = ANY(v_network_ids)    THEN ui.broker_license  -- Free — только сеть
           ELSE NULL                                                          -- Free — чужие скрыты
-        END
+        END,
+        -- активных листингов владельца (мигр. 2026-06-18 2b)
+        'active_listings_count', (
+          SELECT COUNT(*) FROM properties pp
+          WHERE pp.owner_id = p.owner_id AND pp.status = 'active'
+        )
       )
     )
   ) INTO v_result
@@ -617,6 +651,13 @@ BEGIN
   LEFT JOIN locations loc_sub     ON loc_sub.id     = l.sub_community_id
   LEFT JOIN locations loc_cluster ON loc_cluster.id = l.cluster_id
   LEFT JOIN locations loc_building ON loc_building.id = l.building_id
+  -- Предки public-локации (slider-адрес, мигр. 2026-06-18 2b)
+  LEFT JOIN locations pl          ON pl.id  = p.public_location_id
+  LEFT JOIN locations pl_city     ON pl_city.id     = pl.city_id
+  LEFT JOIN locations pl_comm     ON pl_comm.id     = pl.community_id
+  LEFT JOIN locations pl_sub      ON pl_sub.id      = pl.sub_community_id
+  LEFT JOIN locations pl_cluster  ON pl_cluster.id  = pl.cluster_id
+  LEFT JOIN locations pl_building ON pl_building.id = pl.building_id
   -- Девелопер
   LEFT JOIN developers d          ON d.id  = p.developer_id
   -- Данные агента

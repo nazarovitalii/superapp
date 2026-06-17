@@ -190,3 +190,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `dd2474c4c` | 00:39 | fix(types): is_vastu в PropertyInsert, убрать из PropertyFeedItem (чинит тест-бандл)                                                                             |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `60d5b6266` | 00:40 | docs: commits.md журнал                                                                                                                                          |
