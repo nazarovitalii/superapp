@@ -128,3 +128,13 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `ea2e1dc81` | 18:54 | docs: TODO (API-10/11, W-4 онбординг, W-2 SW), резюме дня, экспорт переписки                                                                                     |
+| `e00ecd396` | 18:54 | docs: TODO (API-10/11, W-4 онбординг, W-2 SW), резюме дня, экспорт переписки                                                                                     |
+| `2934f4b20` | 19:28 | docs: get_feed (агент/фото/community_name) в database.md; TODO лента v5                                                                                          |
+| `de3ed3d40` | 19:39 | docs: переписка + резюме дня 2026-06-17 (WP-B лента v5 + WP-C тулбар)                                                                                            |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `b30d20b01` | 20:13 | fix(mrsqm): WP-A серверные баги — get_property 500 + лента Public пустая                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `10643cae9` | 20:16 | docs: переписка + резюме дня 2026-06-17 (WP-A серверные баги)                                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `2a5ad27d3` | 20:43 | feat(feed): WP-D переименование охвата — All/Friends/My Inventory + Favourites                                                                                   |
+| `2edfce16f` | 20:43 | chore: sync глобальных конвенций (А/Б/В) из app-core                                                                                                             |
