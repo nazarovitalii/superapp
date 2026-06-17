@@ -135,7 +135,10 @@ TODO: district через `search_locations` (API-2).
 
 - **Галерея** — реальные фото из `property_photos` (`full_url`), листание + счётчик;
   стрелки prev/next поверх фото (hover-затемнение); клик → **fullscreen лайтбокс Swiper.js**
-  (MIT v12; основной слайдер + полоса миниатюр снизу; клавиатура Escape/стрелки)
+  (MIT v12; основной слайдер + полоса миниатюр снизу; клавиатура Escape/стрелки).
+  Лайтбокс рендерится через нативный `<dialog>` + `showModal()` (**top layer** браузера) —
+  иначе `position:fixed` запирался внутри right-panel (`will-change: transform`) и лента
+  наезжала поверх галереи
 - **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
   Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
 - **Параметры** — bedrooms, bathrooms, maid (`is_maid`), BUA + участок (`plot_sqft`),
@@ -323,7 +326,12 @@ _(план после MVP)_
 
 ## PWA & Telegram Mini App
 
-- `manifest.json` — название MrSQM, иконки, `display: standalone`
-- Service Worker — кэш статики
+- `manifest.json` — иконки, `display: standalone` (название пока «Super Productivity»/«sup» —
+  перебрендировать под MrSQM, см. TODO)
+- Service Worker **отключён** в прод-вебе (`productionWeb serviceWorker: false`): ngsw намертво
+  кэшировал ассеты/фото и не пускал обновления (инцидент 2026-06-17). Установка на рабочий стол
+  не пострадала — она на manifest+apple-touch-icon, SW не требуется. Self-unregister: safety-worker
+  по пути `/ngsw-worker.js` чистит уже застрявшие браузеры. Вернуть минимальный SW только если
+  понадобится веб-пуш (iOS 16.4+)
 - `telegram-web-app.js` SDK
 - `TgWebApp.ready()` при монтировании App

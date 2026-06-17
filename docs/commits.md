@@ -105,3 +105,10 @@
 | `3d535399b` | 15:18 | feat(mrsqm): галерея карточки на ng-gallery (MIT) вместо самодельного лайтбокса                                                                                  |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f27dddff6` | 15:26 | docs: переписка + резюме дня 2026-06-17 (ng-gallery)                                                                                                             |
+| `681bf7f93` | 16:23 | docs: обновить tabs.md — галерея Swiper.js                                                                                                                       |
+| `19d2449f8` | 16:26 | docs: переписка + резюме дня 2026-06-17 (Swiper.js галерея)                                                                                                      |
+| `b11b36671` | 16:32 | ci: форс пересборки образа (предыдущий билд отменён повторным пушем)                                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `3e8a93816` | 17:30 | fix(mrsqm): лайтбокс галереи на нативный <dialog> (top layer) — лента больше не наезжает                                                                         |
+| `7c1ac0269` | 17:31 | build(web): отключить service worker в прод-вебе + self-unregister застрявших                                                                                    |
