@@ -494,7 +494,7 @@ export class PropertyDetailComponent implements OnDestroy {
     const unit = this._label(unitTypeId, opts?.unit_types);
     const sub = this._label(subTypeId, opts?.sub_types);
     const head = [cat, unit].filter(Boolean).join(' ');
-    let out = sub ? `${head} - ${sub}` : head;
+    let out = sub ? (head ? `${head} - ${sub}` : sub) : head;
     if (!out) return null;
     if (isHotelPool) out += ' (hotel apartment)';
     return out;

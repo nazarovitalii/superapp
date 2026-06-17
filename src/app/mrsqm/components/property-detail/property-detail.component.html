@@ -352,6 +352,18 @@
                 <span class="kv-value">{{ vm().furnishedLabel }}</span>
               </div>
             }
+            @if (vm().handoverLabel) {
+              <div class="kv-row">
+                <span class="kv-label">Handover</span>
+                <span class="kv-value">{{ vm().handoverLabel }}</span>
+              </div>
+            }
+            @if (vm().completion) {
+              <div class="kv-row">
+                <span class="kv-label">Completion</span>
+                <span class="kv-value">{{ vm().completion }}</span>
+              </div>
+            }
             @if (vm().occupancyLabel) {
               <div class="kv-row">
                 <span class="kv-label">Occupancy</span>
