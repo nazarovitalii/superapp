@@ -366,7 +366,7 @@
                 </div>
               </div>
 
-              @if (fields().maid || fields().hotelPool) {
+              @if (fields().maid || fields().hotelPool || fields().vastu) {
                 <div class="field">
                   @if (fields().maid) {
                     <label class="toggle-row">
@@ -385,6 +385,16 @@
                         type="checkbox"
                         [ngModel]="isHotelPool()"
                         (ngModelChange)="isHotelPool.set($event)"
+                      />
+                    </label>
+                  }
+                  @if (fields().vastu) {
+                    <label class="toggle-row">
+                      <span>Vastu</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isVastu()"
+                        (ngModelChange)="isVastu.set($event)"
                       />
                     </label>
                   }

@@ -114,6 +114,7 @@ export class AddPropertyPageComponent {
   readonly bathrooms = signal<number | null>(null);
   readonly isMaid = signal(false);
   readonly isHotelPool = signal(false);
+  readonly isVastu = signal(false);
   readonly areaSqft = signal<string>('');
   readonly plotSqft = signal<string>('');
   readonly floorLevelId = signal<string | null>(null);
@@ -509,6 +510,7 @@ export class AddPropertyPageComponent {
       bathrooms: tf.rooms ? this.bathrooms() : null,
       is_maid: tf.maid ? this.isMaid() : false,
       is_hotel_pool: tf.hotelPool ? this.isHotelPool() : false,
+      is_vastu: tf.vastu ? this.isVastu() : false,
       area_sqft: sqft,
       area_sqm: sqft ? Math.round(sqft * SQFT_TO_SQM * 100) / 100 : null,
       plot_sqft: plot,

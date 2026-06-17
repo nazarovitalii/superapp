@@ -9,6 +9,7 @@ export interface TypeFields {
   rooms: boolean; // спальни + санузлы
   maid: boolean; // чекбокс is_maid «Maid room»
   hotelPool: boolean; // чекбокс is_hotel_pool «Hotel apartment»
+  vastu: boolean; // чекбокс is_vastu «Vastu»
   bua: boolean; // площадь BUA (area_sqft)
   plot: boolean; // площадь участка (plot_sqft)
   floorLevel: boolean; // Low / Middle / High (floor_level_id)
@@ -25,6 +26,7 @@ const NONE: TypeFields = {
   rooms: false,
   maid: false,
   hotelPool: false,
+  vastu: false,
   bua: false,
   plot: false,
   floorLevel: false,
@@ -46,6 +48,7 @@ const CONFIG: Record<string, TypeFields> = {
     rooms: true,
     maid: true,
     hotelPool: true,
+    vastu: true,
     bua: true,
     floorLevel: true,
     views: true,
@@ -57,6 +60,7 @@ const CONFIG: Record<string, TypeFields> = {
     subType: true,
     rooms: true,
     maid: true,
+    vastu: true,
     bua: true,
     plot: true,
     floorsInUnit: true,
@@ -76,6 +80,7 @@ const CONFIG: Record<string, TypeFields> = {
   hotel_apartment: f({
     rooms: true,
     hotelPool: true,
+    vastu: true,
     bua: true,
     floorLevel: true,
     views: true,
@@ -97,6 +102,7 @@ const CONFIG: Record<string, TypeFields> = {
     layout: true,
     views: true,
     amenities: true,
+    vastu: true,
     furnished: true,
   }),
   bulk_unit_commercial: f({ bua: true }),

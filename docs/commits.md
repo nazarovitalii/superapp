@@ -174,3 +174,6 @@
 | `0022ff26a` | 22:06 | docs: карточка слой 1 — tabs/TODO/spec (3 таба, Tech, no-photo, избранное)                                                                                       |
 | `2b434408c` | 22:59 | migrate: is_vastu колонка применена (properties.is_vastu)                                                                                                        |
 | `621b689bc` | 22:59 | migrate: is_vastu → applied/                                                                                                                                     |
+| `cb79fe133` | 00:14 | migrate: get_feed +is_vastu применён → applied/; spec Project-блок уточнён                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `a60b4fc49` | 00:18 | feat(feed): беды в строке — число сверху, maid серым ниже (vastu в ленте не показываем)                                                                          |
