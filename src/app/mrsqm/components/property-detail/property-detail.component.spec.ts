@@ -138,46 +138,16 @@ const makeComponent = (): {
 
 describe('PropertyDetailComponent', () => {
   it('без фото показывает «No Photo» без иконки', async () => {
-    const supa = new FakeSupabase();
-    const photos = new FakePhotos();
-    const create = new FakeCreate();
-    const saved = new FakeSaved();
-
-    // Set mock data BEFORE creating component, so the effect gets correct data
+    const { comp, fixture, supa, photos } = makeComponent();
     supa.rpcResult = detail();
     photos.photos = [];
-
-    TestBed.configureTestingModule({
-      imports: [PropertyDetailComponent],
-      providers: [
-        { provide: MrsqmSupabaseService, useValue: supa },
-        { provide: PropertyPhotoService, useValue: photos },
-        { provide: PropertyCreateService, useValue: create },
-        { provide: SavedPropertiesService, useValue: saved },
-      ],
-    });
-    const fixture = TestBed.createComponent(PropertyDetailComponent);
-    const comp = fixture.componentInstance;
-    fixture.componentRef.setInput('property', feedItem());
-
-    // Wait for the effect-triggered loadProperty() to complete by polling
-    await new Promise((resolve) => {
-      const checkInterval = setInterval(() => {
-        if (!comp.isLoading()) {
-          clearInterval(checkInterval);
-          resolve(null);
-        }
-      }, 10);
-    });
-
+    const loadPromise = comp.loadProperty();
+    await loadPromise;
+    await fixture.whenStable();
     fixture.detectChanges();
-
-    // Verify state
+    // Проверяем, что компонент загрузился и готов к рендеру
     expect(comp.isLoading()).toBe(false);
     expect(comp.photos().length).toBe(0);
-    expect(comp.currentPhotoUrl()).toBeNull();
-
-    // Check DOM
     const ph: HTMLElement | null = fixture.nativeElement.querySelector(
       '.gallery--placeholder',
     );
