@@ -177,3 +177,11 @@
 | `cb79fe133` | 00:14 | migrate: get_feed +is_vastu применён → applied/; spec Project-блок уточнён                                                                                       |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `a60b4fc49` | 00:18 | feat(feed): беды в строке — число сверху, maid серым ниже (vastu в ленте не показываем)                                                                          |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `a08b0623f` | 00:23 | feat(add-property): чекбокс Vastu (is_vastu) в форме                                                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `c9a29a27a` | 00:27 | fix(add-property): Vastu только для резидентных типов (убрать с commercial villa)                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `354cb7b09` | 00:29 | fix(add-property): Vastu только для apartment и house (резидентные)                                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |

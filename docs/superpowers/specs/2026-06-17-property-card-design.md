@@ -125,7 +125,7 @@ RPC данных: `get_property` (`docs/database.md:449`).
 
 1. **`agent.active_listings_count`** — `COUNT(*)` по `properties` владельца, `status='active'`. Независимо от rework. ✅ готово к работе.
 2. **`public_location_path`** — резолв пути по `properties.public_location_id` тем же `CONCAT_WS`-приёмом, что `location_full_path`, но через JOIN на `public_location_id`. Независимо от rework. ✅ готово.
-3. **`is_vastu`** — `ALTER TABLE properties ADD COLUMN is_vastu boolean NOT NULL DEFAULT false` (поглощает WP-F); вернуть в `get_property` и `get_feed` (для `+v` в ленте); чекбокс в форме. Независимо от rework. ✅ готово.
+3. **`is_vastu`** — `ALTER TABLE properties ADD COLUMN is_vastu boolean NOT NULL DEFAULT false` (поглощает WP-F). Применено: колонка ✅, `get_feed` возвращает поле ✅. **В ленте vastu НЕ показываем** (решение 2026-06-17 — лента: число beds сверху, `maid` серым снизу). Чекбокс «Vastu» в форме — **только для резидентных `apartment` и `house`** (не hotel_apartment, не коммерческие). В карточке «+ vastu» в строке Bedrooms — через `get_property` (M-2b).
 4. **Project-блок** — `location_developers` по `location_id = property.location_id` (вернётся **ровно одна строка**; проект висит на leaf-локации). ⚠️ **ЗАВИСИТ от rework `location_developers`** — применять только после новой схемы. Каждая строка блока **скрывается, если её источник NULL**. Маппинг (уточнён 2026-06-17):
    - **Name** ← `project_group_name`. NULL → строку не показывать.
    - **Building / Cluster** — значение = `project_name`, подпись зависит от `is_building`:
