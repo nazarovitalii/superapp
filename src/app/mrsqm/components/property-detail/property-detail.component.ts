@@ -6,7 +6,7 @@ import {
   inject,
   signal,
   computed,
-  OnInit,
+  effect,
   OnDestroy,
   ViewChild,
   ElementRef,
@@ -49,7 +49,7 @@ import { Navigation, Thumbs } from 'swiper/modules';
   templateUrl: './property-detail.component.html',
   styleUrl: './property-detail.component.scss',
 })
-export class PropertyDetailComponent implements OnInit, OnDestroy {
+export class PropertyDetailComponent implements OnDestroy {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _createService = inject(PropertyCreateService);
@@ -80,6 +80,16 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
   // Состояние лайтбокса Swiper.
   readonly lightboxOpen = signal(false);
   readonly lightboxIdx = signal(0);
+
+  constructor() {
+    // Правая панель ПЕРЕИСПОЛЬЗУЕТ этот компонент при смене объекта (меняется только
+    // input [property], ngOnInit второй раз не вызывается). Поэтому грузим деталь
+    // реактивно на каждое изменение property() — иначе у всех объектов одни и те же фото.
+    effect(() => {
+      const id = this.property().id;
+      void this.loadProperty(id);
+    });
+  }
 
   readonly commentsCount = computed(
     () => this.detail()?.comments_count ?? this.property().comments_count ?? 0,
@@ -159,15 +169,26 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
     this.commentsScope.set(scope);
   }
 
-  async ngOnInit(): Promise<void> {
+  async loadProperty(id: PropertyFeedItem['id'] = this.property().id): Promise<void> {
     this.isLoading.set(true);
+    // Сбрасываем данные предыдущего объекта, чтобы не мелькали чужие фото.
+    this.detail.set(null);
+    this.photos.set([]);
+    this.activePhotoIdx.set(0);
+    if (this._lightboxDialogEl?.nativeElement.open) {
+      this.closeLightbox();
+    }
     const [detailRes, photosRes, optsRes] = await Promise.allSettled([
       this._supabase.rpc<PropertyDetail>('get_property', {
-        p_property_id: this.property().id,
+        p_property_id: id,
       }),
-      this._photoService.getPhotos(this.property().id),
+      this._photoService.getPhotos(id),
       this._createService.getFilterOptions(),
     ]);
+    // Пока грузили, мог открыться другой объект — не затираем его данные.
+    if (this.property().id !== id) {
+      return;
+    }
     if (detailRes.status === 'fulfilled' && !detailRes.value?.error) {
       this.detail.set(detailRes.value);
     }
@@ -205,7 +226,9 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
     afterNextRender(
       () => {
         this._lightboxDialogEl?.nativeElement.showModal();
-        this._initLightboxSwiper(index);
+        // Ждём кадр: диалог в top layer должен получить размеры, иначе Swiper
+        // считает ширину слайда = 0 и фото не видно (чёрный экран).
+        requestAnimationFrame(() => this._initLightboxSwiper(index));
       },
       { injector: this._injector },
     );
@@ -241,6 +264,8 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
       slidesPerView: 'auto',
       watchSlidesProgress: true,
       slideToClickedSlide: true,
+      observer: true,
+      observeParents: true,
     });
 
     this._mainSwiper = new Swiper(mainEl, {
@@ -250,6 +275,8 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
       navigation: prevEl && nextEl ? { prevEl, nextEl } : false,
       thumbs: { swiper: this._thumbsSwiper },
       keyboard: { enabled: true },
+      observer: true,
+      observeParents: true,
       on: {
         slideChange: (swiper: Swiper) => this.lightboxIdx.set(swiper.activeIndex),
       },

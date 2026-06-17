@@ -123,7 +123,7 @@ describe('PropertyDetailComponent', () => {
   it('резолвит агента из вложенного agent{} (фикс бага плоских полей)', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail();
-    await comp.ngOnInit();
+    await comp.loadProperty();
     const vm = comp.vm();
     expect(vm.agentName).toBe('Ivan Agent');
     expect(vm.whatsapp).toBe('+971500000000');
@@ -135,7 +135,7 @@ describe('PropertyDetailComponent', () => {
   it('показывает снижение цены (previous_price > price)', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail();
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.vm().previousPrice).toBe(1_000_000);
     expect(comp.vm().price).toBe(900_000);
   });
@@ -143,7 +143,7 @@ describe('PropertyDetailComponent', () => {
   it('не показывает снижение, если previous_price <= price', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ previous_price: 800_000, price: 900_000 });
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.vm().previousPrice).toBeNull();
   });
 
@@ -153,7 +153,7 @@ describe('PropertyDetailComponent', () => {
     create.options = {
       views: [{ id: 'v1', value: 'sea', label_en: 'Sea View' }],
     };
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.vm().views).toEqual(['Sea View']);
   });
 
@@ -174,7 +174,7 @@ describe('PropertyDetailComponent', () => {
         photo_type: 'gallery',
       },
     ];
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.photos().length).toBe(2);
     expect(comp.currentPhotoUrl()).toBe('f1.webp');
     comp.nextPhoto();
@@ -184,7 +184,7 @@ describe('PropertyDetailComponent', () => {
   it('при ошибке доступа get_property ({error}) использует данные feed-item', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = { error: 'property not found or access denied' };
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.detail()).toBeNull();
     // фолбэк на объект из ленты
     expect(comp.vm().agentName).toBe('Feed Owner');
@@ -194,14 +194,14 @@ describe('PropertyDetailComponent', () => {
   it('isOwner берётся из detail.is_owner', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });
-    await comp.ngOnInit();
+    await comp.loadProperty();
     expect(comp.isOwner()).toBe(true);
   });
 
   it('saveEdit обновляет цену и описание в detail', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });
-    await comp.ngOnInit();
+    await comp.loadProperty();
     comp.startEdit();
     comp.editPrice.set('750000');
     comp.editDescription.set('обновлённое описание');
@@ -214,7 +214,7 @@ describe('PropertyDetailComponent', () => {
   it('saveEdit отклоняет некорректную цену', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });
-    await comp.ngOnInit();
+    await comp.loadProperty();
     comp.startEdit();
     comp.editPrice.set('abc');
     await comp.saveEdit();
@@ -225,7 +225,7 @@ describe('PropertyDetailComponent', () => {
   it('archive меняет статус в detail', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });
-    await comp.ngOnInit();
+    await comp.loadProperty();
     await comp.archive('archived_sold');
     expect(comp.detail()?.status).toBe('archived_sold');
   });
