@@ -74,7 +74,7 @@ export class PropertyDetailComponent implements OnDestroy {
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
 
-  readonly activeTab = signal<'info' | 'comments'>('info');
+  readonly activeTab = signal<'details' | 'comments' | 'metrics'>('details');
   readonly commentsScope = signal<'all' | 'private'>('all');
 
   // Состояние лайтбокса Swiper.
@@ -161,7 +161,7 @@ export class PropertyDetailComponent implements OnDestroy {
     };
   });
 
-  setTab(tab: 'info' | 'comments'): void {
+  setTab(tab: 'details' | 'comments' | 'metrics'): void {
     this.activeTab.set(tab);
   }
 

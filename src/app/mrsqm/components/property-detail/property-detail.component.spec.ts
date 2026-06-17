@@ -229,4 +229,15 @@ describe('PropertyDetailComponent', () => {
     await comp.archive('archived_sold');
     expect(comp.detail()?.status).toBe('archived_sold');
   });
+
+  it('таб по умолчанию — details', () => {
+    const { comp } = makeComponent();
+    expect(comp.activeTab()).toBe('details');
+  });
+
+  it('setTab переключает на metrics', () => {
+    const { comp } = makeComponent();
+    comp.setTab('metrics');
+    expect(comp.activeTab()).toBe('metrics');
+  });
 });

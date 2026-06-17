@@ -12,15 +12,15 @@
     <span class="panel-title">Объект</span>
   </div>
 
-  <!-- Табы Инфо / Комментарии (item 13) -->
+  <!-- Табы Details / Comments / Metrics (Metrics — только владельцу) -->
   <div class="detail-tabs">
     <button
       type="button"
       class="detail-tab"
-      [class.is-active]="activeTab() === 'info'"
-      (click)="setTab('info')"
+      [class.is-active]="activeTab() === 'details'"
+      (click)="setTab('details')"
     >
-      Инфо
+      Details
     </button>
     <button
       type="button"
@@ -28,11 +28,21 @@
       [class.is-active]="activeTab() === 'comments'"
       (click)="setTab('comments')"
     >
-      Комментарии
+      Comments
       @if (commentsCount()) {
         <span class="tab-count">{{ commentsCount() }}</span>
       }
     </button>
+    @if (isOwner()) {
+      <button
+        type="button"
+        class="detail-tab"
+        [class.is-active]="activeTab() === 'metrics'"
+        (click)="setTab('metrics')"
+      >
+        Metrics
+      </button>
+    }
   </div>
 
   @if (isLoading()) {
@@ -92,6 +102,10 @@
         <mat-icon>chat_bubble_outline</mat-icon>
         <p>Комментариев пока нет</p>
       </div>
+    </div>
+  } @else if (activeTab() === 'metrics') {
+    <div class="detail-scroll metrics-tab">
+      <!-- содержимое — Task 2 -->
     </div>
   } @else {
     <div class="detail-scroll">
