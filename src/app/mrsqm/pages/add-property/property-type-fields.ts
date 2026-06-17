@@ -80,7 +80,6 @@ const CONFIG: Record<string, TypeFields> = {
   hotel_apartment: f({
     rooms: true,
     hotelPool: true,
-    vastu: true,
     bua: true,
     floorLevel: true,
     views: true,
