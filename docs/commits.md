@@ -96,3 +96,6 @@
 | `61bbe4f83` | 17:25 | feat(mrsqm): полноэкранный лайтбокс галереи объекта                                                                                                              |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `105f1a396` | 17:36 | docs: переписка + резюме дня 2026-06-16 (лайтбокс галереи)                                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `3b01dfb34` | 01:24 | feat(mrsqm): действия владельца над своим объектом (редакт/актуализация/архив)                                                                                   |
