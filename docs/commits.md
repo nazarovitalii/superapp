@@ -187,3 +187,6 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `3a39ed8bb` | 00:31 | docs(spec): vastu — только apartment/house в форме, в ленте не показываем                                                                                        |
 | `63d1b542b` | 00:33 | docs: commits.md журнал (слой 2a)                                                                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `dd2474c4c` | 00:39 | fix(types): is_vastu в PropertyInsert, убрать из PropertyFeedItem (чинит тест-бандл)                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
