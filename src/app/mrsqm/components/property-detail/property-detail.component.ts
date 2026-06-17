@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
   FilterOptionId,
@@ -22,6 +23,10 @@ import {
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import {
+  ArchiveStatus,
+  PropertyOwnerService,
+} from '../../services/property-owner.service';
 import { PropertyGalleryLightboxComponent } from '../property-gallery-lightbox/property-gallery-lightbox.component';
 
 @Component({
@@ -32,6 +37,7 @@ import { PropertyGalleryLightboxComponent } from '../property-gallery-lightbox/p
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     PropertyGalleryLightboxComponent,
   ],
@@ -42,6 +48,7 @@ export class PropertyDetailComponent implements OnInit {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _createService = inject(PropertyCreateService);
+  private readonly _ownerService = inject(PropertyOwnerService);
 
   // Объект из ленты (по нему открыли карточку) — фолбэк, пока грузится detail.
   readonly property = input.required<PropertyFeedItem>();
@@ -185,6 +192,84 @@ export class PropertyDetailComponent implements OnInit {
 
   closeLightbox(): void {
     this.lightboxOpen.set(false);
+  }
+
+  // ─── Действия владельца над своим объектом (is_owner) ──────────────────────
+  readonly isOwner = computed(() => this.detail()?.is_owner ?? false);
+  readonly ownerBusy = signal(false);
+  readonly ownerMsg = signal<string | null>(null);
+  // Inline-редактирование цены/описания.
+  readonly isEditing = signal(false);
+  readonly editPrice = signal('');
+  readonly editDescription = signal('');
+
+  startEdit(): void {
+    const d = this.detail();
+    this.editPrice.set(d ? String(d.price) : '');
+    this.editDescription.set(d?.description ?? '');
+    this.ownerMsg.set(null);
+    this.isEditing.set(true);
+  }
+
+  cancelEdit(): void {
+    this.isEditing.set(false);
+  }
+
+  async saveEdit(): Promise<void> {
+    const d = this.detail();
+    if (!d) return;
+    const price = Number(String(this.editPrice()).replace(/[^\d.]/g, ''));
+    if (!price || price <= 0) {
+      this.ownerMsg.set('Укажите корректную цену');
+      return;
+    }
+    const description = this.editDescription().trim() || null;
+    this.ownerBusy.set(true);
+    this.ownerMsg.set(null);
+    try {
+      await this._ownerService.updateProperty(d.id, price, description);
+      this.detail.set({ ...d, price, description });
+      this.isEditing.set(false);
+      this.ownerMsg.set('Сохранено');
+    } catch {
+      this.ownerMsg.set('Не удалось сохранить');
+    } finally {
+      this.ownerBusy.set(false);
+    }
+  }
+
+  async actualize(): Promise<void> {
+    const d = this.detail();
+    if (!d) return;
+    this.ownerBusy.set(true);
+    this.ownerMsg.set(null);
+    try {
+      await this._ownerService.actualizeProperty(d.id);
+      this.detail.set({ ...d, last_actualized_at: new Date().toISOString() });
+      this.ownerMsg.set('Объект актуализирован');
+    } catch {
+      this.ownerMsg.set('Не удалось актуализировать');
+    } finally {
+      this.ownerBusy.set(false);
+    }
+  }
+
+  async archive(status: ArchiveStatus): Promise<void> {
+    const d = this.detail();
+    if (!d) return;
+    this.ownerBusy.set(true);
+    this.ownerMsg.set(null);
+    try {
+      await this._ownerService.archiveProperty(d.id, status);
+      this.detail.set({ ...d, status });
+      this.ownerMsg.set(
+        status === 'archived_sold' ? 'Отмечено: продан' : 'Снято с публикации',
+      );
+    } catch {
+      this.ownerMsg.set('Не удалось изменить статус');
+    } finally {
+      this.ownerBusy.set(false);
+    }
   }
 
   openWhatsApp(phone: string): void {

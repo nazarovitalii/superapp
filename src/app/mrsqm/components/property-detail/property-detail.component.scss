@@ -301,6 +301,75 @@
   }
 }
 
+// ─── Управление своим объектом ───────────────────────────────────────────────
+.owner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half);
+  padding: var(--s) var(--s2);
+  background: var(--task-detail-bg);
+  border: 1px solid transparent;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-detail-shadow);
+
+  @include mq(xs, max) {
+    box-shadow: none;
+    border-color: var(--extra-border-color);
+  }
+}
+
+.owner-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-half);
+
+  button mat-icon {
+    margin-right: var(--s-quarter);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.owner-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s);
+}
+
+.owner-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-quarter);
+  font-size: 0.8125rem;
+  color: var(--text-color-muted);
+
+  input,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--extra-border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.875rem;
+    padding: var(--s-half);
+    resize: vertical;
+  }
+}
+
+.owner-edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-half);
+}
+
+.owner-msg {
+  font-size: 0.8125rem;
+  color: var(--text-color-muted);
+}
+
 // ─── Параметры ───────────────────────────────────────────────────────────────
 .specs-grid {
   display: flex;

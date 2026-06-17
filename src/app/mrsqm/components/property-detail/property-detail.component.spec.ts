@@ -190,4 +190,43 @@ describe('PropertyDetailComponent', () => {
     expect(comp.vm().agentName).toBe('Feed Owner');
     expect(comp.vm().price).toBe(1_000_000);
   });
+
+  it('isOwner берётся из detail.is_owner', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.ngOnInit();
+    expect(comp.isOwner()).toBe(true);
+  });
+
+  it('saveEdit обновляет цену и описание в detail', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.ngOnInit();
+    comp.startEdit();
+    comp.editPrice.set('750000');
+    comp.editDescription.set('обновлённое описание');
+    await comp.saveEdit();
+    expect(comp.detail()?.price).toBe(750_000);
+    expect(comp.detail()?.description).toBe('обновлённое описание');
+    expect(comp.isEditing()).toBe(false);
+  });
+
+  it('saveEdit отклоняет некорректную цену', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.ngOnInit();
+    comp.startEdit();
+    comp.editPrice.set('abc');
+    await comp.saveEdit();
+    expect(comp.isEditing()).toBe(true);
+    expect(comp.ownerMsg()).toBe('Укажите корректную цену');
+  });
+
+  it('archive меняет статус в detail', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.ngOnInit();
+    await comp.archive('archived_sold');
+    expect(comp.detail()?.status).toBe('archived_sold');
+  });
 });

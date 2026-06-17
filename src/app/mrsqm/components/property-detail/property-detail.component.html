@@ -164,6 +164,91 @@
           </div>
         </div>
 
+        <!-- ── Управление своим объектом (is_owner) ──────────────────────── -->
+        @if (isOwner()) {
+          <div class="owner-actions">
+            @if (isEditing()) {
+              <div class="owner-edit">
+                <label class="owner-field">
+                  <span>Цена</span>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    [value]="editPrice()"
+                    (input)="editPrice.set($any($event.target).value)"
+                  />
+                </label>
+                <label class="owner-field">
+                  <span>Описание</span>
+                  <textarea
+                    rows="3"
+                    [value]="editDescription()"
+                    (input)="editDescription.set($any($event.target).value)"
+                  ></textarea>
+                </label>
+                <div class="owner-edit-buttons">
+                  <button
+                    mat-stroked-button
+                    (click)="cancelEdit()"
+                    [disabled]="ownerBusy()"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="saveEdit()"
+                    [disabled]="ownerBusy()"
+                  >
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="owner-buttons">
+                <button
+                  mat-stroked-button
+                  (click)="startEdit()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>edit</mat-icon>Редактировать
+                </button>
+                <button
+                  mat-stroked-button
+                  (click)="actualize()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>refresh</mat-icon>Актуализировать
+                </button>
+                <button
+                  mat-stroked-button
+                  [matMenuTriggerFor]="archiveMenu"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>inventory_2</mat-icon>Архивировать
+                </button>
+                <mat-menu #archiveMenu="matMenu">
+                  <button
+                    mat-menu-item
+                    (click)="archive('archived_sold')"
+                  >
+                    Продан
+                  </button>
+                  <button
+                    mat-menu-item
+                    (click)="archive('archived_withdrawn')"
+                  >
+                    Снять с публикации
+                  </button>
+                </mat-menu>
+              </div>
+            }
+            @if (ownerMsg(); as msg) {
+              <div class="owner-msg">{{ msg }}</div>
+            }
+          </div>
+        }
+
         <!-- ── 3. Параметры объекта ──────────────────────────────────────── -->
         <div class="specs-grid">
           @if (vm().bedrooms !== null) {

@@ -150,6 +150,11 @@ TODO: district через `search_locations` (API-2).
   **WhatsApp** + **Telegram** только если контакт != null (Pro или в сети), иначе
   заглушка «Доступно на Pro»
 - **Статистика** — «Обновлено N дней назад» + `views_count`
+- **Управление своим объектом** (только при `is_owner`): **Редактировать** (цена+описание,
+  inline-форма → `update_property`), **Актуализировать** (`actualize_property`),
+  **Архивировать** (Продан/Снят → `archive_property`). 3 SECURITY DEFINER RPC, миграция
+  `applied/2026-06-16-property-owner-actions.sql` (на `properties` нет UPDATE-RLS)
+- Клик по фото → **полноэкранный лайтбокс** (`property-gallery-lightbox`)
 - Бейдж агента **не показывается** (вне MVP). Таб «Комментарии» — заглушка (F-13)
 - Кнопка **Сохранить в избранное** (toggle, `save_property`)
 - `track_view(p_property_id)` — fire and forget при открытии

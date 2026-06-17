@@ -7,13 +7,15 @@
 
 ## ⚙️ Журнал изменений схемы (прим\* — тела функций ниже могут быть устаревшими)
 
-| Дата       | Объект                 | Что                                                                                                                     | Миграция                                                            |
-| ---------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 2026-06-11 | `activate_user()`      | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`. | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql` |
-| 2026-06-11 | `get_feed()`           | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                      | `…/2026-06-11-get-feed-add-community-name.sql`                      |
-| 2026-06-11 | `get_agent_listings()` | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                        | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`               |
+| Дата       | Объект                                                            | Что                                                                                                                                                                                                             | Миграция                                                            |
+| ---------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 2026-06-11 | `activate_user()`                                                 | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`.                                                                                         | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql` |
+| 2026-06-11 | `get_feed()`                                                      | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                                                                                                              | `…/2026-06-11-get-feed-add-community-name.sql`                      |
+| 2026-06-11 | `get_agent_listings()`                                            | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                                                                                                                | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`               |
+| 2026-06-16 | `update_property()`, `actualize_property()`, `archive_property()` | Новые SECURITY DEFINER RPC для действий владельца над своим объектом (на `properties` нет UPDATE-RLS). Каждая проверяет `owner_id = auth.uid()`; правят только цену+описание / `last_actualized_at` / `status`. | `…/2026-06-16-property-owner-actions.sql`                           |
 
-> Известные **серверные баги (не чинены)**: на `properties` нет DELETE-RLS-политики;
+> Известные **серверные баги (не чинены)**: на `properties` нет DELETE-RLS-политики
+> (удаление объекта с клиента невозможно — для «снять» используется `archive_property`);
 > на `users` нет self-UPDATE RLS (только `admins_update`) — агент не может править свои контакты.
 
 ---
