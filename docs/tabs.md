@@ -134,9 +134,8 @@ TODO: district через `search_locations` (API-2).
 ### Содержимое (пустые блоки скрываются)
 
 - **Галерея** — реальные фото из `property_photos` (`full_url`), листание + счётчик;
-  клик по фото → **полноэкранный лайтбокс `ng-gallery`** (MIT; зум, миниатюры, свайп,
-  клавиатура; рисуется через CDK Overlay в `body`, поэтому не зависит от `transform`
-  правой панели). `Gallery.ref('property-card').load(ImageItem[])` + `Lightbox.open()`
+  стрелки prev/next поверх фото (hover-затемнение); клик → **fullscreen лайтбокс Swiper.js**
+  (MIT v12; основной слайдер + полоса миниатюр снизу; клавиатура Escape/стрелки)
 - **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
   Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
 - **Параметры** — bedrooms, bathrooms, maid (`is_maid`), BUA + участок (`plot_sqft`),
@@ -155,7 +154,7 @@ TODO: district через `search_locations` (API-2).
   inline-форма → `update_property`), **Актуализировать** (`actualize_property`),
   **Архивировать** (Продан/Снят → `archive_property`). 3 SECURITY DEFINER RPC, миграция
   `applied/2026-06-16-property-owner-actions.sql` (на `properties` нет UPDATE-RLS)
-- Клик по фото → **полноэкранный лайтбокс `ng-gallery`**
+- Клик по фото → **полноэкранный лайтбокс Swiper.js** (миниатюры + стрелки)
 - Бейдж агента **не показывается** (вне MVP). Таб «Комментарии» — заглушка (F-13)
 - Кнопка **Сохранить в избранное** (toggle, `save_property`)
 - `track_view(p_property_id)` — fire and forget при открытии
