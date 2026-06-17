@@ -102,7 +102,6 @@ const CONFIG: Record<string, TypeFields> = {
     layout: true,
     views: true,
     amenities: true,
-    vastu: true,
     furnished: true,
   }),
   bulk_unit_commercial: f({ bua: true }),
