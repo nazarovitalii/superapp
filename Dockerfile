@@ -48,6 +48,13 @@ COPY . .
 # Pass build args as environment variables for the build commands
 RUN UNSPLASH_KEY=$UNSPLASH_KEY UNSPLASH_CLIENT_ID=$UNSPLASH_CLIENT_ID npm run env && npm run lint && npm run buildFrontend:prodWeb
 
+# Web-сборка идёт без service worker (serviceWorker:false в productionWeb) — он намертво
+# кэшировал ассеты и фото, не пуская обновления (инцидент 2026-06-17: старая галерея +
+# пропавшие фото из кэша SW). Чтобы вычистить SW в браузерах, где он УЖЕ установлен,
+# кладём по пути /ngsw-worker.js самоудаляющийся «safety worker» Angular: при следующей
+# загрузке браузер подхватит его, разрегистрирует старый SW и удалит ngsw-кэши.
+RUN cp node_modules/@angular/service-worker/safety-worker.js dist/browser/ngsw-worker.js
+
 # Production stage
 FROM nginx:1
 
