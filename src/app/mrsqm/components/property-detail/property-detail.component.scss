@@ -511,25 +511,14 @@
 
 // ─── Управление своим объектом ───────────────────────────────────────────────
 .owner-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-half);
-  padding: var(--s) var(--s2);
-  background: var(--task-detail-bg);
-  border: 1px solid transparent;
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--task-detail-shadow);
-
-  @include mq(xs, max) {
-    box-shadow: none;
-    border-color: var(--extra-border-color);
-  }
+  margin: 16px 0 8px;
 }
 
 .owner-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-half);
+  justify-content: center;
+  gap: 8px;
 
   button mat-icon {
     margin-right: var(--s-quarter);
@@ -569,13 +558,15 @@
 
 .owner-edit-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: var(--s-half);
+  justify-content: center;
+  gap: 8px;
 }
 
 .owner-msg {
   font-size: 0.8125rem;
   color: var(--text-color-muted);
+  text-align: center;
+  margin-top: 8px;
 }
 
 // ─── Параметры ───────────────────────────────────────────────────────────────

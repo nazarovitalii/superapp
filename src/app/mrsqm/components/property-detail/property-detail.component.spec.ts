@@ -352,6 +352,17 @@ describe('PropertyDetailComponent', () => {
     expect(comp.isSaved()).toBe(true);
   });
 
+  it('кнопки действий показываются владельцу', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const actions = fixture.nativeElement.querySelector('.owner-actions');
+    expect(actions).not.toBeNull();
+    expect(actions.textContent).toContain('Редактировать');
+  });
+
   it('typeLabel собирает категория + тип + подтип (+ hotel pool)', async () => {
     const { comp, supa, create } = makeComponent();
     supa.rpcResult = detail({
