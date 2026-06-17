@@ -186,3 +186,4 @@
 | `354cb7b09` | 00:29 | fix(add-property): Vastu только для apartment и house (резидентные)                                                                                              |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `3a39ed8bb` | 00:31 | docs(spec): vastu — только apartment/house в форме, в ленте не показываем                                                                                        |
+| `63d1b542b` | 00:33 | docs: commits.md журнал (слой 2a)                                                                                                                                |
