@@ -182,7 +182,7 @@ RPC данных: `get_property` (`docs/database.md:449`).
 
 ## Открытые пункты на проверку при планировании
 
-1. Где лежат floor-plan фото (тип в `property_photos` vs `location_developers.media`).
+1. ~~Где лежат floor-plan фото~~ — РЕШЕНО (слой 1, Task 7): `property_photos` сейчас только `photo_type='gallery'` (floor-plan-строк нет), `getPhotos` уже мержит все типы → property-floor-plan подтянутся сами. `location_developers.media` = маркетинговые фото проекта (`photos`/`cover_photo`/`cover_video`), отдельного floor-plan нет → сюрфейс project-медиа = слой 2.
 2. Наличие колонки `properties.public_location_id` на проде (для slider-адреса).
 3. Какое поле несёт «всего этажей в здании» vs «этажей в юните» (`floors_in_unit` vs прочее) и логика Floor/Floors apartment↔house.
 4. Источник `Cluster` для Project-блока (иерархия локации vs `location_developers`).

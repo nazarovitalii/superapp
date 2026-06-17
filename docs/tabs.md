@@ -132,19 +132,34 @@ TODO: district через `search_locations` (API-2).
 цена — заголовок с нижней линией primary, секции — карточки `--task-detail-bg` /
 `--task-detail-shadow`.
 
-### Содержимое (пустые блоки скрываются)
+### Табы (WP-G слой 1)
+
+Три таба: **Details** · **Comments** · **Metrics**. Таб **Metrics виден только владельцу**
+объекта (`is_owner`). Активный таб сбрасывается на Details при смене объекта в панели.
+Лейблы табов — англ. (Details/Comments/Metrics).
+
+- **Metrics** (владелец): «метрика: значение» — Показы (`impressions_count`), Просмотры
+  (`views_count`), Уникальные (`unique_views_count`), Комментарии (`comments_count`),
+  акцентом «Ваш контакт просмотрено» (`contacts_count`; реальная запись/дедуп — слой 3).
+- **Comments** — каркас (инпут, переключатель All/Private, счётчик); бэкенд — F-13e.
+
+### Содержимое таба Details (пустые блоки скрываются)
 
 - **Галерея** — реальные фото из `property_photos` (`full_url`), листание + счётчик;
   стрелки prev/next поверх фото (hover-затемнение); клик → **fullscreen лайтбокс Swiper.js**
   (MIT v12; основной слайдер + полоса миниатюр снизу; клавиатура Escape/стрелки).
   Лайтбокс рендерится через нативный `<dialog>` + `showModal()` (**top layer** браузера) —
   иначе `position:fixed` запирался внутри right-panel (`will-change: transform`) и лента
-  наезжала поверх галереи
+  наезжала поверх галереи. Галерея уже включает все `photo_type` в одну ленту (floor-plan
+  при появлении подтянутся автоматически; project-медиа из `location_developers.media` — слой 2)
+- **Нет фото** — серый блок ~1/3 высоты с текстом «No Photo» (без иконки)
+- **Кнопка «Добавить в избранное»** — под фото (toggle `save_property`, иконка `bookmark`)
 - **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
   Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
-- **Параметры** — bedrooms, bathrooms, maid (`is_maid`), BUA + участок (`plot_sqft`),
-  этаж-уровень (`floor_level_id`→label), этажность (`floors_in_unit`), мебель,
-  готовность/срок сдачи (`completion_year`/`q`), занятость + «занято до» (`lease_until`)
+- **Tech (характеристики)** — формат «Поле: Значение»: Deal · Type (категория+тип+подтип
+  +«hotel apartment») · Bedrooms (+maid) · Bathrooms · BUA (`area_sqft`) · Plot (`plot_sqft`) ·
+  Floor (`floor_level_id`) · Floors (`floors_in_unit`) · Furnished · Handover · Completion ·
+  Occupancy (+`lease_until`) · Created · Updated. (Layout-имя и «+vastu» — слой 2)
 - **Особенности** — views/positions/amenities (id → названия через `get_filter_options`)
 - **Локация** — полный путь `location_full_path`
 - **Девелопер** — логотип (`developer_logo_url`) + название
@@ -154,13 +169,12 @@ TODO: district через `search_locations` (API-2).
   **WhatsApp** + **Telegram** только если контакт != null (Pro или в сети), иначе
   заглушка «Доступно на Pro»
 - **Статистика** — «Обновлено N дней назад» + `views_count`
-- **Управление своим объектом** (только при `is_owner`): **Редактировать** (цена+описание,
-  inline-форма → `update_property`), **Актуализировать** (`actualize_property`),
-  **Архивировать** (Продан/Снят → `archive_property`). 3 SECURITY DEFINER RPC, миграция
-  `applied/2026-06-16-property-owner-actions.sql` (на `properties` нет UPDATE-RLS)
+- **Управление своим объектом** (только при `is_owner`): три кнопки **вне блоков, центрированы
+  внизу** карточки — **Редактировать** (цена+описание, inline-форма → `update_property`),
+  **Актуализировать** (`actualize_property`), **Архивировать** (Продан/Снят → `archive_property`).
+  3 SECURITY DEFINER RPC, миграция `applied/2026-06-16-property-owner-actions.sql`
 - Клик по фото → **полноэкранный лайтбокс Swiper.js** (миниатюры + стрелки)
-- Бейдж агента **не показывается** (вне MVP). Таб «Комментарии» — заглушка (F-13)
-- Кнопка **Сохранить в избранное** (toggle, `save_property`)
+- Бейдж агента **не показывается** (вне MVP)
 - `track_view(p_property_id)` — fire and forget при открытии
 
 ---

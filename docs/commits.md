@@ -138,3 +138,36 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `2a5ad27d3` | 20:43 | feat(feed): WP-D переименование охвата — All/Friends/My Inventory + Favourites                                                                                   |
 | `2edfce16f` | 20:43 | chore: sync глобальных конвенций (А/Б/В) из app-core                                                                                                             |
+| `07e64f692` | 20:49 | docs: переписка + резюме дня 2026-06-17 (WP-D переименование охвата)                                                                                             |
+| `b02657d64` | 21:05 | docs(spec): дизайн карточки объекта — 4 слоя (фронт/get_property/метрика/layouts)                                                                                |
+| `687a69fe8` | 21:12 | docs(plan): карточка слой 1 — план реализации (7 задач, TDD)                                                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `eb79fe37e` | 21:16 | feat(property-detail): три таба details/comments/metrics, Metrics только владельцу                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `496fb2e29` | 21:21 | feat(property-detail): таб Metrics — показы/просмотры/уникальные/комментарии/контакт + reset активного таба при смене объекта                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `c6255eaf1` | 21:23 | test(property-detail): типизировать fixture в makeComponent (убрать any)                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `154778e3f` | 21:27 | feat(property-detail): кнопка избранного под фото (save_property)                                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `c83ef4b6a` | 21:34 | feat(property-detail): no-photo блок — серый, 1/3 высоты, текст No Photo без иконки                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `420a226b9` | 21:38 | test(property-detail): детерминированное ожидание в no-photo тесте (убрать setInterval polling)                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f82f77487` | 21:42 | feat(property-detail): Tech-блок Поле:Значение + композиция Type (категория/тип/подтип)                                                                          |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `6db6eab94` | 21:45 | fix(property-detail): вернуть Handover/Completion в Tech-блок + guard \_composeType                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `1fbc40ca8` | 21:49 | refactor(property-detail): кнопки действий вынесены вниз и центрированы                                                                                          |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `bbce8aa2e` | 22:01 | style(property-detail): стили таба Metrics + чистка мёртвого specs-grid SCSS + reset isSaved                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
