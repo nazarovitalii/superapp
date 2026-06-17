@@ -155,6 +155,19 @@ describe('FeedPageComponent', () => {
     expect(c.visibleProperties()[0].id).toBe('a');
   });
 
+  it('охват Public показывает и network-объекты (совпадает со счётчиком get_feed)', async () => {
+    // API-11: count_total считает public+network, поэтому таблица под Public
+    // не должна фильтровать строго 'public' — иначе пусто при ненулевом счётчике.
+    const c = build();
+    await flush();
+    c.properties.set([
+      { id: 'a', visibility: 'public', owner_full_name: 'A' },
+      { id: 'b', visibility: 'network', owner_full_name: 'B' },
+    ] as unknown as Parameters<typeof c.properties.set>[0]);
+    expect(filter.scope()).toBe('public');
+    expect(c.visibleProperties().length).toBe(2);
+  });
+
   it('выбор unit_type ставит категорию + unitTypeId и чистит подтипы', async () => {
     const c = build();
     await flush();

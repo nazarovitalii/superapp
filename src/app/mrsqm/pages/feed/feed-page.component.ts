@@ -90,7 +90,12 @@ export class FeedPageComponent {
     let scoped: PropertyFeedItem[];
     switch (scope) {
       case 'public':
-        scoped = items.filter((p) => p.visibility === 'public');
+        // Public = вся доступная лента: get_feed уже отдаёт только public + network
+        // объекты города, и count_total считает их вместе. Поэтому фильтр по
+        // visibility не нужен — иначе таблица (строго 'public') расходится со
+        // счётчиком (public+network) и под Public пусто при ненулевом счётчике.
+        // (WP-D переименует этот охват в «All Inventory».)
+        scoped = items;
         break;
       case 'friends':
         scoped = items.filter((p) => p.is_network);

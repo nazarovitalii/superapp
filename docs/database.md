@@ -488,8 +488,9 @@ BEGIN
   -- ШАГ 2: Получить объект с проверкой доступа и всеми JOIN полями
   -- ================================================================
   SELECT (
+    -- Поля properties, часть 1/2 (31 пара — держим вызов < 100 аргументов, см.
+    -- миграцию 2026-06-17-fix-get-property-100-args: фикс ошибки 54023)
     jsonb_build_object(
-      -- Все поля properties
       'id',                  p.id,
       'owner_id',            p.owner_id,
       'unit_id',             p.unit_id,
@@ -520,7 +521,10 @@ BEGIN
       'furnished',           p.furnished,
       'lat',                 p.lat,
       'lng',                 p.lng,
-      'price',               p.price,
+      'price',               p.price
+    ) ||
+    -- Поля properties, часть 2/2 (31 пара)
+    jsonb_build_object(
       'previous_price',      p.previous_price,
       'price_currency',      p.price_currency,
       'price_changed_at',    p.price_changed_at,
