@@ -49,12 +49,14 @@
   gap: var(--s-quarter);
   height: 36px;
   padding: 0 var(--s-quarter) 0 var(--s);
-  border-radius: 18px;
+  // Скругление и белый фон — как строка объекта в ленте (item 13)
+  border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
-  background: transparent;
+  background: var(--task-c-bg);
   color: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  // Размер текста = тело ленты (14px), без жирности (item 13)
+  font-size: 0.875rem;
+  font-weight: 400;
   white-space: nowrap;
   cursor: pointer;
   flex: 0 0 auto;
@@ -98,13 +100,14 @@
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  flex: 1 1 220px;
-  min-width: 180px;
+  // Шире остальных контролов — основное поле поиска адрес/агент
+  flex: 2 1 300px;
+  min-width: 220px;
   height: 36px;
   padding: 0 var(--s);
-  border-radius: 18px;
+  border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
-  background: transparent;
+  background: var(--task-c-bg);
 
   &:focus-within {
     border-color: var(--c-primary);
@@ -125,7 +128,7 @@
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-family: inherit;
   outline: none;
 
@@ -140,8 +143,8 @@
   align-items: center;
   gap: var(--s-quarter);
   max-width: 100%;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 400;
   color: var(--c-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,12 +250,12 @@
   gap: var(--s-quarter);
   height: 36px;
   padding: 0 var(--s);
-  border-radius: 18px;
+  border-radius: var(--task-border-radius);
   border: 1px solid var(--c-primary);
-  background: transparent;
+  background: var(--task-c-bg);
   color: var(--c-primary);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 400;
   cursor: pointer;
   flex: 0 0 auto;
 
@@ -274,8 +277,8 @@
 }
 
 .type-mega {
-  width: 520px;
-  max-width: 90vw;
+  width: 560px;
+  max-width: 92vw;
 }
 
 .type-cols {
@@ -301,8 +304,9 @@
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-size: 0.875rem;
-  font-weight: 700;
+  // Заголовок чуть крупнее тела, semibold (item 14)
+  font-size: 0.9375rem;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 
@@ -315,8 +319,9 @@
 
   small {
     margin-left: auto;
-    font-size: 0.6875rem;
-    font-weight: 600;
+    // «Все» — тот же кегль что подписи, не микро-текст
+    font-size: 0.8125rem;
+    font-weight: 400;
     color: var(--text-color-muted);
   }
 
@@ -332,11 +337,13 @@
 .type-unit {
   display: block;
   width: 100%;
-  padding: var(--s-quarter) var(--s) var(--s-quarter) var(--s2);
+  // Больше воздуха по вертикали + ровный отступ под иконку заголовка (item 14)
+  padding: var(--s-half) var(--s) var(--s-half) var(--s3);
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-size: 0.8125rem;
+  // Размер = тело ленты (14px) — выровнено с остальными текстами (item 14)
+  font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
 
@@ -355,20 +362,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-quarter);
-  padding: var(--s-quarter) var(--s) var(--s-half) var(--s2);
+  padding: var(--s-quarter) var(--s) var(--s-half) var(--s3);
 }
 
 .type-sub-chip {
   display: inline-flex;
   align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 13px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
   background: transparent;
   color: var(--text-color-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
+  // 13px — на ступень меньше тела, но не микро-текст (item 14)
+  font-size: 0.8125rem;
+  font-weight: 400;
   cursor: pointer;
 
   &:hover {
@@ -394,8 +402,8 @@
   border: none;
   background: transparent;
   color: var(--text-color-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 400;
   cursor: pointer;
 
   &:hover {
@@ -404,13 +412,13 @@
 }
 
 .type-done {
-  height: 32px;
+  height: 34px;
   padding: 0 var(--s2);
   border: none;
-  border-radius: 16px;
+  border-radius: var(--task-border-radius);
   background: var(--c-primary);
   color: var(--palette-primary-contrast-500, #fff);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
 }

@@ -121,19 +121,28 @@
   text-align: right;
 }
 
-// Площадь: BUA + Plot (серее) для домов/вилл (item 11)
-.col-size {
+// Тип + Ready/Off-Plan серым ниже (item 4)
+.col-type {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
 
-  .size-plot {
+  .type-handover {
+    font-size: 0.72rem;
     color: var(--text-color-muted);
   }
 }
 
+// Цена: новая сверху, прежняя — серой зачёркнутой ниже (item 7)
 .col-price {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .price-old {
+    font-size: 0.72rem;
+    color: var(--text-color-muted);
+    text-decoration: line-through;
+  }
 }
 
 // Иконки «есть фото» / «есть комментарии»
@@ -152,11 +161,24 @@
   }
 }
 
-// Агентство (отдельная колонка)
-.col-agency {
-  text-align: right;
+// Агент: имя чёрным сверху + агентство серым ниже (item 2)
+.col-agent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   overflow: hidden;
-  text-overflow: ellipsis;
+
+  .agent-name,
+  .agent-agency {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .agent-agency {
+    font-size: 0.72rem;
+    color: var(--text-color-muted);
+  }
 }
 
 // Дата (отдельная колонка, item 1)

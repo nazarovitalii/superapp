@@ -28,49 +28,54 @@
       }
     </div>
 
-    <!-- Тип: Apartment / Villa etc -->
+    <!-- Тип: Apartment / Villa + Ready/Off-Plan серым ниже (item 4) -->
     <div class="col col-type">
-      {{ property().property_type || '—' }}
+      <span class="type-name">{{ property().property_type || '—' }}</span>
+      @if (property().handover) {
+        <span class="type-handover">{{
+          property().handover === 'ready' ? 'Ready' : 'Off-Plan'
+        }}</span>
+      }
     </div>
 
-    <!-- Beds -->
+    <!-- Beds: «2+m» — число + «+m» если есть комната прислуги (item 5) -->
     <div class="col col-beds">
       @if (property().bedrooms !== null) {
-        <span>{{
-          property().bedrooms === 0 ? 'Studio' : property().bedrooms + ' BR'
-        }}</span>
+        @if (property().bedrooms === 0) {
+          <span>Studio</span>
+        } @else {
+          <span>{{ property().bedrooms }}{{ property().is_maid ? '+m' : '' }}</span>
+        }
       } @else {
         <span>—</span>
       }
     </div>
 
-    <!-- Size: BUA сверху, Plot ниже серым (для домов/вилл) -->
+    <!-- Площадь: только BUA, без plot и без «sqft» (items 1, 6) -->
     <div class="col col-size">
       @if (property().area_sqft !== null) {
-        <span class="size-bua">{{ property().area_sqft | number: '1.0-0' }} sqft</span>
+        <span>{{ property().area_sqft | number: '1.0-0' }}</span>
       } @else {
         <span>—</span>
       }
-      @if (property().plot_sqft) {
-        <span class="size-plot"
-          >Plot {{ property().plot_sqft | number: '1.0-0' }} sqft</span
-        >
-      }
     </div>
 
-    <!-- Price (без валюты; для аренды — период) -->
+    <!-- Цена: новая сверху, прежняя (если выше) — серой зачёркнутой (item 7) -->
     <div class="col col-price">
-      <span
+      <span class="price-now"
         >{{ property().price | number: '1.0-0' }}
         @if (property().price_period) {
           <ng-container>/{{ property().price_period }}</ng-container>
         }
       </span>
+      @if (property().previous_price && property().previous_price! > property().price) {
+        <span class="price-old">{{ property().previous_price | number: '1.0-0' }}</span>
+      }
     </div>
 
     <!-- Иконки: фото + комментарии (если есть хотя бы один) -->
     <div class="col col-photo">
-      @if (property().photos?.length) {
+      @if (property().has_photos) {
         <mat-icon class="photo-ico">photo_camera</mat-icon>
       }
       @if (property().comments_count) {
@@ -78,9 +83,12 @@
       }
     </div>
 
-    <!-- Агентство -->
-    <div class="col col-agency">
-      <span class="agency-name">{{ property().owner_agency_name || '—' }}</span>
+    <!-- Агент: имя чёрным сверху + агентство серым ниже (item 2) -->
+    <div class="col col-agent">
+      <span class="agent-name">{{ property().owner_full_name || '—' }}</span>
+      @if (property().owner_agency_name) {
+        <span class="agent-agency">{{ property().owner_agency_name }}</span>
+      }
     </div>
 
     <!-- Дата публикации/актуализации (отдельная колонка, item 1) -->

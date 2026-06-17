@@ -255,6 +255,8 @@ export interface PropertyFeedItem {
   price_period: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  // Комната прислуги — суффикс «+m» к беды в строке ленты.
+  is_maid?: boolean | null;
   area_sqft: number | null;
   // Площадь участка — для домов/вилл (выводим под BUA в карточке).
   plot_sqft?: number | null;
@@ -266,7 +268,11 @@ export interface PropertyFeedItem {
   furnished: Furnished | null;
   handover: Handover | null;
   is_distress: boolean;
+  // Предыдущая цена — если > price, в строке показываем старую зачёркнутой.
+  previous_price?: number | null;
   photos: string[] | null;
+  // Флаг «есть фото» из get_feed (EXISTS на property_photos) — иконка 📷.
+  has_photos?: boolean | null;
   published_at: string;
   // Дата актуализации (поднимает объект в ленте) и видимость — есть в jsonb get_feed.
   last_actualized_at?: string | null;
