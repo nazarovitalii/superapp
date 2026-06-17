@@ -189,16 +189,18 @@
   }
 
   &--placeholder {
+    height: 73px;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: default;
-    color: var(--ink-muted);
+    background: var(--bg-lighter, #f0f0f0);
 
-    mat-icon {
-      font-size: 72px;
-      width: 72px;
-      height: 72px;
+    .no-photo-text {
+      color: var(--text-color-muted, #9e9e9e);
+      font-size: 13px;
+      letter-spacing: 0.02em;
     }
   }
 }
