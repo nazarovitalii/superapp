@@ -56,9 +56,10 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 **Тулбар ленты** (Bayut-style, одна строка над таблицей на всю её ширину; контейнер
 расширен 800→960px; глобальный хедер чистый). Слева направо:
 
-1. **Охват** — пилюля-селект «Public · 1 154» (Public / Friends / Private / Favourites).
-   При non-Public — бордюр primary. Счётчик: public — серверный `count_total`, остальные —
-   клиентский. ⚠️ Охват фильтруется **на клиенте** (owner_id / is_network / visibility) —
+1. **Охват** — пилюля-селект «All Inventory · 1 154» (All Inventory / Friends Inventory /
+   My Inventory / Favourites; WP-D, значения scope `public/friends/my/favourites` не изменились).
+   При non-All Inventory — бордюр primary. Счётчик: All Inventory — серверный `count_total`
+   (public+network), остальные — клиентский. ⚠️ Охват фильтруется **на клиенте** (owner_id / is_network / visibility) —
    серверного параметра нет (TODO API-9).
 2. **Автокомплит «Адрес или агент»** — крупное поле:
    - **Адрес** → `search_locations` (p_mode=search) → выбор пишет `locationFilter{id,name}`

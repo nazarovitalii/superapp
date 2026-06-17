@@ -4,11 +4,11 @@ import { DealType, ListingType } from '../types/database';
 // Сортировка ленты — значения p_sort_by из get_feed (default = по свежести).
 export type FeedSortBy = 'default' | 'price_desc' | 'price_asc' | 'date_asc';
 
-// Охват ленты (селект слева от Sale/Rent в хедере):
-//   public     — все публичные объекты города (по умолчанию)
-//   friends    — объекты сети (друзья + коллеги)
-//   my         — мои объекты
-//   favourites — добавленные в избранное
+// Охват ленты (пилюля-селект слева в тулбаре); метки UI в скобках (WP-D):
+//   public     — весь инвентарь города: public + network (по умолчанию) («All Inventory»)
+//   friends    — объекты сети (друзья + коллеги) («Friends Inventory»)
+//   my         — мои объекты («My Inventory»)
+//   favourites — добавленные в избранное («Favourites»)
 // Фильтруется на клиенте по owner_id / is_network / visibility / savedIds
 // (в get_feed серверного параметра охвата пока нет — см. TODO API).
 export type FeedScope = 'public' | 'friends' | 'my' | 'favourites';

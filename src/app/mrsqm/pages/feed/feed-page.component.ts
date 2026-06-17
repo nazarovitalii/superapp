@@ -80,9 +80,9 @@ export class FeedPageComponent {
     return this._panels.selectedProperty()?.id ?? null;
   }
 
-  // Охват Public / Friends / My / Favourites — фильтр на клиенте по полям
-  // get_feed (visibility / is_network / owner_id) и savedIds: серверного
-  // параметра охвата в RPC пока нет.
+  // Охват All Inventory / Friends Inventory / My Inventory / Favourites —
+  // фильтр на клиенте по полям get_feed (visibility / is_network / owner_id)
+  // и savedIds: серверного параметра охвата в RPC пока нет.
   readonly visibleProperties = computed<PropertyFeedItem[]>(() => {
     const items = this.properties();
     const scope = this.filter.scope();
@@ -90,11 +90,10 @@ export class FeedPageComponent {
     let scoped: PropertyFeedItem[];
     switch (scope) {
       case 'public':
-        // Public = вся доступная лента: get_feed уже отдаёт только public + network
-        // объекты города, и count_total считает их вместе. Поэтому фильтр по
+        // All Inventory = вся доступная лента: get_feed уже отдаёт только public +
+        // network объекты города, и count_total считает их вместе. Поэтому фильтр по
         // visibility не нужен — иначе таблица (строго 'public') расходится со
-        // счётчиком (public+network) и под Public пусто при ненулевом счётчике.
-        // (WP-D переименует этот охват в «All Inventory».)
+        // счётчиком (public+network) и под All Inventory пусто при ненулевом счётчике.
         scoped = items;
         break;
       case 'friends':
@@ -126,17 +125,22 @@ export class FeedPageComponent {
       : this.visibleProperties().length,
   );
 
-  // Охват ленты — пилюля слева в тулбаре.
+  // Охват ленты — пилюля слева в тулбаре (метки WP-D):
+  //   All Inventory     — весь инвентарь (public + network), что вернул get_feed
+  //   Friends Inventory — только объекты сети
+  //   My Inventory      — мои объекты
+  //   Favourites        — добавленные в избранное
   readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
-    { value: 'public', label: 'Public' },
-    { value: 'friends', label: 'Friends' },
-    { value: 'my', label: 'Private' },
+    { value: 'public', label: 'All Inventory' },
+    { value: 'friends', label: 'Friends Inventory' },
+    { value: 'my', label: 'My Inventory' },
     { value: 'favourites', label: 'Favourites' },
   ];
 
   readonly scopeLabel = computed(
     () =>
-      this.scopeOptions.find((o) => o.value === this.filter.scope())?.label ?? 'Public',
+      this.scopeOptions.find((o) => o.value === this.filter.scope())?.label ??
+      'All Inventory',
   );
 
   setScope(scope: FeedScope): void {
