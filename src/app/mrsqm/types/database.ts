@@ -367,6 +367,8 @@ export interface PropertyDetail {
   last_actualized_at: string | null;
   published_at: string | null;
   views_count: number | null;
+  unique_views_count: number | null;
+  impressions_count: number | null;
   contacts_count: number | null;
   comments_count: number | null;
   created_at: string | null;

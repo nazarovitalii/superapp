@@ -105,7 +105,27 @@
     </div>
   } @else if (activeTab() === 'metrics') {
     <div class="detail-scroll metrics-tab">
-      <!-- содержимое — Task 2 -->
+      <div class="metric-row">
+        <span class="metric-label">Показы</span>
+        <span class="metric-value">{{ metricsVm().impressions | number }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Просмотры</span>
+        <span class="metric-value">{{ metricsVm().views | number }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Уникальные просмотры</span>
+        <span class="metric-value">{{ metricsVm().uniqueViews | number }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Комментарии</span>
+        <span class="metric-value">{{ metricsVm().comments | number }}</span>
+      </div>
+      <!-- «Ваш контакт просмотрено: N» — данные/дедуп в слое 3 -->
+      <div class="metric-row metric-row--accent">
+        <span class="metric-label">Ваш контакт просмотрено</span>
+        <span class="metric-value">{{ metricsVm().contacts | number }}</span>
+      </div>
     </div>
   } @else {
     <div class="detail-scroll">

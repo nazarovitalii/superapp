@@ -99,6 +99,7 @@ const detail = (over: Partial<PropertyDetail> = {}): PropertyDetail =>
 
 const makeComponent = (): {
   comp: PropertyDetailComponent;
+  fixture: any;
   supa: FakeSupabase;
   photos: FakePhotos;
   create: FakeCreate;
@@ -116,7 +117,7 @@ const makeComponent = (): {
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
-  return { comp: fixture.componentInstance, supa, photos, create };
+  return { comp: fixture.componentInstance, fixture, supa, photos, create };
 };
 
 describe('PropertyDetailComponent', () => {
@@ -239,5 +240,61 @@ describe('PropertyDetailComponent', () => {
     const { comp } = makeComponent();
     comp.setTab('metrics');
     expect(comp.activeTab()).toBe('metrics');
+  });
+
+  it('metricsVm берёт метрики из detail', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      is_owner: true,
+      views_count: 42,
+      unique_views_count: 30,
+      impressions_count: 100,
+      contacts_count: 7,
+      comments_count: 3,
+    });
+    await comp.loadProperty();
+    const m = comp.metricsVm();
+    expect(m.views).toBe(42);
+    expect(m.uniqueViews).toBe(30);
+    expect(m.impressions).toBe(100);
+    expect(m.contacts).toBe(7);
+    expect(m.comments).toBe(3);
+  });
+
+  it('reset активного таба при смене объекта', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.loadProperty();
+    comp.setTab('metrics');
+    expect(comp.activeTab()).toBe('metrics');
+    // Теперь меняем объект — таб должен вернуться на 'details'
+    await comp.loadProperty();
+    expect(comp.activeTab()).toBe('details');
+  });
+
+  it('таб Metrics скрыт для non-owner, виден для owner', async () => {
+    const { comp, fixture, supa } = makeComponent();
+
+    // Проверим non-owner
+    supa.rpcResult = detail({ is_owner: false });
+    await comp.loadProperty();
+    fixture.detectChanges();
+
+    let buttons = fixture.nativeElement.querySelectorAll('.detail-tab');
+    let hasMetricsButton = Array.from(buttons as NodeListOf<Element>).some((btn) =>
+      btn.textContent?.includes('Metrics'),
+    );
+    expect(hasMetricsButton).toBe(false);
+
+    // Теперь для owner
+    supa.rpcResult = detail({ is_owner: true });
+    await comp.loadProperty();
+    fixture.detectChanges();
+
+    buttons = fixture.nativeElement.querySelectorAll('.detail-tab');
+    hasMetricsButton = Array.from(buttons as NodeListOf<Element>).some((btn) =>
+      btn.textContent?.includes('Metrics'),
+    );
+    expect(hasMetricsButton).toBe(true);
   });
 });
