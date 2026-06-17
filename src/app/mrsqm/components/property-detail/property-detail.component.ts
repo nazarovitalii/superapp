@@ -173,6 +173,15 @@ export class PropertyDetailComponent implements OnDestroy {
       agentAbout: d?.agent?.about ?? null,
       whatsapp: d?.agent?.whatsapp_phone ?? null,
       telegram: d?.agent?.tg_username ?? null,
+      typeLabel: this._composeType(
+        d?.category_id,
+        d?.unit_type_id,
+        d?.sub_type_id,
+        d?.is_hotel_pool ?? false,
+        opts,
+      ),
+      createdLabel: this._fmtDate(d?.created_at),
+      updatedLabelFull: this._fmtDate(d?.updated_at ?? d?.last_actualized_at),
     };
   });
 
@@ -471,5 +480,32 @@ export class PropertyDetailComponent implements OnDestroy {
     if (days < 30) return `${Math.floor(days / 7)} нед. назад`;
     if (days < 365) return `${Math.floor(days / 30)} мес. назад`;
     return `${Math.floor(days / 365)} г. назад`;
+  }
+
+  // «Residential Apartment - Flat (hotel apartment)» из справочников.
+  private _composeType(
+    categoryId: string | null | undefined,
+    unitTypeId: string | null | undefined,
+    subTypeId: string | null | undefined,
+    isHotelPool: boolean,
+    opts: FilterOptions | null,
+  ): string | null {
+    const cat = this._label(categoryId, opts?.categories);
+    const unit = this._label(unitTypeId, opts?.unit_types);
+    const sub = this._label(subTypeId, opts?.sub_types);
+    const head = [cat, unit].filter(Boolean).join(' ');
+    let out = sub ? `${head} - ${sub}` : head;
+    if (!out) return null;
+    if (isHotelPool) out += ' (hotel apartment)';
+    return out;
+  }
+
+  // Дата в формате DD.MM.YYYY (для Created/Updated).
+  private _fmtDate(iso: string | null | undefined): string | null {
+    if (!iso) return null;
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return null;
+    const p = (n: number): string => String(n).padStart(2, '0');
+    return `${p(dt.getDate())}.${p(dt.getMonth() + 1)}.${dt.getFullYear()}`;
   }
 }

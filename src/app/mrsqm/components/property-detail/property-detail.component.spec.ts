@@ -351,4 +351,21 @@ describe('PropertyDetailComponent', () => {
     await comp.loadProperty();
     expect(comp.isSaved()).toBe(true);
   });
+
+  it('typeLabel собирает категория + тип + подтип (+ hotel pool)', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({
+      category_id: 'c1',
+      unit_type_id: 'u1',
+      sub_type_id: 's1',
+      is_hotel_pool: true,
+    });
+    create.options = {
+      categories: [{ id: 'c1', value: 'residential', label_en: 'Residential' }],
+      unit_types: [{ id: 'u1', value: 'apartment', label_en: 'Apartment' }],
+      sub_types: [{ id: 's1', value: 'flat', label_en: 'Flat' }],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().typeLabel).toBe('Residential Apartment - Flat (hotel apartment)');
+  });
 });

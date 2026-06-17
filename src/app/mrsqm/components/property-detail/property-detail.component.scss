@@ -604,6 +604,31 @@
   }
 }
 
+// ─── Характеристики «Поле: Значение» ────────────────────────────────────────
+.kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.kv-label {
+  color: var(--text-color-muted, #9e9e9e);
+  flex: 0 0 auto;
+}
+
+.kv-value {
+  color: var(--text-color, inherit);
+  text-align: right;
+}
+
 // ─── Секции — карточки в стиле input-item из task-detail-panel ──────────────
 .section {
   display: flex;

@@ -292,77 +292,88 @@
           </div>
         }
 
-        <!-- ── 3. Параметры объекта ──────────────────────────────────────── -->
-        <div class="specs-grid">
-          @if (vm().bedrooms !== null) {
-            <div class="spec-item">
-              <mat-icon>bed</mat-icon>
-              <span>{{ vm().bedrooms }} спал.</span>
+        <!-- ── Tech: характеристики «Поле: Значение» ─────────────────────── -->
+        <div class="section">
+          <div class="section-label"><mat-icon>tune</mat-icon>Характеристики</div>
+          <div class="kv-list">
+            <div class="kv-row">
+              <span class="kv-label">Deal</span>
+              <span class="kv-value">{{
+                vm().dealType === 'sale' ? 'Sale' : 'Rent'
+              }}</span>
             </div>
-          }
-          @if (vm().bathrooms !== null) {
-            <div class="spec-item">
-              <mat-icon>shower</mat-icon>
-              <span>{{ vm().bathrooms }} ванн.</span>
-            </div>
-          }
-          @if (vm().isMaid) {
-            <div class="spec-item">
-              <mat-icon>cleaning_services</mat-icon>
-              <span>Maid room</span>
-            </div>
-          }
-          @if (vm().areaSqft !== null) {
-            <div class="spec-item">
-              <mat-icon>square_foot</mat-icon>
-              <span>{{ vm().areaSqft | number: '1.0-0' }} sqft</span>
-            </div>
-          }
-          @if (vm().plotSqft) {
-            <div class="spec-item">
-              <mat-icon>crop_landscape</mat-icon>
-              <span>{{ vm().plotSqft | number: '1.0-0' }} sqft участок</span>
-            </div>
-          }
-          @if (vm().floorLevel) {
-            <div class="spec-item">
-              <mat-icon>stairs</mat-icon>
-              <span>{{ vm().floorLevel }}</span>
-            </div>
-          }
-          @if (vm().floorsInUnit) {
-            <div class="spec-item">
-              <mat-icon>layers</mat-icon>
-              <span>{{ vm().floorsInUnit }}</span>
-            </div>
-          }
-          @if (vm().furnishedLabel) {
-            <div class="spec-item">
-              <mat-icon>chair</mat-icon>
-              <span>{{ vm().furnishedLabel }}</span>
-            </div>
-          }
-          @if (vm().handoverLabel) {
-            <div class="spec-item">
-              <mat-icon>home</mat-icon>
-              <span>{{ vm().handoverLabel }}</span>
-            </div>
-          }
-          @if (vm().completion) {
-            <div class="spec-item">
-              <mat-icon>event</mat-icon>
-              <span>Сдача {{ vm().completion }}</span>
-            </div>
-          }
-          @if (vm().occupancyLabel) {
-            <div class="spec-item">
-              <mat-icon>meeting_room</mat-icon>
-              <span
-                >{{ vm().occupancyLabel
-                }}{{ vm().leaseLabel ? ' · ' + vm().leaseLabel : '' }}</span
-              >
-            </div>
-          }
+            @if (vm().typeLabel) {
+              <div class="kv-row">
+                <span class="kv-label">Type</span>
+                <span class="kv-value">{{ vm().typeLabel }}</span>
+              </div>
+            }
+            @if (vm().bedrooms !== null) {
+              <div class="kv-row">
+                <span class="kv-label">Bedrooms</span>
+                <span class="kv-value">
+                  {{ vm().bedrooms }}{{ vm().isMaid ? ' + maid' : '' }}
+                </span>
+              </div>
+            }
+            @if (vm().bathrooms !== null) {
+              <div class="kv-row">
+                <span class="kv-label">Bathrooms</span>
+                <span class="kv-value">{{ vm().bathrooms }}</span>
+              </div>
+            }
+            @if (vm().areaSqft !== null) {
+              <div class="kv-row">
+                <span class="kv-label">BUA</span>
+                <span class="kv-value">{{ vm().areaSqft | number: '1.0-0' }} sqft</span>
+              </div>
+            }
+            @if (vm().plotSqft) {
+              <div class="kv-row">
+                <span class="kv-label">Plot</span>
+                <span class="kv-value">{{ vm().plotSqft | number: '1.0-0' }} sqft</span>
+              </div>
+            }
+            @if (vm().floorLevel) {
+              <div class="kv-row">
+                <span class="kv-label">Floor</span>
+                <span class="kv-value">{{ vm().floorLevel }}</span>
+              </div>
+            }
+            @if (vm().floorsInUnit) {
+              <div class="kv-row">
+                <span class="kv-label">Floors</span>
+                <span class="kv-value">{{ vm().floorsInUnit }}</span>
+              </div>
+            }
+            @if (vm().furnishedLabel) {
+              <div class="kv-row">
+                <span class="kv-label">Furnished</span>
+                <span class="kv-value">{{ vm().furnishedLabel }}</span>
+              </div>
+            }
+            @if (vm().occupancyLabel) {
+              <div class="kv-row">
+                <span class="kv-label">Occupancy</span>
+                <span class="kv-value"
+                  >{{ vm().occupancyLabel
+                  }}{{ vm().leaseLabel ? ' · ' + vm().leaseLabel : '' }}</span
+                >
+              </div>
+            }
+            @if (vm().createdLabel) {
+              <div class="kv-row">
+                <span class="kv-label">Created</span>
+                <span class="kv-value">{{ vm().createdLabel }}</span>
+              </div>
+            }
+            @if (vm().updatedLabelFull) {
+              <div class="kv-row">
+                <span class="kv-label">Updated</span>
+                <span class="kv-value">{{ vm().updatedLabelFull }}</span>
+              </div>
+            }
+          </div>
         </div>
 
         <!-- ── 3b. Виды / расположение / удобства ─────────────────────────── -->
