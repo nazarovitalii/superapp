@@ -475,9 +475,11 @@
 
   <!-- ── Lightbox Swiper (fullscreen, рендерится поверх всего) ─────────────── -->
   @if (lightboxOpen()) {
-    <div
+    <dialog
       class="lightbox-overlay"
+      #lightboxDialog
       (click)="closeLightbox()"
+      (close)="onDialogClose()"
     >
       <!-- Шапка: счётчик + кнопка закрытия -->
       <div
@@ -546,6 +548,6 @@
           }
         </div>
       </div>
-    </div>
+    </dialog>
   }
 </div>

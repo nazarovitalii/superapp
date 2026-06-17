@@ -11,7 +11,6 @@ import {
   ViewChild,
   ElementRef,
   Injector,
-  HostListener,
   afterNextRender,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -57,6 +56,7 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
   private readonly _ownerService = inject(PropertyOwnerService);
   private readonly _injector = inject(Injector);
 
+  @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
   @ViewChild('lightboxMain') private _lightboxMainEl?: ElementRef<HTMLElement>;
   @ViewChild('lightboxThumbs') private _lightboxThumbsEl?: ElementRef<HTMLElement>;
   @ViewChild('lightboxPrev') private _lightboxPrevEl?: ElementRef<HTMLElement>;
@@ -151,12 +151,6 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
     };
   });
 
-  // Escape закрывает лайтбокс.
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (this.lightboxOpen()) this.closeLightbox();
-  }
-
   setTab(tab: 'info' | 'comments'): void {
     this.activeTab.set(tab);
   }
@@ -198,19 +192,39 @@ export class PropertyDetailComponent implements OnInit, OnDestroy {
     this.activePhotoIdx.set((this.activePhotoIdx() - 1 + len) % len);
   }
 
-  // Открыть fullscreen лайтбокс Swiper. DOM рендерится через @if, Swiper инициализируется
-  // после следующего рендер-цикла Angular.
+  // Открыть fullscreen лайтбокс Swiper. DOM рендерится через @if, затем диалог поднимается
+  // в top layer браузера через showModal() — это выводит его ПОВЕРХ правой панели
+  // (у right-panel-content стоит `will-change: transform`, который иначе запирает
+  // `position: fixed` внутри панели и лента наезжает на галерею). После показа диалога
+  // инициализируем Swiper — к этому моменту размеры уже корректны.
   openLightbox(index: number): void {
     const photos = this.photos();
     if (!photos.length) return;
     this.lightboxIdx.set(index);
     this.lightboxOpen.set(true);
-    afterNextRender(() => this._initLightboxSwiper(index), { injector: this._injector });
+    afterNextRender(
+      () => {
+        this._lightboxDialogEl?.nativeElement.showModal();
+        this._initLightboxSwiper(index);
+      },
+      { injector: this._injector },
+    );
   }
 
+  // Закрытие по кнопке/клику по фону: закрываем нативный диалог, очистка — в onDialogClose.
   closeLightbox(): void {
-    this.lightboxOpen.set(false);
+    const dlg = this._lightboxDialogEl?.nativeElement;
+    if (dlg?.open) {
+      dlg.close();
+    } else {
+      this.onDialogClose();
+    }
+  }
+
+  // Срабатывает и при нативном Escape, и при dlg.close() — единая точка очистки.
+  onDialogClose(): void {
     this._destroySwipers();
+    this.lightboxOpen.set(false);
   }
 
   private _initLightboxSwiper(startIndex: number): void {

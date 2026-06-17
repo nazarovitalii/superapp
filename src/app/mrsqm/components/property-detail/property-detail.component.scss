@@ -256,14 +256,29 @@
   pointer-events: none;
 }
 
-// ─── Lightbox Swiper (fullscreen) ─────────────────────────────────────────────
+// ─── Lightbox Swiper (fullscreen, нативный <dialog> + showModal) ──────────────
+// <dialog>.showModal() рендерит элемент в top layer браузера — выше любого
+// z-index и любого transform-контекста (right-panel-content имеет
+// `will-change: transform`, который иначе запирает position:fixed внутри панели).
 .lightbox-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
   background: rgba(0, 0, 0, 0.93);
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.93);
+  }
 }
 
 .lightbox-header {
