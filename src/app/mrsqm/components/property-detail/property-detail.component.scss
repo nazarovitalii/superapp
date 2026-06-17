@@ -256,6 +256,32 @@
   pointer-events: none;
 }
 
+// ─── Кнопка избранного ─────────────────────────────────────────────────────────
+.fav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 16px 0;
+  padding: 6px 14px;
+  border: 1px solid var(--separator-color, rgba(0, 0, 0, 0.12));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-color, inherit);
+  font-size: 13px;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.is-saved {
+    color: var(--c-primary, #1976d2);
+    border-color: var(--c-primary, #1976d2);
+  }
+}
+
 // ─── Lightbox Swiper (fullscreen, нативный <dialog> + showModal) ──────────────
 // <dialog>.showModal() рендерит элемент в top layer браузера — выше любого
 // z-index и любого transform-контекста (right-panel-content имеет

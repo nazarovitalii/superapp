@@ -162,6 +162,17 @@
         </div>
       }
 
+      <!-- Кнопка избранного под фото -->
+      <button
+        type="button"
+        class="fav-btn"
+        [class.is-saved]="isSaved()"
+        (click)="toggleSaved()"
+      >
+        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+        {{ isSaved() ? 'В избранном' : 'Добавить в избранное' }}
+      </button>
+
       <div class="detail-body">
         <!-- ── 2. Цена и тип сделки ──────────────────────────────────────── -->
         <div class="price-row">

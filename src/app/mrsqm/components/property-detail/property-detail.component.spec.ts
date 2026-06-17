@@ -3,6 +3,7 @@ import { PropertyDetailComponent } from './property-detail.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { SavedPropertiesService } from '../../services/saved-properties.service';
 import {
   FilterOptions,
   PropertyDetail,
@@ -27,6 +28,18 @@ class FakeCreate {
   options: Partial<FilterOptions> = {};
   async getFilterOptions(): Promise<FilterOptions> {
     return this.options as FilterOptions;
+  }
+}
+class FakeSaved {
+  saved = new Set<string>();
+  async getSavedIds(): Promise<Set<string>> {
+    return this.saved;
+  }
+  toggleResult = true;
+  toggleCalls: string[] = [];
+  async toggle(id: string): Promise<boolean> {
+    this.toggleCalls.push(id);
+    return this.toggleResult;
   }
 }
 
@@ -103,21 +116,24 @@ const makeComponent = (): {
   supa: FakeSupabase;
   photos: FakePhotos;
   create: FakeCreate;
+  saved: FakeSaved;
 } => {
   const supa = new FakeSupabase();
   const photos = new FakePhotos();
   const create = new FakeCreate();
+  const saved = new FakeSaved();
   TestBed.configureTestingModule({
     imports: [PropertyDetailComponent],
     providers: [
       { provide: MrsqmSupabaseService, useValue: supa },
       { provide: PropertyPhotoService, useValue: photos },
       { provide: PropertyCreateService, useValue: create },
+      { provide: SavedPropertiesService, useValue: saved },
     ],
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
-  return { comp: fixture.componentInstance, fixture, supa, photos, create };
+  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved };
 };
 
 describe('PropertyDetailComponent', () => {
@@ -296,5 +312,24 @@ describe('PropertyDetailComponent', () => {
       btn.textContent?.includes('Metrics'),
     );
     expect(hasMetricsButton).toBe(true);
+  });
+
+  it('toggleSaved дёргает сервис и переключает isSaved', async () => {
+    const { comp, supa, saved } = makeComponent();
+    supa.rpcResult = detail();
+    await comp.loadProperty();
+    expect(comp.isSaved()).toBe(false);
+    saved.toggleResult = true;
+    await comp.toggleSaved();
+    expect(saved.toggleCalls).toEqual(['p1']);
+    expect(comp.isSaved()).toBe(true);
+  });
+
+  it('loadProperty подхватывает существующее избранное', async () => {
+    const { comp, supa, saved } = makeComponent();
+    saved.saved = new Set(['p1']);
+    supa.rpcResult = detail();
+    await comp.loadProperty();
+    expect(comp.isSaved()).toBe(true);
   });
 });

@@ -32,6 +32,7 @@ import {
   ArchiveStatus,
   PropertyOwnerService,
 } from '../../services/property-owner.service';
+import { SavedPropertiesService } from '../../services/saved-properties.service';
 import Swiper from 'swiper';
 import { Navigation, Thumbs } from 'swiper/modules';
 
@@ -54,6 +55,7 @@ export class PropertyDetailComponent implements OnDestroy {
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _createService = inject(PropertyCreateService);
   private readonly _ownerService = inject(PropertyOwnerService);
+  private readonly _saved = inject(SavedPropertiesService);
   private readonly _injector = inject(Injector);
 
   @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
@@ -73,6 +75,7 @@ export class PropertyDetailComponent implements OnDestroy {
   readonly filterOptions = signal<FilterOptions | null>(null);
   readonly isLoading = signal(true);
   readonly activePhotoIdx = signal(0);
+  readonly isSaved = signal(false);
 
   readonly activeTab = signal<'details' | 'comments' | 'metrics'>('details');
   readonly commentsScope = signal<'all' | 'private'>('all');
@@ -191,12 +194,13 @@ export class PropertyDetailComponent implements OnDestroy {
     if (this._lightboxDialogEl?.nativeElement.open) {
       this.closeLightbox();
     }
-    const [detailRes, photosRes, optsRes] = await Promise.allSettled([
+    const [detailRes, photosRes, optsRes, savedRes] = await Promise.allSettled([
       this._supabase.rpc<PropertyDetail>('get_property', {
         p_property_id: id,
       }),
       this._photoService.getPhotos(id),
       this._createService.getFilterOptions(),
+      this._saved.getSavedIds(),
     ]);
     // Пока грузили, мог открыться другой объект — не затираем его данные.
     if (this.property().id !== id) {
@@ -211,6 +215,9 @@ export class PropertyDetailComponent implements OnDestroy {
     if (optsRes.status === 'fulfilled') {
       this.filterOptions.set(optsRes.value);
     }
+    if (savedRes.status === 'fulfilled') {
+      this.isSaved.set(savedRes.value.has(id));
+    }
     this.isLoading.set(false);
   }
 
@@ -224,6 +231,17 @@ export class PropertyDetailComponent implements OnDestroy {
     const len = this.photos().length;
     if (len <= 1) return;
     this.activePhotoIdx.set((this.activePhotoIdx() - 1 + len) % len);
+  }
+
+  // Добавить/убрать текущий объект из избранного (RPC save_property).
+  async toggleSaved(): Promise<void> {
+    const id = this.property().id;
+    try {
+      const saved = await this._saved.toggle(id);
+      this.isSaved.set(saved);
+    } catch {
+      // молча: избранное не критично, состояние не меняем
+    }
   }
 
   // Открыть fullscreen лайтбокс Swiper. DOM рендерится через @if, затем диалог поднимается
