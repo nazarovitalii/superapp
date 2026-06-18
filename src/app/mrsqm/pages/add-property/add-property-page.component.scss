@@ -256,6 +256,15 @@
   opacity: 0.7;
 }
 
+// Логотип девелопера в автокомплите — фиксированный маленький thumbnail (B7 fix)
+.dev-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
 // ─── Каскад адреса ───────────────────────────────────────────────────────
 .addr-trail {
   display: flex;
