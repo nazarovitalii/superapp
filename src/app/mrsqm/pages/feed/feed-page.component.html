@@ -14,7 +14,10 @@
       <span class="scope-count">· {{ foundCount() | number }}</span>
       <mat-icon>arrow_drop_down</mat-icon>
     </button>
-    <mat-menu #scopeMenu="matMenu">
+    <mat-menu
+      #scopeMenu="matMenu"
+      class="tb-menu"
+    >
       @for (o of scopeOptions; track o.value) {
         <button
           mat-menu-item
@@ -115,7 +118,10 @@
       <span>{{ segmentLabel() }}</span>
       <mat-icon>arrow_drop_down</mat-icon>
     </button>
-    <mat-menu #segMenu="matMenu">
+    <mat-menu
+      #segMenu="matMenu"
+      class="tb-menu"
+    >
       @for (o of segmentOptions; track o.label) {
         <button
           mat-menu-item
@@ -138,7 +144,10 @@
       <span>{{ dealLabel() }}</span>
       <mat-icon>arrow_drop_down</mat-icon>
     </button>
-    <mat-menu #dealMenu="matMenu">
+    <mat-menu
+      #dealMenu="matMenu"
+      class="tb-menu"
+    >
       @for (o of dealOptions; track o.value) {
         <button
           mat-menu-item

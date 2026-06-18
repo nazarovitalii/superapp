@@ -96,9 +96,10 @@
   }
 }
 
-// U-8: охват фиксированной ширины — самый длинный пункт «Friends Inventory · 8888»
+// U-8: охват фиксированной ширины — сокращена ~20% (13.5rem → 10.75rem),
+// поле поиска flex:1 заберёт освободившееся место
 .scope-select {
-  min-width: 13.5rem;
+  min-width: 10.75rem;
   justify-content: space-between;
 }
 
@@ -286,6 +287,19 @@
   }
 }
 
+// V-4: компактные пункты выпадающих меню тулбара (охват / сегмент / сделка).
+// Класс .tb-menu вешается на <mat-menu> → стиль scoped, не глобальный Material-override.
+::ng-deep .tb-menu .mat-mdc-menu-item {
+  font-size: 0.875rem; // 14px — кегль ленты
+  min-height: 36px; // компактная высота строки
+}
+
+::ng-deep .tb-menu .mat-mdc-menu-item .mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
 // ─── Мега-дропдаун типа (U-2: одна колонка ~240px) ──────────────────────────
 // Панель меню шире дефолтных 280px (класс задаётся через mat-menu class=).
 ::ng-deep .type-mega-panel {
@@ -425,17 +439,18 @@
 // Заголовки таблицы — те же пропорции что в grid карточки
 .table-header {
   display: grid;
-  // колонки 1:1 с .first-line карточки (чекбокс … фото, агентство, дата)
+  // V-2: адрес 2fr → 1.4fr (меньше гап перед Тип); дата 56px → 72px (вмещает «Yesterday»)
+  // Синхронно с .first-line в property-card.component.scss
   grid-template-columns:
     34px
-    minmax(110px, 2fr)
+    minmax(110px, 1.4fr)
     minmax(76px, 1fr)
     56px
     80px
     minmax(90px, 1fr)
     28px
     minmax(80px, 1.2fr)
-    56px;
+    72px;
   gap: var(--s);
   padding: var(--s) calc(var(--s) + 5px) var(--s) calc(var(--s-half) + 5px);
   position: sticky;
