@@ -38,6 +38,7 @@ import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { FeedSelectionService } from '../../services/feed-selection.service';
 import { MrsqmAuthService } from '../../services/auth.service';
+import { PropertyOwnerService } from '../../services/property-owner.service';
 
 // W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
 const COMMERCIAL_ALLOWLIST = new Set([
@@ -80,6 +81,7 @@ export class FeedPageComponent {
   // Множественный выбор чекбоксами — общий сервис с меню в главном хедере.
   readonly selection = inject(FeedSelectionService);
   private readonly _auth = inject(MrsqmAuthService);
+  private readonly _owner = inject(PropertyOwnerService);
   private readonly _destroyRef = inject(DestroyRef);
 
   // W-1: inline-ряд чипов локаций (шаблонная ссылка #locRow)
@@ -398,6 +400,17 @@ export class FeedPageComponent {
       this.offset.set(0);
       this.properties.set([]);
       void this._load();
+    });
+
+    // W-7: перезагружаем ленту после действий владельца (актуализация/архив/правка цены).
+    // t=0 — первый запуск, пропускаем (лента уже грузится выше).
+    effect(() => {
+      const t = this._owner.changedTick();
+      if (t > 0) {
+        this.offset.set(0);
+        this.properties.set([]);
+        void this._load();
+      }
     });
 
     // W-1: effect в injection context — пересчитываем переполнение ряда локаций

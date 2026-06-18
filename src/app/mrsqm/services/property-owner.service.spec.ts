@@ -4,8 +4,11 @@ import { MrsqmSupabaseService } from './supabase.service';
 
 class FakeSupabase {
   calls: { fn: string; params?: Record<string, unknown> }[] = [];
+  shouldReject = false;
+
   async rpc<T>(fn: string, params?: Record<string, unknown>): Promise<T> {
     this.calls.push({ fn, params });
+    if (this.shouldReject) throw new Error('rpc error');
     return true as T;
   }
 }
@@ -47,5 +50,39 @@ describe('PropertyOwnerService', () => {
       fn: 'archive_property',
       params: { p_property_id: 'p1', p_status: 'archived_sold' },
     });
+  });
+
+  // Тесты W-7: changedTick бампается после успешного RPC, НЕ бампается при reject.
+
+  it('changedTick увеличивается после успешной актуализации', async () => {
+    const before = svc.changedTick();
+    await svc.actualizeProperty('p2');
+    expect(svc.changedTick()).toBe(before + 1);
+  });
+
+  it('changedTick НЕ увеличивается при ошибке актуализации', async () => {
+    fake.shouldReject = true;
+    const before = svc.changedTick();
+    await expectAsync(svc.actualizeProperty('p2')).toBeRejected();
+    expect(svc.changedTick()).toBe(before);
+  });
+
+  it('changedTick увеличивается после успешной архивации', async () => {
+    const before = svc.changedTick();
+    await svc.archiveProperty('p3', 'archived_withdrawn');
+    expect(svc.changedTick()).toBe(before + 1);
+  });
+
+  it('changedTick НЕ увеличивается при ошибке архивации', async () => {
+    fake.shouldReject = true;
+    const before = svc.changedTick();
+    await expectAsync(svc.archiveProperty('p3', 'archived_withdrawn')).toBeRejected();
+    expect(svc.changedTick()).toBe(before);
+  });
+
+  it('changedTick увеличивается после успешного редактирования', async () => {
+    const before = svc.changedTick();
+    await svc.updateProperty('p4', 100000, null);
+    expect(svc.changedTick()).toBe(before + 1);
   });
 });

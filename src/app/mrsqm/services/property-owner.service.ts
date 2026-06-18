@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { MrsqmSupabaseService } from './supabase.service';
 
 // Действия владельца над своим объектом — через SECURITY DEFINER RPC
@@ -9,6 +9,10 @@ export type ArchiveStatus = 'archived_sold' | 'archived_withdrawn';
 @Injectable({ providedIn: 'root' })
 export class PropertyOwnerService {
   private readonly _supabase = inject(MrsqmSupabaseService);
+
+  // Тик «владелец что-то изменил» — лента слушает и перезагружается (W-7).
+  // Бампается только после успешного RPC; ошибка — бампа нет.
+  readonly changedTick = signal(0);
 
   // Редактирование: только цена и описание.
   async updateProperty(
@@ -21,6 +25,7 @@ export class PropertyOwnerService {
       p_price: price,
       p_description: description,
     });
+    this.changedTick.update((n) => n + 1);
   }
 
   // Актуализация: поднять объект в ленте (last_actualized_at = now()).
@@ -28,6 +33,7 @@ export class PropertyOwnerService {
     await this._supabase.rpc<boolean>('actualize_property', {
       p_property_id: propertyId,
     });
+    this.changedTick.update((n) => n + 1);
   }
 
   // Архивация: смена статуса (продан / снят).
@@ -36,5 +42,6 @@ export class PropertyOwnerService {
       p_property_id: propertyId,
       p_status: status,
     });
+    this.changedTick.update((n) => n + 1);
   }
 }
