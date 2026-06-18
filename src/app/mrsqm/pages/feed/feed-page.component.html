@@ -83,8 +83,8 @@
           }
         </div>
 
-        <!-- W-1: кнопка-стрелка — driver = количество (>= 2), не переполнение -->
-        @if (filter.locationFilters().length >= 2) {
+        <!-- W-1: кнопка-стрелка — driver = количество (>= 2) ИЛИ панель открыта -->
+        @if (filter.locationFilters().length >= 2 || locExpanded()) {
           <button
             type="button"
             class="tb-loc-toggle"

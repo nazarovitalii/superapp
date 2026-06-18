@@ -368,6 +368,8 @@ export class FeedPageComponent {
 
   // Убираем конкретную локацию по id (мультиселект).
   // При обнулении списка — сворачиваем раскрытую панель.
+  // Кнопка-стрелка в шаблоне видна пока length >= 2 ИЛИ locExpanded(),
+  // поэтому «осиротевшей» открытой панели без кнопки больше не возникает.
   removeLocation(id: string): void {
     this.filter.removeLocation(id);
     if (this.filter.locationFilters().length === 0) {

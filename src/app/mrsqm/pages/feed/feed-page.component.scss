@@ -391,10 +391,12 @@
     }
   }
 
-  // 1B: иконка check у выбранного пункта
+  // 1B: иконка check у выбранного пункта — отцентрована вертикально
   .mat-mdc-menu-item .tb-menu-check {
     position: absolute;
     left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 18px;
     width: 18px;
     height: 18px;
