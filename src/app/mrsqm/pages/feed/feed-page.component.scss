@@ -107,14 +107,7 @@
     color: var(--text-color-muted);
   }
 
-  &.isActive {
-    border-color: var(--c-primary);
-    color: var(--c-primary);
-
-    mat-icon {
-      color: var(--c-primary);
-    }
-  }
+  // Выбор конкретной опции НЕ подсвечивает селект синим — всегда нейтральный вид.
 }
 
 // Селекты фиксированной ширины — каждый по своей самой длинной метке,
@@ -149,15 +142,11 @@
   justify-content: space-between;
 }
 
-// Охват: счётчик внутри пилюли («Public · 1 154»)
+// Охват: счётчик в пилюле — отделён ~3 пробелами от метки, серый, без подсветки
 .scope-select .scope-count {
+  margin-left: var(--s);
   font-weight: 400;
   color: var(--text-color-muted);
-}
-
-.scope-select.isActive .scope-count {
-  color: var(--c-primary);
-  opacity: 0.7;
 }
 
 // ─── Автокомплит «Адрес или агент» ──────────────────────────────────────────
@@ -222,10 +211,10 @@
   }
 }
 
-// W-1: счётчик скрытых адресов рядом со стрелкой («+2»)
+// W-1: счётчик скрытых адресов рядом со стрелкой («+2») — 14px жирный, в уровень строки
 .tb-loc-count {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1;
   color: var(--c-primary);
   white-space: nowrap;
@@ -261,6 +250,11 @@
   min-width: 0;
   // лёгкий отступ слева — текст «Ещё адрес» не липнет к чипу
   padding-left: var(--s-quarter);
+  // выравниваем по тексту строки (чип/«+N»): без верт. паддинга + оптический подъём на 1px
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
+  transform: translateY(-1px);
   border: none;
   background: transparent;
   color: var(--text-color);
