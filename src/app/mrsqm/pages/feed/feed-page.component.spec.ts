@@ -4,7 +4,9 @@ import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { MrsqmAuthService } from '../../services/auth.service';
-import { FilterOptions } from '../../types/database';
+import { FilterOptions, PropertyFeedItem } from '../../types/database';
+import { SnackService } from '../../../core/snack/snack.service';
+import { SavedPropertiesService } from '../../services/saved-properties.service';
 
 // Заглушка Supabase: фиксируем параметры вызова get_feed.
 class FakeSupabase {
@@ -33,11 +35,32 @@ class FakeAuth {
   currentUser = (): null => null;
 }
 
+class FakeSnack {
+  calls: unknown[] = [];
+  open(params: unknown): void {
+    this.calls.push(params);
+  }
+}
+
+class FakeSaved {
+  toggleResult = true;
+  shouldThrow = false;
+  async getSavedIds(): Promise<Set<string>> {
+    return new Set();
+  }
+  async toggle(_id: string): Promise<boolean> {
+    if (this.shouldThrow) throw new Error('rpc fail');
+    return this.toggleResult;
+  }
+}
+
 const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
 describe('FeedPageComponent', () => {
   let fake: FakeSupabase;
   let filter: FeedFilterService;
+  let fakeSnack: FakeSnack;
+  let fakeSaved: FakeSaved;
 
   const build = (): FeedPageComponent => {
     TestBed.configureTestingModule({
@@ -46,6 +69,8 @@ describe('FeedPageComponent', () => {
         { provide: MrsqmSupabaseService, useValue: fake },
         { provide: PanelContentService, useClass: FakePanels },
         { provide: MrsqmAuthService, useClass: FakeAuth },
+        { provide: SnackService, useValue: fakeSnack },
+        { provide: SavedPropertiesService, useValue: fakeSaved },
       ],
     });
     filter = TestBed.inject(FeedFilterService);
@@ -54,6 +79,8 @@ describe('FeedPageComponent', () => {
 
   beforeEach(() => {
     fake = new FakeSupabase();
+    fakeSnack = new FakeSnack();
+    fakeSaved = new FakeSaved();
     TestBed.resetTestingModule();
   });
 
@@ -346,5 +373,46 @@ describe('FeedPageComponent', () => {
     c.removeLocation('loc-1');
     // Ещё есть одна локация — панель остаётся раскрытой
     expect(c.locExpanded()).toBe(true);
+  });
+
+  // ─── Тост-подтверждение избранного ──────────────────────────────────────────
+  const minimalFeedItem = (id = 'p1'): PropertyFeedItem =>
+    ({ id }) as unknown as PropertyFeedItem;
+
+  it('toggleSaved: добавление вызывает SnackService.open с «Добавлено в избранное»', async () => {
+    fakeSaved.toggleResult = true; // toggle вернёт isSaved=true
+    const c = build();
+    await flush();
+    await c.toggleSaved(minimalFeedItem());
+    expect(fakeSnack.calls.length).toBe(1);
+    const call = fakeSnack.calls[0] as { msg: string; type: string; ico: string };
+    expect(call.msg).toBe('Добавлено в избранное');
+    expect(call.type).toBe('SUCCESS');
+    expect(call.ico).toBe('bookmark');
+  });
+
+  it('toggleSaved: удаление вызывает SnackService.open с «Убрано из избранного»', async () => {
+    fakeSaved.toggleResult = false; // toggle вернёт isSaved=false
+    const c = build();
+    await flush();
+    // Предварительно помечаем как сохранённый, чтобы оптимистично удалить
+    c.savedIds.set(new Set(['p1']));
+    await c.toggleSaved(minimalFeedItem());
+    expect(fakeSnack.calls.length).toBe(1);
+    const call = fakeSnack.calls[0] as { msg: string; type: string; ico: string };
+    expect(call.msg).toBe('Убрано из избранного');
+    expect(call.type).toBe('SUCCESS');
+    expect(call.ico).toBe('bookmark_border');
+  });
+
+  it('toggleSaved: ошибка RPC вызывает SnackService.open с «Не удалось обновить избранное»', async () => {
+    fakeSaved.shouldThrow = true;
+    const c = build();
+    await flush();
+    await c.toggleSaved(minimalFeedItem());
+    expect(fakeSnack.calls.length).toBe(1);
+    const call = fakeSnack.calls[0] as { msg: string; type: string };
+    expect(call.msg).toBe('Не удалось обновить избранное');
+    expect(call.type).toBe('ERROR');
   });
 });

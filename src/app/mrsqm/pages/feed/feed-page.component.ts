@@ -35,6 +35,8 @@ import { SavedPropertiesService } from '../../services/saved-properties.service'
 import { FeedSelectionService } from '../../services/feed-selection.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { PropertyOwnerService } from '../../services/property-owner.service';
+import { SnackService } from '../../../core/snack/snack.service';
+import { SnackType } from '../../../core/snack/snack.model';
 
 // W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
 const COMMERCIAL_ALLOWLIST = new Set([
@@ -73,6 +75,7 @@ export class FeedPageComponent {
   private readonly _panels = inject(PanelContentService);
   private readonly _createService = inject(PropertyCreateService);
   private readonly _saved = inject(SavedPropertiesService);
+  private readonly _snack = inject(SnackService);
   readonly filter = inject(FeedFilterService);
   // Множественный выбор чекбоксами — общий сервис с меню в главном хедере.
   readonly selection = inject(FeedSelectionService);
@@ -443,13 +446,34 @@ export class FeedPageComponent {
       if (isSaved) fixed.add(id);
       else fixed.delete(id);
       this.savedIds.set(fixed);
+      this._notify(
+        isSaved ? 'Добавлено в избранное' : 'Убрано из избранного',
+        'SUCCESS',
+        isSaved ? 'bookmark' : 'bookmark_border',
+      );
     } catch {
       // откат при ошибке
       const revert = new Set(this.savedIds());
       if (wasSaved) revert.add(id);
       else revert.delete(id);
       this.savedIds.set(revert);
+      this._notify('Не удалось обновить избранное', 'ERROR');
     }
+  }
+
+  /** Помощник: показать снек-сообщение (низ-лево, стиль mrsqm-snack). */
+  private _notify(msg: string, type: SnackType, ico?: string): void {
+    this._snack.open({
+      msg,
+      type,
+      ...(ico ? { ico } : {}),
+      isSkipTranslate: true,
+      config: {
+        horizontalPosition: 'left',
+        verticalPosition: 'bottom',
+        panelClass: 'mrsqm-snack',
+      },
+    });
   }
 
   async loadMore(): Promise<void> {
