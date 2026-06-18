@@ -25,19 +25,31 @@
   padding: var(--s) 5px var(--s-half);
 }
 
-.toolbar-spacer {
-  flex: 1 1 auto;
-}
-
-.toolbar-icon-btn {
+// U-11: иконко-кнопки в квадратной рамке вместо mat-icon-button
+// 40×40px, бордюр/фон/скругление как у .tb-select
+.tb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
+  width: var(--task-first-line-min-height, 40px);
+  height: var(--task-first-line-min-height, 40px);
+  border-radius: var(--task-border-radius);
+  border: 1px solid var(--extra-border-color);
+  background: var(--task-c-bg);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--text-color-muted);
+  }
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
+    color: var(--text-color-muted);
     line-height: 20px;
   }
 }
@@ -47,14 +59,15 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-quarter);
-  height: 36px;
+  // U-1: высота всех контролов тулбара = 40px
+  height: var(--task-first-line-min-height, 40px);
   padding: 0 var(--s-quarter) 0 var(--s);
-  // Скругление и белый фон — как строка объекта в ленте (item 13)
+  // Скругление и белый фон — как строка объекта в ленте
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
   background: var(--task-c-bg);
   color: inherit;
-  // Размер текста = тело ленты (14px), без жирности (item 13)
+  // Размер текста = тело ленты (14px), без жирности
   font-size: 0.875rem;
   font-weight: 400;
   white-space: nowrap;
@@ -83,6 +96,12 @@
   }
 }
 
+// U-8: охват фиксированной ширины — самый длинный пункт «Friends Inventory · 8888»
+.scope-select {
+  min-width: 13.5rem;
+  justify-content: space-between;
+}
+
 // Охват: счётчик внутри пилюли («Public · 1 154»)
 .scope-select .scope-count {
   font-weight: 400;
@@ -100,10 +119,11 @@
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  // Шире остальных контролов — основное поле поиска адрес/агент
-  flex: 2 1 300px;
-  min-width: 220px;
-  height: 36px;
+  // U-10: растягивается на свободное место тулбара
+  flex: 1 1 auto;
+  min-width: 160px;
+  // U-1: высота 40px
+  height: var(--task-first-line-min-height, 40px);
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
@@ -243,12 +263,12 @@
   white-space: nowrap;
 }
 
-// Чип фильтров (есть активные): tune + количество, в цветах primary
+// U-1: чип фильтров (активные) — высота 40px
 .filter-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--s-quarter);
-  height: 36px;
+  height: var(--task-first-line-min-height, 40px);
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
   border: 1px solid var(--c-primary);
@@ -266,7 +286,7 @@
   }
 }
 
-// ─── Мега-дропдаун Residential / Commercial ─────────────────────────────────
+// ─── Мега-дропдаун типа (U-2: одна колонка ~240px) ──────────────────────────
 // Панель меню шире дефолтных 280px (класс задаётся через mat-menu class=).
 ::ng-deep .type-mega-panel {
   max-width: none !important;
@@ -276,73 +296,52 @@
   }
 }
 
+// U-2: одна колонка вместо двух
 .type-mega {
-  width: 560px;
+  width: 240px;
   max-width: 92vw;
 }
 
-.type-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+// U-2: ряд табов Residential / Commercial
+.type-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--extra-border-color);
 }
 
-.type-col {
-  padding: var(--s-half) 0;
+.type-tab {
+  flex: 1;
+  padding: var(--s-half) var(--s);
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  // U-2: единый кегль 14px, semibold для табов
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 
-  & + & {
-    border-left: 1px solid var(--extra-border-color);
+  &:hover {
+    color: var(--text-color);
+  }
+
+  &.active {
+    color: var(--c-primary);
+    border-bottom-color: var(--c-primary);
   }
 }
 
-// Заголовок-категория («Все Residential/Commercial»)
-.type-cat-head {
-  display: flex;
-  align-items: center;
-  gap: var(--s-half);
+// Строки типов (Все / конкретный тип) — 14px, единый кегль
+.type-unit {
+  display: block;
   width: 100%;
   padding: var(--s-half) var(--s);
   border: none;
   background: transparent;
   color: var(--text-color);
-  // Заголовок чуть крупнее тела, semibold (item 14)
-  font-size: 0.9375rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    color: var(--c-primary);
-  }
-
-  small {
-    margin-left: auto;
-    // «Все» — тот же кегль что подписи, не микро-текст
-    font-size: 0.8125rem;
-    font-weight: 400;
-    color: var(--text-color-muted);
-  }
-
-  &:hover {
-    background: var(--bg-lighter, var(--surface-0));
-  }
-
-  &.active {
-    color: var(--c-primary);
-  }
-}
-
-.type-unit {
-  display: block;
-  width: 100%;
-  // Больше воздуха по вертикали + ровный отступ под иконку заголовка (item 14)
-  padding: var(--s-half) var(--s) var(--s-half) var(--s3);
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  // Размер = тело ленты (14px) — выровнено с остальными текстами (item 14)
+  // U-2: единый кегль 14px
   font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
@@ -362,7 +361,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-quarter);
-  padding: var(--s-quarter) var(--s) var(--s-half) var(--s3);
+  padding: var(--s-quarter) var(--s) var(--s-half) var(--s2);
 }
 
 .type-sub-chip {
@@ -374,7 +373,7 @@
   border: 1px solid var(--extra-border-color);
   background: transparent;
   color: var(--text-color-muted);
-  // 13px — на ступень меньше тела, но не микро-текст (item 14)
+  // U-2: 13px — на ступень меньше тела, но не микро-текст
   font-size: 0.8125rem;
   font-weight: 400;
   cursor: pointer;
@@ -457,10 +456,16 @@
   white-space: nowrap;
 }
 
+// U-5: выровнять заголовки под ячейки карточки
+// th-address — слева (дефолт); th-photo — пусто
+.th-type,
 .th-beds,
 .th-size,
 .th-price,
-.th-agency,
+.th-agency {
+  text-align: center;
+}
+
 .th-date {
   text-align: right;
 }

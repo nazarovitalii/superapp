@@ -185,4 +185,39 @@ describe('FeedPageComponent', () => {
     c.toggleSubType('s1');
     expect(filter.filters().subTypeIds).toEqual([]);
   });
+
+  // ─── U-2: сигнал typePanelCat ───────────────────────────────────────────────
+  it('typePanelCat по умолчанию = residential', () => {
+    const c = build();
+    expect(c.typePanelCat()).toBe('residential');
+  });
+
+  it('setTypePanelCat переключает таб панели на commercial', () => {
+    const c = build();
+    c.setTypePanelCat('commercial');
+    expect(c.typePanelCat()).toBe('commercial');
+  });
+
+  it('setTypePanelCat переключает обратно на residential', () => {
+    const c = build();
+    c.setTypePanelCat('commercial');
+    c.setTypePanelCat('residential');
+    expect(c.typePanelCat()).toBe('residential');
+  });
+
+  it('onTypeMenuOpened синхронизирует typePanelCat с текущей категорией фильтра', () => {
+    const c = build();
+    filter.selectCategoryAll('commercial');
+    // До открытия — дефолт
+    expect(c.typePanelCat()).toBe('residential');
+    c.onTypeMenuOpened();
+    expect(c.typePanelCat()).toBe('commercial');
+  });
+
+  it('onTypeMenuOpened при null-категории оставляет residential', () => {
+    const c = build();
+    // фильтр не выбран → category() = null
+    c.onTypeMenuOpened();
+    expect(c.typePanelCat()).toBe('residential');
+  });
 });

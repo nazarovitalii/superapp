@@ -28,7 +28,7 @@
       }
     </mat-menu>
 
-    <!-- 2. Автокомплит «Адрес или агент» -->
+    <!-- 2. Автокомплит «Адрес или агент» (U-10: flex:1 1 auto — съедает свободное место) -->
     <div class="tb-search">
       <mat-icon class="tb-search-icon">place</mat-icon>
       @if (filter.locationFilter(); as loc) {
@@ -152,12 +152,13 @@
       }
     </mat-menu>
 
-    <!-- 5. Тип объекта: мега-дропдаун Residential / Commercial -->
+    <!-- 5. Тип объекта: компактный дропдаун одна колонка (U-2) -->
     <button
       type="button"
       class="tb-select tb-type-select"
       [class.isActive]="hasTypeSelection()"
       [matMenuTriggerFor]="typeMenu"
+      (menuOpened)="onTypeMenuOpened()"
     >
       <span>{{ typeLabel() }}</span>
       <mat-icon>arrow_drop_down</mat-icon>
@@ -172,87 +173,63 @@
           (click)="$event.stopPropagation()"
           (keydown)="$event.stopPropagation()"
         >
-          <div class="type-cols">
-            <!-- Residential -->
-            <div class="type-col">
-              <button
-                type="button"
-                class="type-cat-head"
-                [class.active]="
-                  filter.category() === 'residential' && !filter.filters().unitTypeId
-                "
-                (click)="selectCategoryAll('residential')"
-              >
-                <mat-icon>home_work</mat-icon>
-                <span>Residential</span>
-                <small>Все</small>
-              </button>
-              @for (u of typeTree().residential.units; track u.id) {
-                <button
-                  type="button"
-                  class="type-unit"
-                  [class.active]="filter.filters().unitTypeId === u.id"
-                  (click)="selectUnitType('residential', u.id)"
-                >
-                  {{ u.label }}
-                </button>
-                @if (filter.filters().unitTypeId === u.id && u.subs.length) {
-                  <div class="type-subs">
-                    @for (s of u.subs; track s.id) {
-                      <button
-                        type="button"
-                        class="type-sub-chip"
-                        [class.active]="isSubTypeActive(s.id)"
-                        (click)="toggleSubType(s.id)"
-                      >
-                        {{ s.label_en }}
-                      </button>
-                    }
-                  </div>
-                }
-              }
-            </div>
-
-            <!-- Commercial -->
-            <div class="type-col">
-              <button
-                type="button"
-                class="type-cat-head"
-                [class.active]="
-                  filter.category() === 'commercial' && !filter.filters().unitTypeId
-                "
-                (click)="selectCategoryAll('commercial')"
-              >
-                <mat-icon>storefront</mat-icon>
-                <span>Commercial</span>
-                <small>Все</small>
-              </button>
-              @for (u of typeTree().commercial.units; track u.id) {
-                <button
-                  type="button"
-                  class="type-unit"
-                  [class.active]="filter.filters().unitTypeId === u.id"
-                  (click)="selectUnitType('commercial', u.id)"
-                >
-                  {{ u.label }}
-                </button>
-                @if (filter.filters().unitTypeId === u.id && u.subs.length) {
-                  <div class="type-subs">
-                    @for (s of u.subs; track s.id) {
-                      <button
-                        type="button"
-                        class="type-sub-chip"
-                        [class.active]="isSubTypeActive(s.id)"
-                        (click)="toggleSubType(s.id)"
-                      >
-                        {{ s.label_en }}
-                      </button>
-                    }
-                  </div>
-                }
-              }
-            </div>
+          <!-- Табы Residential / Commercial -->
+          <div class="type-tabs">
+            <button
+              type="button"
+              class="type-tab"
+              [class.active]="typePanelCat() === 'residential'"
+              (click)="setTypePanelCat('residential')"
+            >
+              Residential
+            </button>
+            <button
+              type="button"
+              class="type-tab"
+              [class.active]="typePanelCat() === 'commercial'"
+              (click)="setTypePanelCat('commercial')"
+            >
+              Commercial
+            </button>
           </div>
+
+          <!-- Строка «Все {категория}» -->
+          <button
+            type="button"
+            class="type-unit"
+            [class.active]="
+              filter.category() === typePanelCat() && !filter.filters().unitTypeId
+            "
+            (click)="selectCategoryAll(typePanelCat())"
+          >
+            Все {{ typePanelCat() === 'residential' ? 'Residential' : 'Commercial' }}
+          </button>
+
+          <!-- Список unit-типов активной категории -->
+          @for (u of typeTree()[typePanelCat()].units; track u.id) {
+            <button
+              type="button"
+              class="type-unit"
+              [class.active]="filter.filters().unitTypeId === u.id"
+              (click)="selectUnitType(typePanelCat(), u.id)"
+            >
+              {{ u.label }}
+            </button>
+            @if (filter.filters().unitTypeId === u.id && u.subs.length) {
+              <div class="type-subs">
+                @for (s of u.subs; track s.id) {
+                  <button
+                    type="button"
+                    class="type-sub-chip"
+                    [class.active]="isSubTypeActive(s.id)"
+                    (click)="toggleSubType(s.id)"
+                  >
+                    {{ s.label_en }}
+                  </button>
+                }
+              </div>
+            }
+          }
 
           <div class="type-mega-footer">
             <button
@@ -274,12 +251,10 @@
       </ng-template>
     </mat-menu>
 
-    <span class="toolbar-spacer"></span>
-
-    <!-- 6. Сортировка -->
+    <!-- 6. Сортировка (U-11: обычная кнопка в квадратной рамке, не mat-icon-button) -->
     <button
-      class="toolbar-icon-btn"
-      mat-icon-button
+      type="button"
+      class="tb-icon-btn"
       [matMenuTriggerFor]="sortMenu"
       [attr.aria-label]="'Сортировка'"
       title="Сортировка"
@@ -300,7 +275,7 @@
       }
     </mat-menu>
 
-    <!-- 7. Фильтры: при активных — чип с количеством -->
+    <!-- 7. Фильтры: при активных — чип с количеством, иначе — кнопка в рамке (U-11) -->
     @if (filter.activeFilterCount() > 0) {
       <button
         type="button"
@@ -313,8 +288,8 @@
       </button>
     } @else {
       <button
-        class="toolbar-icon-btn"
-        mat-icon-button
+        type="button"
+        class="tb-icon-btn"
         (click)="toggleFilterPanel()"
         [attr.aria-label]="'Фильтры'"
         title="Фильтры"
@@ -324,7 +299,7 @@
     }
   </div>
 
-  <!-- Шапка таблицы — колонки -->
+  <!-- Шапка таблицы — колонки (U-5: text-align выровнен под ячейки карточки) -->
   <div class="table-header">
     <div class="th th-select"></div>
     <div class="th th-address">Адрес</div>

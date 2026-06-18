@@ -261,6 +261,19 @@ export class FeedPageComponent {
     this.filter.clearType();
   }
 
+  // ─── Таб-переключатель внутри дропдауна типа (U-2) ────────────────────────
+  // Показывает список Residential или Commercial без применения фильтра.
+  readonly typePanelCat = signal<PropertyCategory>('residential');
+
+  setTypePanelCat(c: PropertyCategory): void {
+    this.typePanelCat.set(c);
+  }
+
+  // Синхронизация таба с текущей категорией фильтра при открытии меню.
+  onTypeMenuOpened(): void {
+    this.setTypePanelCat(this.filter.category() ?? 'residential');
+  }
+
   // ─── Автокомплит «Адрес или агент» ─────────────────────────────────────────
   readonly searchInput = signal<string>('');
   readonly locationResults = signal<LocationSearchItem[]>([]);
