@@ -56,17 +56,21 @@
   }
 }
 
-// «Поделиться» выбранным — как иконка-кнопка фильтра, но подсвечена акцентом
+// «Поделиться» выбранным — сплошная акцентная заливка (белая иконка),
+// чтобы кнопка явно выделялась, а не терялась контуром.
 .tb-share-btn {
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--palette-primary-contrast-500, #fff);
 
   &:hover {
     border-color: var(--c-primary);
+    background: var(--c-primary);
+    filter: brightness(1.08);
   }
 
   mat-icon {
-    color: var(--c-primary);
+    color: var(--palette-primary-contrast-500, #fff);
   }
 }
 
