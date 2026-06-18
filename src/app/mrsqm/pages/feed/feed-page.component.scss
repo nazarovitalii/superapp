@@ -300,58 +300,72 @@
   height: 20px;
 }
 
-// ─── Мега-дропдаун типа (U-2: одна колонка ~240px) ──────────────────────────
+// ─── Мега-дропдаун типа (V-9: полировка — сегмент-табы, состояния, чипы) ────
 // Панель меню шире дефолтных 280px (класс задаётся через mat-menu class=).
 ::ng-deep .type-mega-panel {
   max-width: none !important;
+  // V-9: мягкое скругление как у карточек
+  border-radius: var(--card-border-radius) !important;
+  overflow: hidden;
 
   .mat-mdc-menu-content {
     padding: 0 !important;
   }
 }
 
-// U-2: одна колонка вместо двух
+// U-2: одна колонка вместо двух; V-9: внутренний отступ
 .type-mega {
-  width: 240px;
+  width: 244px;
   max-width: 92vw;
+  padding: var(--s-quarter);
 }
 
-// U-2: ряд табов Residential / Commercial
+// V-9: сегмент-контрол вместо подчёркнутых табов
 .type-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--extra-border-color);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-quarter);
+  padding: var(--s-quarter);
+  margin-bottom: var(--s-quarter);
+  background: var(--bg-darker);
+  border-radius: var(--task-border-radius);
 }
 
 .type-tab {
-  flex: 1;
-  padding: var(--s-half) var(--s);
+  height: 34px;
   border: none;
   background: transparent;
-  color: var(--text-color-muted);
+  cursor: pointer;
+  border-radius: var(--task-border-radius);
   // U-2: единый кегль 14px, semibold для табов
   font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: var(--text-color-muted);
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+    background var(--transition-duration-s) ease,
+    color var(--transition-duration-s) ease;
 
   &:hover {
     color: var(--text-color);
   }
 
+  // V-9: активный таб — белый фон (task-c-bg) + тень + primary-цвет
   &.active {
+    background: var(--task-c-bg);
     color: var(--c-primary);
-    border-bottom-color: var(--c-primary);
+    font-weight: 600;
+    box-shadow: var(--task-shadow);
   }
 }
 
-// Строки типов (Все / конкретный тип) — 14px, единый кегль
+// Строки типов (Все / конкретный тип) — 14px, единый кегль; V-9: flex + hover-фон
 .type-unit {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
+  min-height: 36px;
   padding: var(--s-half) var(--s);
+  margin: 1px 0;
   border: none;
   background: transparent;
   color: var(--text-color);
@@ -359,18 +373,24 @@
   font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
+  border-radius: var(--task-border-radius);
+  transition:
+    background var(--transition-duration-s) ease,
+    color var(--transition-duration-s) ease;
 
   &:hover {
-    background: var(--bg-lighter, var(--surface-0));
+    background: var(--bg-lighter);
   }
 
+  // V-9: активная строка — primary-цвет + лёгкий фон через state-selected
   &.active {
     color: var(--c-primary);
     font-weight: 600;
+    background: var(--state-selected);
   }
 }
 
-// Подтипы выбранного типа — чипами
+// Подтипы выбранного типа — чипами; V-9: вложенный отступ
 .type-subs {
   display: flex;
   flex-wrap: wrap;
@@ -378,10 +398,11 @@
   padding: var(--s-quarter) var(--s) var(--s-half) var(--s2);
 }
 
+// V-9: чипы — hover/active состояния + плавные переходы
 .type-sub-chip {
   display: inline-flex;
   align-items: center;
-  height: 30px;
+  height: 28px;
   padding: 0 12px;
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
@@ -391,26 +412,35 @@
   font-size: 0.8125rem;
   font-weight: 400;
   cursor: pointer;
+  transition:
+    border-color var(--transition-duration-s) ease,
+    background var(--transition-duration-s) ease,
+    color var(--transition-duration-s) ease;
 
   &:hover {
     border-color: var(--text-color-muted);
+    color: var(--text-color);
   }
 
   &.active {
     background: var(--c-primary);
     color: var(--palette-primary-contrast-500, #fff);
     border-color: var(--c-primary);
+    font-weight: 500;
   }
 }
 
+// V-9: футер — разделитель + отступ сверху
 .type-mega-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--s-half) var(--s);
+  margin-top: var(--s-quarter);
   border-top: 1px solid var(--extra-border-color);
 }
 
+// V-9: кнопка сброса — плавный переход цвета
 .type-reset {
   border: none;
   background: transparent;
@@ -418,14 +448,16 @@
   font-size: 0.875rem;
   font-weight: 400;
   cursor: pointer;
+  transition: color var(--transition-duration-s) ease;
 
   &:hover {
     color: var(--text-color);
   }
 }
 
+// V-9: кнопка «Готово» — primary-фон + hover-яркость
 .type-done {
-  height: 34px;
+  height: 32px;
   padding: 0 var(--s2);
   border: none;
   border-radius: var(--task-border-radius);
@@ -434,6 +466,11 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  transition: filter var(--transition-duration-s) ease;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
 }
 
 // Заголовки таблицы — те же пропорции что в grid карточки
