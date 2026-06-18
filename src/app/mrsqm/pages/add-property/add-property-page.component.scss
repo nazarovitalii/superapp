@@ -446,6 +446,17 @@
   color: var(--text-color);
 }
 
+// Компактные чекбоксы: галочка рядом с меткой слева (maid/hotel/vastu)
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  font-size: 15px;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
 .note {
   font-size: 14px;
   color: var(--text-color-muted);

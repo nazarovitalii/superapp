@@ -369,33 +369,33 @@
               @if (fields().maid || fields().hotelPool || fields().vastu) {
                 <div class="field">
                   @if (fields().maid) {
-                    <label class="toggle-row">
-                      <span>Maid room</span>
+                    <label class="check-row">
                       <input
                         type="checkbox"
                         [ngModel]="isMaid()"
                         (ngModelChange)="isMaid.set($event)"
                       />
+                      <span>Maid room</span>
                     </label>
                   }
                   @if (fields().hotelPool) {
-                    <label class="toggle-row">
-                      <span>Hotel apartment</span>
+                    <label class="check-row">
                       <input
                         type="checkbox"
                         [ngModel]="isHotelPool()"
                         (ngModelChange)="isHotelPool.set($event)"
                       />
+                      <span>Hotel apartment</span>
                     </label>
                   }
                   @if (fields().vastu) {
-                    <label class="toggle-row">
-                      <span>Vastu</span>
+                    <label class="check-row">
                       <input
                         type="checkbox"
                         [ngModel]="isVastu()"
                         (ngModelChange)="isVastu.set($event)"
                       />
+                      <span>Vastu</span>
                     </label>
                   }
                 </div>
