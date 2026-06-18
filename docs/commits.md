@@ -198,3 +198,20 @@
 | `cd28688ae` | 01:11 | docs: карточка слой 2b — Project/slider/active-listings/+vastu (tabs, TODO)                                                                                      |
 | `19b1e3839` | 01:19 | docs: founder-README + переписка + резюме дня 2026-06-18 (карточка слой 1-2)                                                                                     |
 | `d763efba0` | 01:23 | chore: handoff remember.md (карточка слои 1-2b задеплоены)                                                                                                       |
+| `220fe1875` | 02:00 | docs(form-card): record FC-1..FC-4 fix spec + TODO (lost requirements recovered)                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f12484533` | 02:02 | style(property-detail): Характеристики info-иконка + Вариант A раскладка (FC-1)                                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `a10355ea7` | 02:06 | style(add-property): maid/hotel/vastu — три строки, галочка рядом (FC-2)                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f4492864a` | 02:13 | feat(add-property): Off-Plan недоступен для готового проекта (FC-3)                                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `a87bc5b83` | 02:21 | feat(add-property): Сделка в Категорию + шаг «Фото и планировка», перенумерация (FC-4)                                                                           |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `5f6462726` | 02:22 | chore(add-property): убрать лишние eslint-disable из FC-4 тестов (предупреждения линтера)                                                                        |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |

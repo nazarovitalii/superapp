@@ -156,7 +156,8 @@ TODO: district через `search_locations` (API-2).
 - **Кнопка «Добавить в избранное»** — под фото (toggle `save_property`, иконка `bookmark`)
 - **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
   Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
-- **Tech (характеристики)** — формат «Поле: Значение»: Deal · Type (категория+тип+подтип
+- **Tech (характеристики)** — иконка `info`; формат «Поле: Значение» построчно, **левосторонне**
+  (Вариант A, без правой колонки; тот же стиль у блока Project, FC-1): Deal · Type (категория+тип+подтип
   +«hotel apartment») · Bedrooms (+maid, **+vastu** при `is_vastu`) · Bathrooms · BUA (`area_sqft`) ·
   Plot (`plot_sqft`) · Floor (`floor_level_id`) · Floors (`floors_in_unit`) · Furnished · Handover ·
   Completion · Occupancy (+`lease_until`) · Created · Updated. (Layout-имя — слой 4)
@@ -200,16 +201,16 @@ RPC `publish_property` **не существует**. Справочники —
 блок в стиле task-detail-panel с иконкой, заголовком (17px) и «Шаг N/8» справа.
 Поля и чипы на шаге — 15px. Навигация: Назад / Далее / Опубликовать.
 
-### Поля формы (8 шагов, реализовано 2026-06-15)
+### Поля формы (8 шагов, реализовано 2026-06-15; реструктуризация 2026-06-18 FC-4)
 
-1. **Категория** — category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house)
-2. **Сделка** — sale|rent (+ price_period для rent)
-3. **Адрес** — каскад до leaf: `search_locations` (mode=search) → выбор → `search_locations` (mode=info) отдаёт children. Внутри комьюнити (children>10) «Уточните адрес» — **глобальный поиск по всем нижним уровням** (sub_community/cluster/building), отфильтрованный по `community_name` (не только прямые дети). Выше комьюнити (город→комьюнити) — фильтр прямых children: поиск если >10, чипы если ≤10. leaf = children пуст. Building info из `location_developers`. Бегунок приватности адреса F-12b (`public_location_id`, минимум — комьюнити)
-4. **Параметры** — набор полей зависит от unit_type (`property-type-fields.ts`): beds/baths, чекбоксы `is_maid`/`is_hotel_pool`, BUA `area_sqft`, `plot_sqft`, `floor_level_id` (Low/Mid/High), `floors_in_unit` (G+…), `layout_id` (community_layouts), мультиселекты `view_ids`/`position_ids`/`amenity_ids`, `furnished`. (Поле «номер этажа» убрано — оставлен только уровень этажа)
-5. **Цена** — price (AED) + торг
-6. **Состояние** — handover; off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until` (месяц+год); distress
-7. **Листинг** — listing_type, visibility. Документы (Title Deed №/год, plot/municipality number) + заметка Form A — **только для official**; для pocket-листинга документы не нужны
-8. **Описание** — текст + загрузка фото (нарезка в браузере → Storage `property_photos`, P-5b)
+1. **Категория** — category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house) + **Сделка**: sale|rent (+ price_period для rent). [Сделка влита в Категорию, FC-4]
+2. **Адрес** — каскад до leaf: `search_locations` (mode=search) → выбор → `search_locations` (mode=info) отдаёт children. Внутри комьюнити (children>10) «Уточните адрес» — **глобальный поиск по всем нижним уровням** (sub_community/cluster/building), отфильтрованный по `community_name` (не только прямые дети). Выше комьюнити (город→комьюнити) — фильтр прямых children: поиск если >10, чипы если ≤10. leaf = children пуст. Building info из `location_developers`. Бегунок приватности адреса F-12b (`public_location_id`, минимум — комьюнити)
+3. **Параметры** — набор полей зависит от unit_type (`property-type-fields.ts`): beds/baths, чекбоксы `is_maid`/`is_hotel_pool`/`is_vastu` (**три строки, галочка слева у метки**, FC-2; vastu только residential apartment/house), BUA `area_sqft`, `plot_sqft`, `floor_level_id` (Low/Mid/High), `floors_in_unit` (G+…), мультиселекты `view_ids`/`position_ids`/`amenity_ids`, `furnished`. (Планировка вынесена в шаг 7; «номер этажа» убрано)
+4. **Цена** — price (AED) + торг
+5. **Состояние** — handover; **Off-Plan заблокирован, если у локации `project_status='completed'`** (Ready форсится; дизейбл чипа + гард + реконсиляция при смене локации, FC-3); off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until` (месяц+год); distress
+6. **Листинг** — listing_type, visibility. Документы (Title Deed №/год, plot/municipality number) + заметка Form A — **только для official**; для pocket-листинга документы не нужны
+7. **Фото и планировка** — `layout_id` (`community_layouts`, если есть для типа) + загрузка фото (нарезка в браузере → Storage `property_photos`, P-5b). [новый шаг, FC-4]
+8. **Описание** — текст
 
 **Расхождение таксономии:** в живой БД `hotel_apartment` — коммерческий unit_type
 (в CSV-матрице он был подтипом Apartment); «Residential Land» в БД = `land`.
