@@ -195,3 +195,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `6b7cc580c` | 01:04 | feat(property-detail): Project-блок + active-listings + slider-адрес + vastu (слой 2b)                                                                           |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `cd28688ae` | 01:11 | docs: карточка слой 2b — Project/slider/active-listings/+vastu (tabs, TODO)                                                                                      |
