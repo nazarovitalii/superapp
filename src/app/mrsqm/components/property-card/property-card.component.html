@@ -18,24 +18,22 @@
       [attr.aria-label]="isSelected() ? 'Снять выбор' : 'Выбрать объект'"
     ></done-toggle>
 
-    <!-- Адрес: leaf + community -->
+    <!-- Адрес: leaf + метка off-plan (U-7) + community -->
     <div class="col col-address">
-      <span class="addr-leaf">{{
-        property().location_name || property().community_name || '—'
-      }}</span>
+      <span class="addr-leaf"
+        >{{ property().location_name || property().community_name || '—' }}
+        @if (property().handover === 'offplan') {
+          <span class="addr-offplan"> (off-plan)</span>
+        }
+      </span>
       @if (property().community_name && property().location_name) {
         <span class="addr-community">{{ property().community_name }}</span>
       }
     </div>
 
-    <!-- Тип: Apartment / Villa + Ready/Off-Plan серым ниже (item 4) -->
+    <!-- Тип: Apartment / Villa (U-6: перенос на 2 строки, без Ready/Off-Plan) -->
     <div class="col col-type">
       <span class="type-name">{{ property().property_type || '—' }}</span>
-      @if (property().handover) {
-        <span class="type-handover">{{
-          property().handover === 'ready' ? 'Ready' : 'Off-Plan'
-        }}</span>
-      }
     </div>
 
     <!-- Beds: число сверху, «maid» серым снизу (vastu в ленте не показываем) -->
@@ -52,10 +50,13 @@
       }
     </div>
 
-    <!-- Площадь: только BUA, без plot и без «sqft» (items 1, 6) -->
+    <!-- Площадь: BUA сверху + plot снизу серым (U-9) -->
     <div class="col col-size">
       @if (property().area_sqft !== null) {
         <span>{{ property().area_sqft | number: '1.0-0' }}</span>
+        @if (property().plot_sqft !== null && property().plot_sqft !== undefined) {
+          <span class="size-plot">{{ property().plot_sqft | number: '1.0-0' }}</span>
+        }
       } @else {
         <span>—</span>
       }
@@ -92,9 +93,9 @@
       }
     </div>
 
-    <!-- Дата публикации/актуализации (отдельная колонка, item 1) -->
+    <!-- Дата публикации/актуализации (U-4: читаемый формат через computed) -->
     <div class="col col-date">
-      {{ property().last_actualized_at || property().published_at | date: 'dd.MM.yy' }}
+      {{ dateLabel() }}
     </div>
 
     <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->

@@ -1,9 +1,16 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { PropertyFeedItem } from '../../types/database';
 import { DoneToggleComponent } from '../../../ui/done-toggle/done-toggle.component';
+import { formatFeedDate } from '../../util/feed-date.util';
 
 @Component({
   selector: 'mrsqm-property-card',
@@ -25,4 +32,11 @@ export class PropertyCardComponent {
   readonly selectToggle = output<void>();
   // Hover-кнопка «развернуть/свернуть» правый sidebar (item 2).
   readonly toggleClick = output<void>();
+
+  // U-4: читаемый формат даты — мемоизировано через computed (hot-path).
+  readonly dateLabel = computed(() =>
+    formatFeedDate(
+      this.property().last_actualized_at ?? this.property().published_at ?? null,
+    ),
+  );
 }

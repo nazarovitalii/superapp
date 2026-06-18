@@ -116,6 +116,11 @@
   color: var(--text-color-muted);
 }
 
+// U-7: метка «(off-plan)» инлайн в строке адреса — приглушённый цвет, тот же кегль
+.addr-offplan {
+  color: var(--text-color-muted);
+}
+
 .col-beds,
 .col-size {
   text-align: center;
@@ -134,17 +139,30 @@
   font-size: 0.78em;
 }
 
-// Тип + Ready/Off-Plan серым ниже (item 4)
-.col-type {
+// U-9: Площадь — BUA сверху, plot серым снизу (по образцу .col-beds)
+.col-size {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  line-height: 1.15;
+}
 
-  .type-handover {
-    font-size: 0.72rem;
-    color: var(--text-color-muted);
-  }
+.size-plot {
+  color: var(--text-color-muted);
+  font-size: 0.78em;
+}
+
+// U-6: Тип — только название; разрешаем перенос на 2 строки (переопределяет white-space: nowrap из .col)
+.col-type {
+  text-align: center;
+  white-space: normal;
+  line-height: 1.15;
+  // Ограничиваем двумя строками
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // Цена: новая сверху, прежняя — серой зачёркнутой ниже (item 7)
