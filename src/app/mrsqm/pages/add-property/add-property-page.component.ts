@@ -250,10 +250,16 @@ export class AddPropertyPageComponent {
     if (ri >= this.leafIndex()) return null;
     return this.addrPath()[ri]?.id ?? null;
   });
-  // Подпись: что увидят соседи (имя уровня по revealIndex).
+  // Подпись: что увидят коллеги (имя уровня по revealIndex).
   readonly revealLabel = computed<string>(
     () => this.addrPath()[this.revealIndex()]?.name ?? '',
   );
+
+  /** Выбрать уровень раскрытия. Нельзя выбрать ниже communityIndex (B5). */
+  selectReveal(i: number): void {
+    if (i < this.communityIndex()) return;
+    this.revealIndex.set(i);
+  }
 
   private _locTimer: ReturnType<typeof setTimeout> | null = null;
 

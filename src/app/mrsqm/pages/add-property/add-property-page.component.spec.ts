@@ -531,3 +531,63 @@ describe('AddPropertyPageComponent — Floor Plan до 4 (B4)', () => {
     expect(component.floorPlanPreviews()[0]).toBe('u2');
   });
 });
+
+// ─── Бегунок приватности: selectReveal (B5) ──────────────────────────────────
+describe('AddPropertyPageComponent — selectReveal (B5)', () => {
+  let component: AddPropertyPageComponent;
+
+  // Фиктивные уровни адреса: Dubai(0) → Damac Hills(1, community) → Street(2) → Unit(3, leaf)
+  const FAKE_PATH = [
+    { id: 'l0', name: 'Dubai', level: 'city' },
+    { id: 'l1', name: 'Damac Hills', level: 'community' },
+    { id: 'l2', name: 'Street', level: 'street' },
+    { id: 'l3', name: 'Unit 101', level: 'unit' },
+  ] as import('../../types/database').LocationBreadcrumbItem[];
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+    // Устанавливаем путь и начальный revealIndex на leaf.
+    component.addrPath.set(FAKE_PATH);
+    component.revealIndex.set(3);
+  });
+
+  it('communityIndex() === 1 для FAKE_PATH', () => {
+    expect(component.communityIndex()).toBe(1);
+  });
+
+  it('selectReveal: устанавливает revealIndex при i >= communityIndex', () => {
+    component.selectReveal(2);
+    expect(component.revealIndex()).toBe(2);
+  });
+
+  it('selectReveal: НЕ меняет revealIndex при i < communityIndex (гард)', () => {
+    component.revealIndex.set(2);
+    component.selectReveal(0); // ниже community → гард блокирует
+    expect(component.revealIndex()).toBe(2);
+  });
+
+  it('selectReveal: допускает выбор самого communityIndex', () => {
+    component.selectReveal(1);
+    expect(component.revealIndex()).toBe(1);
+  });
+
+  it('selectReveal: допускает выбор leafIndex', () => {
+    component.revealIndex.set(1);
+    component.selectReveal(3);
+    expect(component.revealIndex()).toBe(3);
+  });
+});

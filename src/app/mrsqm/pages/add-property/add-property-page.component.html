@@ -264,31 +264,53 @@
                 </div>
               </div>
 
-              <!-- Бегунок приватности адреса (F-12b) -->
+              <!-- Бегунок приватности адреса (F-12b / B5) -->
               @if (canSlide()) {
-                <div class="field">
-                  <span class="field-label">Что видят соседи</span>
-                  <input
-                    type="range"
-                    class="reveal-range"
-                    [min]="communityIndex()"
-                    [max]="leafIndex()"
-                    step="1"
-                    [ngModel]="revealIndex()"
-                    (ngModelChange)="revealIndex.set(+$event)"
-                  />
-                  <div class="reveal-ticks">
+                <div class="field reveal-field">
+                  <span class="field-label reveal-label">Что видят коллеги</span>
+                  <!-- Кастомный трек: точки центрированы под словами-уровнями (S2/S3) -->
+                  <div
+                    class="reveal"
+                    [style.--n]="addrPath().length"
+                  >
+                    <!-- Слова-уровни (flex, каждый занимает 1/N ширины) -->
+                    <div class="reveal-ticks">
+                      @for (p of addrPath(); track p.id; let i = $index) {
+                        <span
+                          class="reveal-tick"
+                          [class.muted]="i < communityIndex()"
+                          [class.on]="i <= revealIndex()"
+                        >
+                          {{ p.name }}
+                        </span>
+                      }
+                    </div>
+                    <!-- Трек: от центра первого слова до центра последнего -->
+                    <div class="reveal-track">
+                      <!-- Залитая часть трека (до текущего уровня) -->
+                      <div
+                        class="reveal-track-fill"
+                        [style.right.%]="
+                          (1 - (revealIndex() + 0.5) / addrPath().length) * 100
+                        "
+                      ></div>
+                    </div>
+                    <!-- Точки: по одной на уровень, каждая под своим словом -->
                     @for (p of addrPath(); track p.id; let i = $index) {
-                      <span
-                        class="reveal-tick"
+                      <button
+                        type="button"
+                        class="reveal-dot"
                         [class.muted]="i < communityIndex()"
                         [class.on]="i <= revealIndex()"
-                      >
-                        {{ p.name }}
-                      </span>
+                        [class.active]="i === revealIndex()"
+                        [style.left.%]="((i + 0.5) / addrPath().length) * 100"
+                        [disabled]="i < communityIndex()"
+                        (click)="selectReveal(i)"
+                        [attr.aria-label]="p.name"
+                      ></button>
                     }
                   </div>
-                  <p class="note">
+                  <p class="note reveal-note">
                     В ленте всем (и вам) показывается: <b>{{ revealLabel() }}</b
                     >. Точный адрес виден только вам. Ниже комьюнити скрыть нельзя.
                   </p>

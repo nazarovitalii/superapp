@@ -290,23 +290,38 @@
   }
 }
 
-// ─── Бегунок приватности адреса ──────────────────────────────────────────
-.reveal-range {
-  width: 100%;
-  accent-color: var(--c-primary);
-  cursor: pointer;
+// ─── Бегунок приватности адреса (B5: кастомный трек) ────────────────────
+// Метка «Что видят коллеги» — по центру (S1).
+.reveal-label {
+  display: block;
+  text-align: center;
 }
 
+// Контейнер бегунка — позиционирование для абсолютных дочерних (S2/S3).
+.reveal {
+  position: relative;
+  width: 100%;
+  // Нижний отступ: место для точек (они выходят за трек).
+  padding-bottom: 20px;
+  // CSS-переменная --n задаётся из шаблона ([style.--n]).
+}
+
+// Слова-уровни: flex без переноса, каждый занимает 1/N (S3).
 .reveal-ticks {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-half);
+  flex-wrap: nowrap;
   font-size: 13px;
+  margin-bottom: 24px; // отступ до трека
 }
 
 .reveal-tick {
+  flex: 1 1 0;
+  text-align: center;
   color: var(--text-color-muted);
   opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   &.on {
     color: var(--c-primary);
@@ -318,12 +333,72 @@
     text-decoration: line-through;
     opacity: 0.35;
   }
+}
 
-  &:not(:last-child)::after {
-    content: '·';
-    margin-left: var(--s-half);
-    opacity: 0.5;
+// Трек: тонкая линия от центра первого до центра последнего слова (S2).
+// left/right = 0.5/N * 100% = calc(50% / var(--n)).
+.reveal-track {
+  position: absolute;
+  top: 40px; // под словами (font ~13px + margin-bottom 24px)
+  left: calc(50% / var(--n));
+  right: calc(50% / var(--n));
+  height: 3px;
+  background: var(--text-color-muted);
+  opacity: 0.25;
+  border-radius: 2px;
+}
+
+// Залитая часть трека (до выбранного уровня).
+.reveal-track-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--c-primary);
+  border-radius: 2px;
+  opacity: 1;
+}
+
+// Круглые точки — по одной на уровень, позиция = (i+0.5)/N*100% (S3).
+.reveal-dot {
+  position: absolute;
+  top: 33px; // центр точки совпадает с центром трека (трек top:40px, h:3px → mid=41.5px; точка h:16px → top=41.5-8=33.5)
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--text-color-muted);
+  background: var(--bg-app, #fff);
+  transform: translateX(-50%);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+
+  &.on {
+    background: var(--c-primary);
+    border-color: var(--c-primary);
   }
+
+  &.active {
+    width: 16px;
+    height: 16px;
+    top: 31px; // скорректировать под больший диаметр
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 30%, transparent);
+  }
+
+  &.muted {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:disabled {
+    pointer-events: none;
+  }
+}
+
+// Подпись под треком — по центру.
+.reveal-note {
+  text-align: center;
 }
 
 // ─── Фото ────────────────────────────────────────────────────────────────
