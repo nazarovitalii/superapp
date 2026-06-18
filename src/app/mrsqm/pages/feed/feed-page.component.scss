@@ -227,14 +227,34 @@
   left: 0;
   right: 0;
   z-index: 30;
+  // Список адресов в столбик (как дропдаун подсказок), а не сетка чипов
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-quarter);
-  padding: var(--s-half);
+  flex-direction: column;
+  padding: var(--s-quarter) 0;
   background: var(--bg);
   border: 1px solid var(--extra-border-color);
   border-radius: var(--card-border-radius);
   box-shadow: var(--task-detail-shadow, 0 6px 20px rgba(0, 0, 0, 0.18));
+}
+
+// Строка адреса в раскрытой панели: высота как блок автокомплита (44px),
+// при переносе на 2 строки — выше; текст/крестик в стиле дропдауна подсказок.
+.tb-loc-panel .tb-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-half);
+  width: 100%;
+  max-width: none;
+  min-height: 44px;
+  padding: var(--s-half) var(--s);
+  color: var(--text-color);
+  font-weight: 400;
+  white-space: normal;
+
+  &:hover {
+    background: var(--bg-lighter, var(--surface-0));
+  }
 }
 
 .tb-search-icon {
@@ -478,11 +498,11 @@
   }
 }
 
-// U-2: одна колонка вместо двух; V-9: внутренний отступ
+// U-2: одна колонка вместо двух; V-9: внутренний отступ (просторнее от бордюров)
 .type-mega {
-  width: 244px;
+  width: 248px;
   max-width: 92vw;
-  padding: var(--s-quarter);
+  padding: var(--s-half);
 }
 
 // V-9: сегмент-контрол вместо подчёркнутых табов
@@ -573,8 +593,8 @@
   border: 1px solid var(--extra-border-color);
   background: transparent;
   color: var(--text-color-muted);
-  // U-2: 13px — на ступень меньше тела, но не микро-текст
-  font-size: 0.8125rem;
+  // единый кегль дропдауна — 14px
+  font-size: 0.875rem;
   font-weight: 400;
   cursor: pointer;
   transition:
@@ -605,18 +625,21 @@
   border-top: 1px solid var(--extra-border-color);
 }
 
-// V-9: кнопка сброса — плавный переход цвета
+// Кнопка «Сбросить» — серый «квадрат» тех же размеров, что и «Готово», но серый
 .type-reset {
+  height: 32px;
+  padding: 0 var(--s2);
   border: none;
-  background: transparent;
-  color: var(--text-color-muted);
+  border-radius: var(--task-border-radius);
+  background: var(--bg-darker);
+  color: var(--text-color);
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: 600;
   cursor: pointer;
-  transition: color var(--transition-duration-s) ease;
+  transition: filter var(--transition-duration-s) ease;
 
   &:hover {
-    color: var(--text-color);
+    filter: brightness(0.95);
   }
 }
 
@@ -673,28 +696,31 @@
   white-space: nowrap;
 }
 
-// Колонка чекбоксов в шапке — центрируем кнопку сброса выделения
+// Колонка чекбоксов в шапке — якорь для абсолютной кнопки сброса
 .th-select {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   overflow: visible;
 }
 
-// Кнопка «снять всё выделение» — серая, но понятная (× над колонкой чекбоксов)
+// Кнопка «снять всё выделение» (× над колонкой чекбоксов): абсолютная —
+// не меняет высоту шапки (таблица не «дёргается»); синяя, как кнопка Share.
 .th-clear-sel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--text-color-muted);
+  color: var(--c-primary);
   cursor: pointer;
-  transition: color var(--transition-duration-s) ease;
+  transition: filter var(--transition-duration-s) ease;
 
   &:hover {
-    color: var(--text-color);
+    filter: brightness(1.1);
   }
 
   mat-icon {
