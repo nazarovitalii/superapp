@@ -106,6 +106,7 @@
       <button
         mat-icon-button
         class="ico-btn"
+        [class.is-saved]="isSaved()"
         (click)="saveClick.emit(); $event.stopPropagation()"
         [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
         [title]="isSaved() ? 'Убрать из избранного' : 'В избранное'"

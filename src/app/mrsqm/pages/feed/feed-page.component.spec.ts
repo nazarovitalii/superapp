@@ -415,4 +415,23 @@ describe('FeedPageComponent', () => {
     expect(call.msg).toBe('Не удалось обновить избранное');
     expect(call.type).toBe('ERROR');
   });
+
+  it('toggleSaved: успешное добавление помечает объект сохранённым (иконка заполняется)', async () => {
+    fakeSaved.toggleResult = true; // сервер: action=saved
+    const c = build();
+    await flush();
+    expect(c.savedIds().has('p1')).toBe(false);
+    await c.toggleSaved(minimalFeedItem());
+    // savedIds содержит id → [isSaved] карточки = true → mat-icon = 'bookmark'
+    expect(c.savedIds().has('p1')).toBe(true);
+  });
+
+  it('toggleSaved: ошибка сервера откатывает оптимистичную отметку', async () => {
+    fakeSaved.shouldThrow = true;
+    const c = build();
+    await flush();
+    await c.toggleSaved(minimalFeedItem());
+    // оптимистично добавили, затем откатили — объект не остаётся помеченным
+    expect(c.savedIds().has('p1')).toBe(false);
+  });
 });

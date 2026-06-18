@@ -5,6 +5,9 @@
   position: relative;
   cursor: pointer;
   color: var(--text-color);
+  // Строка объекта чуть выше инбокс-задачи (~+10%): 40px → 44px.
+  // Переопределяем токен только для карточки объекта, не трогая задачи.
+  --task-first-line-min-height: 44px;
 }
 
 .inner-wrapper {
@@ -268,6 +271,15 @@
 
     ::ng-deep .mat-mdc-button-persistent-ripple {
       border-radius: var(--task-border-radius);
+    }
+  }
+
+  // В избранном — заполненная закладка подсвечена акцентом, состояние явное
+  .ico-btn.is-saved {
+    color: var(--c-primary);
+
+    &:hover {
+      color: var(--c-primary);
     }
   }
 }
