@@ -26,6 +26,7 @@ import {
   PropertyPhoto,
   PropertyProject,
 } from '../../types/database';
+import { formatDetailDate } from '../../util/feed-date.util';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
@@ -183,8 +184,8 @@ export class PropertyDetailComponent implements OnDestroy {
         d?.is_hotel_pool ?? false,
         opts,
       ),
-      createdLabel: this._fmtDate(d?.created_at),
-      updatedLabelFull: this._fmtDate(d?.updated_at ?? d?.last_actualized_at),
+      createdLabel: formatDetailDate(d?.created_at),
+      updatedLabelFull: formatDetailDate(d?.updated_at ?? d?.last_actualized_at),
       // Слой 2b: новые поля get_property.
       isVastu: d?.is_vastu ?? false,
       publicLocationPath: d?.public_location_path ?? null,
@@ -538,14 +539,5 @@ export class PropertyDetailComponent implements OnDestroy {
     const base = sub ?? unit;
     if (!base) return null;
     return isHotelPool ? `${base} (hotel apartment)` : base;
-  }
-
-  // Дата в формате DD.MM.YYYY (для Created/Updated).
-  private _fmtDate(iso: string | null | undefined): string | null {
-    if (!iso) return null;
-    const dt = new Date(iso);
-    if (Number.isNaN(dt.getTime())) return null;
-    const p = (n: number): string => String(n).padStart(2, '0');
-    return `${p(dt.getDate())}.${p(dt.getMonth() + 1)}.${dt.getFullYear()}`;
   }
 }

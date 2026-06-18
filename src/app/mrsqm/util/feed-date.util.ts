@@ -1,10 +1,18 @@
 /**
  * Форматирует дату строки ленты недвижимости в читаемый вид.
- * Today / Yesterday / «16 June» / «16 June 2025» (если прошлый год).
+ * HH:MM (сегодня) / Yesterday / «16 June» / «16 June 2025» (если прошлый год).
  * Используется через computed-сигнал в property-card (hot-path — не вызывать напрямую в шаблоне).
  *
  * Сравнение Today/Yesterday ведётся по ЛОКАЛЬНОЙ таймзоне браузера (граница суток на устройстве).
  */
+
+/** Форматирует часы и минуты как HH:MM (zero-padded, локальная TZ). */
+const _fmtHHMM = (date: Date): string => {
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+};
+
 export const formatFeedDate = (
   iso: string | null | undefined,
   now: Date = new Date(),
@@ -24,7 +32,8 @@ export const formatFeedDate = (
   const nowDay = now.getDate();
 
   const isSameDay = dateYear === nowYear && dateMonth === nowMonth && dateDay === nowDay;
-  if (isSameDay) return 'Today';
+  // Сегодня — показываем время в формате HH:MM
+  if (isSameDay) return _fmtHHMM(date);
 
   // Вчера: отматываем now на 1 локальный день
   const yesterday = new Date(nowYear, nowMonth, nowDay - 1);
@@ -46,4 +55,42 @@ export const formatFeedDate = (
 
   // Другой год — с годом: «16 June 2024»
   return `${dateDay} ${monthName} ${dateYear}`;
+};
+
+/**
+ * Форматирует дату для блока Created/Updated в правой панели.
+ * Сегодня → «Today HH:MM», вчера → «Yesterday», остальное → «D MonthLong YY».
+ * null/undefined/невалид → null.
+ */
+export const formatDetailDate = (
+  iso: string | null | undefined,
+  now: Date = new Date(),
+): string | null => {
+  if (!iso) return null;
+
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return null;
+
+  const dateYear = date.getFullYear();
+  const dateMonth = date.getMonth();
+  const dateDay = date.getDate();
+
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth();
+  const nowDay = now.getDate();
+
+  const isSameDay = dateYear === nowYear && dateMonth === nowMonth && dateDay === nowDay;
+  if (isSameDay) return `Today ${_fmtHHMM(date)}`;
+
+  const yesterday = new Date(nowYear, nowMonth, nowDay - 1);
+  const isYesterday =
+    dateYear === yesterday.getFullYear() &&
+    dateMonth === yesterday.getMonth() &&
+    dateDay === yesterday.getDate();
+  if (isYesterday) return 'Yesterday';
+
+  // D MonthLong YY (2-значный год)
+  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(date);
+  const shortYear = String(dateYear).slice(-2);
+  return `${dateDay} ${monthName} ${shortYear}`;
 };

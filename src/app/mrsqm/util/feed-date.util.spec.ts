@@ -1,4 +1,4 @@
-import { formatFeedDate } from './feed-date.util';
+import { formatDetailDate, formatFeedDate } from './feed-date.util';
 
 /**
  * Даты строятся через локальный конструктор new Date(Y, M, D, h, m),
@@ -27,14 +27,14 @@ describe('formatFeedDate', () => {
     expect(formatFeedDate('not-a-date', now)).toBe('');
   });
 
-  it('возвращает "Today" для сегодняшней даты (утро)', () => {
+  it('возвращает время "08:00" для сегодняшней даты (утро)', () => {
     const iso = new Date(2025, 5, 20, 8, 0).toISOString();
-    expect(formatFeedDate(iso, now)).toBe('Today');
+    expect(formatFeedDate(iso, now)).toBe('08:00');
   });
 
-  it('возвращает "Today" для сегодняшней даты (конец дня)', () => {
+  it('возвращает время "23:59" для сегодняшней даты (конец дня)', () => {
     const iso = new Date(2025, 5, 20, 23, 59).toISOString();
-    expect(formatFeedDate(iso, now)).toBe('Today');
+    expect(formatFeedDate(iso, now)).toBe('23:59');
   });
 
   it('возвращает "Yesterday" для вчерашней даты', () => {
@@ -85,10 +85,52 @@ describe('formatFeedDate', () => {
     expect(formatFeedDate(iso, localNow)).toBe('Yesterday');
   });
 
-  // now = 20 июня 2025 01:00 локально; вход 20 июня 00:30 локально → Today
-  it('локальная граница суток: ранее той же локальной ночи → Today', () => {
+  // now = 20 июня 2025 01:00 локально; вход 20 июня 00:30 локально → Today (возвращает время)
+  it('локальная граница суток: ранее той же локальной ночи → время (00:30)', () => {
     const localNow = new Date(2025, 5, 20, 1, 0);
     const iso = new Date(2025, 5, 20, 0, 30).toISOString();
-    expect(formatFeedDate(iso, localNow)).toBe('Today');
+    expect(formatFeedDate(iso, localNow)).toBe('00:30');
+  });
+});
+
+describe('formatDetailDate', () => {
+  // Фиксированная точка отсчёта: 20 июня 2025, 15:15 (локальная TZ)
+  const now = new Date(2025, 5, 20, 15, 15);
+
+  it('возвращает null для null', () => {
+    expect(formatDetailDate(null, now)).toBeNull();
+  });
+
+  it('возвращает null для undefined', () => {
+    expect(formatDetailDate(undefined, now)).toBeNull();
+  });
+
+  it('возвращает null для невалидной строки', () => {
+    expect(formatDetailDate('not-a-date', now)).toBeNull();
+  });
+
+  it('сегодня → "Today HH:MM"', () => {
+    const iso = new Date(2025, 5, 20, 15, 15).toISOString();
+    expect(formatDetailDate(iso, now)).toBe('Today 15:15');
+  });
+
+  it('сегодня утром → "Today 08:00"', () => {
+    const iso = new Date(2025, 5, 20, 8, 0).toISOString();
+    expect(formatDetailDate(iso, now)).toBe('Today 08:00');
+  });
+
+  it('вчера → "Yesterday"', () => {
+    const iso = new Date(2025, 5, 19, 10, 0).toISOString();
+    expect(formatDetailDate(iso, now)).toBe('Yesterday');
+  });
+
+  it('старая дата (тот же год) → "D MonthLong YY"', () => {
+    const iso = new Date(2025, 5, 16, 10, 0).toISOString();
+    expect(formatDetailDate(iso, now)).toBe('16 June 25');
+  });
+
+  it('прошлый год → "D MonthLong YY"', () => {
+    const iso = new Date(2024, 0, 5, 10, 0).toISOString();
+    expect(formatDetailDate(iso, now)).toBe('5 January 24');
   });
 });
