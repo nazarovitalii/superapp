@@ -4,6 +4,11 @@ import {
   ChangeDetectionStrategy,
   effect,
   computed,
+  signal,
+  viewChild,
+  ElementRef,
+  DestroyRef,
+  afterNextRender,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,7 +38,21 @@ import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { FeedSelectionService } from '../../services/feed-selection.service';
 import { MrsqmAuthService } from '../../services/auth.service';
-import { signal } from '@angular/core';
+
+// W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
+const COMMERCIAL_ALLOWLIST = new Set([
+  'office',
+  'hotel apartment',
+  'shop',
+  'retail',
+  'warehouse',
+  'villa',
+  'bulk unit',
+  'land',
+  'floor',
+  'building',
+  'factory',
+]);
 
 const PAGE_SIZE = 20;
 
@@ -61,6 +80,14 @@ export class FeedPageComponent {
   // Множественный выбор чекбоксами — общий сервис с меню в главном хедере.
   readonly selection = inject(FeedSelectionService);
   private readonly _auth = inject(MrsqmAuthService);
+  private readonly _destroyRef = inject(DestroyRef);
+
+  // W-1: inline-ряд чипов локаций (шаблонная ссылка #locRow)
+  private readonly _locRow = viewChild<ElementRef<HTMLElement>>('locRow');
+
+  // W-1: раскрыта ли панель локаций снизу; есть ли переполнение ряда
+  readonly locExpanded = signal(false);
+  readonly locOverflow = signal(false);
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
   private _typeLabels: Map<string, string> | null = null;
@@ -211,13 +238,17 @@ export class FeedPageComponent {
     } => {
       const cat = opts?.categories?.find((c) => c.value === catValue);
       if (!opts || !cat) return { catId: null, units: [] };
-      const units = (opts.unit_types ?? [])
+      let units = (opts.unit_types ?? [])
         .filter((u) => u.parent_id === cat.id)
         .map((u) => ({
           id: u.id,
           label: u.label_en,
           subs: (opts.sub_types ?? []).filter((s) => s.parent_id === u.id),
         }));
+      // W-4: для Commercial оставляем только разрешённые типы из COMMERCIAL_ALLOWLIST
+      if (catValue === 'commercial') {
+        units = units.filter((u) => COMMERCIAL_ALLOWLIST.has(u.label.toLowerCase()));
+      }
       return { catId: cat.id, units };
     };
     return { residential: build('residential'), commercial: build('commercial') };
@@ -338,8 +369,12 @@ export class FeedPageComponent {
   }
 
   // Убираем конкретную локацию по id (мультиселект).
+  // При обнулении списка — сворачиваем раскрытую панель.
   removeLocation(id: string): void {
     this.filter.removeLocation(id);
+    if (this.filter.locationFilters().length === 0) {
+      this.locExpanded.set(false);
+    }
   }
 
   clearAgent(): void {
@@ -363,6 +398,30 @@ export class FeedPageComponent {
       this.offset.set(0);
       this.properties.set([]);
       void this._load();
+    });
+
+    // W-1: ResizeObserver на ряд локаций — детект переполнения.
+    // Подписываемся только после первого рендера, когда viewChild доступен.
+    afterNextRender(() => {
+      const el = this._locRow()?.nativeElement;
+      if (!el) return;
+
+      const checkOverflow = (): void => {
+        this.locOverflow.set(el.scrollWidth > el.clientWidth);
+      };
+
+      const ro = new ResizeObserver(checkOverflow);
+      ro.observe(el);
+
+      // Пересчитываем при изменении набора локаций (DOM обновляется асинхронно).
+      effect(() => {
+        this.filter.locationFilters();
+        // Microtask: DOM обновляется после сигнала, даём ему отрисоваться.
+        void Promise.resolve().then(checkOverflow);
+      });
+
+      // Чистим ResizeObserver при уничтожении компонента.
+      this._destroyRef.onDestroy(() => ro.disconnect());
     });
   }
 

@@ -31,7 +31,7 @@
       }
     </mat-menu>
 
-    <!-- 2. Автокомплит «Адрес или агент» (U-10: flex:1 1 auto — съедает свободное место) -->
+    <!-- 2. Автокомплит «Адрес или агент» (W-1: фикс ширины, не давит правые селекты) -->
     <div class="tb-search">
       <mat-icon class="tb-search-icon">place</mat-icon>
 
@@ -49,34 +49,55 @@
           </button>
         </span>
       } @else {
-        <!-- Чипы выбранных локаций (мультиселект, до 5) -->
-        @for (loc of filter.locationFilters(); track loc.id) {
-          <span class="tb-chip">
-            <mat-icon>place</mat-icon>{{ loc.name }}
-            <button
-              type="button"
-              class="tb-chip-x"
-              (click)="removeLocation(loc.id)"
-              [attr.aria-label]="'Убрать адрес ' + loc.name"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          </span>
-        }
+        <!-- W-1: inline-ряд чипов локаций (без переноса; переполнение отслеживается) -->
+        <div
+          class="tb-loc-inline"
+          #locRow
+        >
+          @for (loc of filter.locationFilters(); track loc.id) {
+            <span class="tb-chip"
+              >{{ loc.name }}
+              <button
+                type="button"
+                class="tb-chip-x"
+                (click)="removeLocation(loc.id)"
+                [attr.aria-label]="'Убрать адрес ' + loc.name"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </span>
+          }
 
-        <!-- Поле ввода: скрываем когда выбрано 5 локаций -->
-        @if (filter.locationFilters().length < filter.MAX_LOCATIONS) {
-          <input
-            type="text"
-            class="tb-search-input"
-            [placeholder]="
-              filter.locationFilters().length ? 'Ещё адрес' : 'Адрес или агент'
+          <!-- Поле ввода: скрываем когда выбрано 5 локаций -->
+          @if (filter.locationFilters().length < filter.MAX_LOCATIONS) {
+            <input
+              type="text"
+              class="tb-search-input"
+              [placeholder]="
+                filter.locationFilters().length ? 'Ещё адрес' : 'Адрес или агент'
+              "
+              [value]="searchInput()"
+              (input)="onSearchInput($any($event.target).value)"
+              (focus)="onSearchFocus()"
+              (blur)="onSearchBlur()"
+            />
+          }
+        </div>
+
+        <!-- W-1: кнопка-стрелка (показывается при переполнении или когда панель открыта) -->
+        @if (locOverflow() || locExpanded()) {
+          <button
+            type="button"
+            class="tb-loc-toggle"
+            (click)="locExpanded.set(!locExpanded())"
+            [attr.aria-label]="
+              locExpanded() ? 'Свернуть список адресов' : 'Показать все адреса'
             "
-            [value]="searchInput()"
-            (input)="onSearchInput($any($event.target).value)"
-            (focus)="onSearchFocus()"
-            (blur)="onSearchBlur()"
-          />
+          >
+            <mat-icon>{{
+              locExpanded() ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
+            }}</mat-icon>
+          </button>
         }
       }
 
@@ -113,6 +134,25 @@
                 <span class="tb-suggest-name">{{ a }}</span>
               </button>
             }
+          }
+        </div>
+      }
+
+      <!-- W-1: раскрытая панель со всеми локациями (чипы с крестиками) -->
+      @if (locExpanded()) {
+        <div class="tb-loc-panel">
+          @for (loc of filter.locationFilters(); track loc.id) {
+            <span class="tb-chip"
+              >{{ loc.name }}
+              <button
+                type="button"
+                class="tb-chip-x"
+                (click)="removeLocation(loc.id)"
+                [attr.aria-label]="'Убрать адрес ' + loc.name"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </span>
           }
         </div>
       }

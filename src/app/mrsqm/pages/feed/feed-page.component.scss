@@ -120,9 +120,10 @@
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  // U-10: растягивается на свободное место тулбара
-  flex: 1 1 auto;
-  min-width: 160px;
+  // W-1: фикс ширины — не давит правые селекты при мультиселекте адресов
+  flex: 1 1 280px;
+  min-width: 220px;
+  max-width: 460px;
   // U-1: высота 40px
   height: var(--task-first-line-min-height, 40px);
   padding: 0 var(--s);
@@ -133,6 +134,61 @@
   &:focus-within {
     border-color: var(--c-primary);
   }
+}
+
+// W-1: inline-ряд чипов (не переносится, обрезается; overflow отслеживается ResizeObserver)
+.tb-loc-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--s-quarter);
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+// W-1: компактная кнопка-стрелка для раскрытия/сворачивания панели локаций
+.tb-loc-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-duration-s) ease;
+
+  &:hover {
+    color: var(--text-color);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+}
+
+// W-1: раскрытая панель со всеми локациями (абсолютно под полем поиска)
+.tb-loc-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-quarter);
+  padding: var(--s-half);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-detail-shadow, 0 6px 20px rgba(0, 0, 0, 0.18));
 }
 
 .tb-search-icon {

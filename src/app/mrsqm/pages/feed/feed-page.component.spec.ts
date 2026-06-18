@@ -4,6 +4,7 @@ import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { MrsqmAuthService } from '../../services/auth.service';
+import { FilterOptions } from '../../types/database';
 
 // Заглушка Supabase: фиксируем параметры вызова get_feed.
 class FakeSupabase {
@@ -262,5 +263,88 @@ describe('FeedPageComponent', () => {
     // фильтр не выбран → category() = null
     c.onTypeMenuOpened();
     expect(c.typePanelCat()).toBe('residential');
+  });
+
+  // ─── W-4: Commercial allowlist ───────────────────────────────────────────────
+  it('typeTree commercial оставляет только разрешённые типы; типы вне allowlist отсеиваются', () => {
+    const c = build();
+    // Мок FilterOptions с residential и commercial категориями
+    // (поля вне typeTree оставляем пустыми через приведение типа)
+    const mockOptions = {
+      categories: [
+        { id: 'cat-res', value: 'residential', label_en: 'Residential', parent_id: null },
+        { id: 'cat-com', value: 'commercial', label_en: 'Commercial', parent_id: null },
+      ],
+      unit_types: [
+        // Residential — должны остаться нетронутыми
+        { id: 'ut-apt', value: 'apartment', label_en: 'Apartment', parent_id: 'cat-res' },
+        { id: 'ut-vil', value: 'villa', label_en: 'Villa', parent_id: 'cat-res' },
+        // Commercial из allowlist — должны остаться
+        { id: 'ut-off', value: 'office', label_en: 'Office', parent_id: 'cat-com' },
+        {
+          id: 'ut-hot',
+          value: 'hotel_apartment',
+          label_en: 'Hotel Apartment',
+          parent_id: 'cat-com',
+        },
+        { id: 'ut-shp', value: 'shop', label_en: 'Shop', parent_id: 'cat-com' },
+        // Commercial НЕ из allowlist — должны отфильтроваться
+        { id: 'ut-shr', value: 'showroom', label_en: 'Showroom', parent_id: 'cat-com' },
+        {
+          id: 'ut-lab',
+          value: 'labour_camp',
+          label_en: 'Labour Camp',
+          parent_id: 'cat-com',
+        },
+      ],
+      sub_types: [],
+    } as unknown as FilterOptions;
+    c.filterOptions.set(mockOptions);
+
+    const tree = c.typeTree();
+
+    // Residential не затронут — оба типа на месте
+    expect(tree.residential.units.length).toBe(2);
+    expect(tree.residential.units.map((u) => u.label)).toEqual(['Apartment', 'Villa']);
+
+    // Commercial: только Office, Hotel Apartment, Shop — Showroom и Labour Camp отсеяны
+    expect(tree.commercial.units.length).toBe(3);
+    const commercialLabels = tree.commercial.units.map((u) => u.label.toLowerCase());
+    expect(commercialLabels).toContain('office');
+    expect(commercialLabels).toContain('hotel apartment');
+    expect(commercialLabels).toContain('shop');
+    expect(commercialLabels).not.toContain('showroom');
+    expect(commercialLabels).not.toContain('labour camp');
+  });
+
+  it('typeTree commercial пуст если filterOptions null', () => {
+    const c = build();
+    c.filterOptions.set(null);
+    expect(c.typeTree().commercial.units).toEqual([]);
+  });
+
+  // ─── W-1: локации — сворачивание панели ─────────────────────────────────────
+  it('removeLocation последней локации сбрасывает locExpanded в false', async () => {
+    const c = build();
+    await flush();
+    filter.addLocation({ id: 'loc-1', name: 'Marina' });
+    // Вручную раскрываем панель
+    c.locExpanded.set(true);
+    expect(c.locExpanded()).toBe(true);
+    // Удаляем единственную локацию
+    c.removeLocation('loc-1');
+    expect(filter.locationFilters().length).toBe(0);
+    expect(c.locExpanded()).toBe(false);
+  });
+
+  it('removeLocation одной из двух локаций НЕ сбрасывает locExpanded', async () => {
+    const c = build();
+    await flush();
+    filter.addLocation({ id: 'loc-1', name: 'Marina' });
+    filter.addLocation({ id: 'loc-2', name: 'JBR' });
+    c.locExpanded.set(true);
+    c.removeLocation('loc-1');
+    // Ещё есть одна локация — панель остаётся раскрытой
+    expect(c.locExpanded()).toBe(true);
   });
 });
