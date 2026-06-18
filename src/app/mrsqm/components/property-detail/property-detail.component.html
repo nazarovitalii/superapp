@@ -227,7 +227,8 @@
               <div class="kv-row">
                 <span class="kv-label">Bedrooms</span>
                 <span class="kv-value">
-                  {{ vm().bedrooms }}{{ vm().isMaid ? ' + maid' : '' }}
+                  {{ vm().bedrooms }}{{ vm().isMaid ? ' + maid' : ''
+                  }}{{ vm().isVastu ? ' + vastu' : '' }}
                 </span>
               </div>
             }
@@ -303,6 +304,45 @@
           </div>
         </div>
 
+        <!-- ── 3a. Проект (location_developers, слой 2b) ────────────────────── -->
+        @if (vm().project; as pr) {
+          <div class="section">
+            <div class="section-label"><mat-icon>apartment</mat-icon>Проект</div>
+            <div class="kv-list">
+              @if (pr.name) {
+                <div class="kv-row">
+                  <span class="kv-label">Name</span
+                  ><span class="kv-value">{{ pr.name }}</span>
+                </div>
+              }
+              @if (pr.clusterValue) {
+                <div class="kv-row">
+                  <span class="kv-label">{{ pr.clusterLabel }}</span
+                  ><span class="kv-value">{{ pr.clusterValue }}</span>
+                </div>
+              }
+              @if (pr.developer) {
+                <div class="kv-row">
+                  <span class="kv-label">Developer</span
+                  ><span class="kv-value">{{ pr.developer }}</span>
+                </div>
+              }
+              @if (pr.completion) {
+                <div class="kv-row">
+                  <span class="kv-label">Completion</span
+                  ><span class="kv-value">{{ pr.completion }}</span>
+                </div>
+              }
+              @if (pr.handover) {
+                <div class="kv-row">
+                  <span class="kv-label">Handover</span
+                  ><span class="kv-value">{{ pr.handover }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <!-- ── 3b. Виды / расположение / удобства ─────────────────────────── -->
         @if (vm().views.length || vm().positions.length || vm().amenities.length) {
           <div class="section">
@@ -326,6 +366,11 @@
           <div class="section">
             <div class="section-label"><mat-icon>place</mat-icon>Расположение</div>
             <p class="section-text">{{ loc }}</p>
+            @if (vm().publicLocationPath) {
+              <p class="section-text section-text--muted">
+                {{ vm().publicLocationPath }}
+              </p>
+            }
           </div>
         }
 
@@ -401,6 +446,11 @@
               }
               @if (vm().agentLangs?.length) {
                 <div class="agent-langs">{{ vm().agentLangs!.join(', ') }}</div>
+              }
+              @if (vm().agentActiveListings !== null) {
+                <div class="agent-agency">
+                  Активных листингов: {{ vm().agentActiveListings }}
+                </div>
               }
             </div>
           </div>

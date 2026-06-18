@@ -9,6 +9,7 @@ import {
   PropertyDetail,
   PropertyFeedItem,
   PropertyPhoto,
+  PropertyProject,
 } from '../../types/database';
 
 // ─── Заглушки сервисов ───────────────────────────────────────────────────────
@@ -378,5 +379,158 @@ describe('PropertyDetailComponent', () => {
     };
     await comp.loadProperty();
     expect(comp.vm().typeLabel).toBe('Residential Apartment - Flat (hotel apartment)');
+  });
+
+  // ─── Слой 2b: Project-блок, active-listings, slider-адрес, vastu ─────────────
+
+  const project = (over: Partial<PropertyProject> = {}): PropertyProject => ({
+    project_group_name: 'Akoya',
+    project_name: 'Akoya Cluster A',
+    is_building: null,
+    developer_name: 'DAMAC',
+    project_status: 'under_construction',
+    built_year: null,
+    completion_q: 'Q4',
+    completion_year: 2029,
+    ...over,
+  });
+
+  it('_mapProject: is_building true → clusterLabel «Building»', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ project: project({ is_building: true }) });
+    await comp.loadProperty();
+    expect(comp.vm().project?.clusterLabel).toBe('Building');
+  });
+
+  it('_mapProject: is_building false → clusterLabel «Cluster»', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ project: project({ is_building: false }) });
+    await comp.loadProperty();
+    expect(comp.vm().project?.clusterLabel).toBe('Cluster');
+  });
+
+  it('_mapProject: is_building null → clusterLabel «Project»', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ project: project({ is_building: null }) });
+    await comp.loadProperty();
+    expect(comp.vm().project?.clusterLabel).toBe('Project');
+  });
+
+  it('_mapProject: status completed → completion «Ready», handover = built_year', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      project: project({ project_status: 'completed', built_year: 2022 }),
+    });
+    await comp.loadProperty();
+    expect(comp.vm().project?.completion).toBe('Ready');
+    expect(comp.vm().project?.handover).toBe('2022');
+  });
+
+  it('_mapProject: status under_construction + q/year → completion «Off-Plan», handover «Q4 2029»', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      project: project({
+        project_status: 'under_construction',
+        completion_q: 'Q4',
+        completion_year: 2029,
+      }),
+    });
+    await comp.loadProperty();
+    expect(comp.vm().project?.completion).toBe('Off-Plan');
+    expect(comp.vm().project?.handover).toBe('Q4 2029');
+  });
+
+  it('_mapProject: status planned → completion «Off-Plan»', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      project: project({
+        project_status: 'planned',
+        completion_q: 'Q1',
+        completion_year: 2030,
+      }),
+    });
+    await comp.loadProperty();
+    expect(comp.vm().project?.completion).toBe('Off-Plan');
+  });
+
+  it('_mapProject: неизвестный статус → completion null', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ project: project({ project_status: 'unknown_status' }) });
+    await comp.loadProperty();
+    expect(comp.vm().project?.completion).toBeNull();
+  });
+
+  it('_mapProject: project null → vm().project null', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ project: null });
+    await comp.loadProperty();
+    expect(comp.vm().project).toBeNull();
+  });
+
+  it('is_vastu true → vm().isVastu true', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_vastu: true });
+    await comp.loadProperty();
+    expect(comp.vm().isVastu).toBe(true);
+  });
+
+  it('is_vastu null → vm().isVastu false', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_vastu: null });
+    await comp.loadProperty();
+    expect(comp.vm().isVastu).toBe(false);
+  });
+
+  it('active_listings_count пробрасывается в vm().agentActiveListings', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      agent: {
+        id: 'u1',
+        full_name: 'Ivan Agent',
+        tg_username: 'ivan',
+        whatsapp_phone: '+971500000000',
+        photo_url: 'a.png',
+        about: 'Top broker',
+        languages: ['English', 'Russian'],
+        agency_name: 'Real Agency',
+        emirate_name: 'Dubai',
+        broker_license: 'BRN123',
+        active_listings_count: 15,
+      },
+    });
+    await comp.loadProperty();
+    expect(comp.vm().agentActiveListings).toBe(15);
+  });
+
+  it('agentActiveListings null когда agent нет', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ agent: null });
+    await comp.loadProperty();
+    expect(comp.vm().agentActiveListings).toBeNull();
+  });
+
+  it('public_location_path пробрасывается в vm().publicLocationPath', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ public_location_path: 'Dubai > Marina' });
+    await comp.loadProperty();
+    expect(comp.vm().publicLocationPath).toBe('Dubai > Marina');
+  });
+
+  it('handover null когда completed без built_year', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      project: project({ project_status: 'completed', built_year: null }),
+    });
+    await comp.loadProperty();
+    expect(comp.vm().project?.handover).toBeNull();
+  });
+
+  it('handover null когда under_construction без completion_q', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      project: project({ project_status: 'under_construction', completion_q: null }),
+    });
+    await comp.loadProperty();
+    expect(comp.vm().project?.handover).toBeNull();
   });
 });

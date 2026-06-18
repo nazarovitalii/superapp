@@ -24,6 +24,7 @@ import {
   PropertyDetail,
   PropertyFeedItem,
   PropertyPhoto,
+  PropertyProject,
 } from '../../types/database';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
@@ -171,6 +172,7 @@ export class PropertyDetailComponent implements OnDestroy {
       agentEmirate: d?.agent?.emirate_name ?? null,
       agentLangs: d?.agent?.languages ?? null,
       agentAbout: d?.agent?.about ?? null,
+      agentActiveListings: d?.agent?.active_listings_count ?? null,
       whatsapp: d?.agent?.whatsapp_phone ?? null,
       telegram: d?.agent?.tg_username ?? null,
       typeLabel: this._composeType(
@@ -182,6 +184,10 @@ export class PropertyDetailComponent implements OnDestroy {
       ),
       createdLabel: this._fmtDate(d?.created_at),
       updatedLabelFull: this._fmtDate(d?.updated_at ?? d?.last_actualized_at),
+      // Слой 2b: новые поля get_property.
+      isVastu: d?.is_vastu ?? false,
+      publicLocationPath: d?.public_location_path ?? null,
+      project: this._mapProject(d?.project ?? null),
     };
   });
 
@@ -427,6 +433,42 @@ export class PropertyDetailComponent implements OnDestroy {
 
   openTelegram(username: string): void {
     window.open(`https://t.me/${username.replace(/^@/, '')}`, '_blank');
+  }
+
+  // Готовые строки Project-блока из location_developers (правила согласованы 2026-06-17).
+  private _mapProject(p: PropertyProject | null): {
+    name: string | null;
+    clusterLabel: string;
+    clusterValue: string | null;
+    developer: string | null;
+    completion: string | null;
+    handover: string | null;
+  } | null {
+    if (!p) return null;
+    const clusterLabel =
+      p.is_building === true
+        ? 'Building'
+        : p.is_building === false
+          ? 'Cluster'
+          : 'Project';
+    let completion: string | null = null;
+    if (p.project_status === 'completed') completion = 'Ready';
+    else if (p.project_status === 'under_construction' || p.project_status === 'planned')
+      completion = 'Off-Plan';
+    let handover: string | null = null;
+    if (p.project_status === 'completed') {
+      handover = p.built_year ? String(p.built_year) : null;
+    } else if (p.completion_q && p.completion_year) {
+      handover = `${p.completion_q} ${p.completion_year}`;
+    }
+    return {
+      name: p.project_group_name,
+      clusterLabel,
+      clusterValue: p.project_name,
+      developer: p.developer_name,
+      completion,
+      handover,
+    };
   }
 
   private _label(id: string | null | undefined, list?: FilterOptionId[]): string | null {

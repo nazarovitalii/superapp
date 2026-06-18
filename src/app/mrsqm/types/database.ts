@@ -299,6 +299,21 @@ export interface PropertyAgent {
   agency_name: string | null;
   emirate_name: string | null;
   broker_license: string | null;
+  // Кол-во активных листингов агента (слой 2b).
+  active_listings_count: number | null;
+}
+
+// Проект из таблицы location_developers — вложенный объект `project` в ответе get_property.
+// Null если для leaf-локации нет строки в location_developers (норма для не-Damac районов).
+export interface PropertyProject {
+  project_group_name: string | null;
+  project_name: string | null;
+  is_building: boolean | null;
+  developer_name: string | null;
+  project_status: string | null;
+  built_year: number | null;
+  completion_q: string | null;
+  completion_year: number | null;
 }
 
 // Фото объекта из таблицы property_photos (прямой select под RLS photos_select).
@@ -377,9 +392,15 @@ export interface PropertyDetail {
   location_name: string | null;
   location_level: string | null;
   location_full_path: string | null;
+  // Уровень адреса, раскрытый публично (бегунок); null = полный адрес скрыт.
+  public_location_path: string | null;
+  // Флаг Vastu — суффикс «+vastu» к числу спален.
+  is_vastu: boolean | null;
   is_network: boolean;
   is_owner: boolean;
   agent: PropertyAgent | null;
+  // Проект из location_developers (слой 2b); null = локация не привязана к девелоперу.
+  project: PropertyProject | null;
   // Ошибка доступа: get_property возвращает { error, property_id } вместо объекта.
   error?: string;
 }

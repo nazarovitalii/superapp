@@ -678,6 +678,11 @@
   overflow-y: auto;
 }
 
+// Приглушённая строка адреса (slider-уровень публичной видимости, слой 2b)
+.section-text--muted {
+  color: var(--text-color-muted);
+}
+
 // Список тегов (виды/расположение/удобства) — переиспользует .type-chip
 .tag-list {
   display: flex;
