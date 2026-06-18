@@ -124,7 +124,7 @@
 .msg-body {
   min-width: 0;
   flex: 1 1 auto;
-  font-size: 0.95rem;
+  font-size: 1rem; // 16px — текст ответа ассистента
   line-height: 1.6;
   color: var(--text-color);
   overflow-wrap: anywhere;
@@ -187,7 +187,7 @@
   background: var(--task-c-bg);
   border: 1px solid var(--extra-border-color);
   color: var(--text-color);
-  font-size: 0.95rem;
+  font-size: 1rem; // 16px — текст сообщения юзера
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -329,7 +329,7 @@
   background: transparent;
   color: var(--text-color);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem; // 16px — совпадает с текстом сообщений, без iOS-зума на фокусе
   line-height: 1.5;
   min-height: 24px;
   max-height: 160px;
