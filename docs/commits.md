@@ -281,3 +281,24 @@
 | `333f430d0` | 14:31 | fix(feed): дата строки — локальная TZ для Today/Yesterday (U-4)                                                                                                  |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `100f860bd` | 14:38 | feat(add-property): бегунок адреса — drag мышкой/пальцем (U-0a)                                                                                                  |
+| `014649ad3` | 14:59 | docs(feed): батч 2026-06-18c — спека/TODO/database + миграция get_feed sort (U-3 применена)                                                                      |
+| `b75c844c1` | 15:03 | docs: переписка + резюме дня 2026-06-18                                                                                                                          |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `9d310e3cc` | 15:55 | style(feed): тулбар — уже охват, кегль меню, грид под Yesterday (V-1,V-2,V-4)                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `33871f2d5` | 15:58 | fix(chat): показывать причину сбоя загрузки истории вместо тихого глотания (S-2)                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `d13027601` | 16:00 | feat(feed): поиск адреса — мультиселект до 5 локаций (V-5)                                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `b01bbac08` | 16:08 | feat(card): sidebar — Агент выше, floor_plan в галерею, Type/Subtype (V-3,V-7,V-8)                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `489c6292f` | 16:14 | feat(add-property): «Занято до» — месяц/год селектами, годы тек…+5 (V-6)                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `79a1e8b85` | 16:18 | style(feed): дропдаун типа — полировка (сегмент-табы, состояния, чипы) (V-9)                                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `9f3f600a3` | 16:24 | feat(feed): приватный адрес — публичный в ленте по охвату, два пути в карточке (V-10,V-11)                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `3b2446d01` | 16:28 | fix(feed): публичный режим адреса не падает в location_name (V-10, приватность)                                                                                  |
