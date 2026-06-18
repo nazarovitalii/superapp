@@ -1230,6 +1230,19 @@ $function$
 
 </details>
 
+### `search_in_scope`
+
+**Возвращает:** `jsonb` · **Параметры:** `p_query text`, `p_within_id uuid`, `p_limit integer DEFAULT 50`
+
+Поиск локаций строго среди ПОТОМКОВ узла `p_within_id` (шаг «Уточните адрес»). Потомок — локация,
+у которой `p_within_id` встречается в любом FK-предке (`city_id/community_id/sub_community_id/
+cluster_id/building_id`) и которая ≠ самому узлу. Уровень узла знать не нужно (community → все
+потомки; sub_community/cluster → только ниже него). Подстрочный матч по `name`/`aliases`. Формат
+ответа как `search_locations` mode=search: `{ mode:'scope', query, count, results:[{id,name,level,
+community_name,city_name,stats_listings,is_popular}] }`. `LANGUAGE plpgsql STABLE` (НЕ SECURITY
+DEFINER). GRANT EXECUTE → anon/authenticated/service_role. Миграция:
+`applied/2026-06-18-search-in-scope.sql` (AP-2; заменил клиентский обход p_limit=50).
+
 ### `get_location_path`
 
 **Возвращает:** `jsonb`

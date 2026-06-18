@@ -254,3 +254,7 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `6f5ec8a96` | 03:56 | docs: tabs+TODO под форму v3 (AP-2..AP-S2) + F-center                                                                                                            |
 | `2d2d51151` | 04:01 | docs: переписка + резюме дня 2026-06-18 (форма v3 + бегунок + лента)                                                                                             |
+| `ff9376079` | 04:16 | migrate: search_in_scope применён (серверный скоуп уточнения адреса, AP-2)                                                                                       |
+| `115ed50c0` | 04:16 | migrate: search_in_scope → applied/                                                                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `4c47155ed` | 04:19 | feat(add-property): уточнение адреса через search_in_scope (серверный скоуп, AP-2)                                                                               |

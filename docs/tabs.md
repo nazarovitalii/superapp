@@ -210,10 +210,10 @@ RPC `publish_property` **не существует**. Справочники —
 
 1. **Категория** — **первой строкой Сделка** sale|rent (+ price_period для rent, AP-8), затем
    category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house).
-2. **Адрес** — каскад до leaf: `search_locations` (mode=search, **descendant-поиск с `p_limit=50`**,
-   AP-2 — иначе подстрока типа «Vista»→«Golf Vista» выбивалась из топ-8) → `search_locations`
-   (mode=info) отдаёт children. Внутри комьюнити (children>10) «Уточните адрес» — глобальный поиск,
-   отфильтрованный по `community_name`. Building info из `location_developers`. **Developer-автокомплит**
+2. **Адрес** — каскад до leaf: `search_locations` (mode=search) для верхнего поиска → `search_locations`
+   (mode=info) отдаёт children. «Уточните адрес» (children>10) — **RPC `search_in_scope`**: ищет строго
+   среди потомков **последнего выбранного узла** (AP-2; выбрал Damac Hills → его потомки, выбрал Golf
+   Town → только ниже Golf Town; «Vista»→«Golf Vista»). Заменил прежний клиентский обход. Building info из `location_developers`. **Developer-автокомплит**
    (RPC `search_developers`) показывается, когда leaf выбран и по нему НЕТ `location_developers`
    (`buildingInfo()===null`, AP-5) → `developer_id` в payload. Бегунок приватности «**Что видят коллеги**»
    (AP-3): кастомные **круглые точки по уровням**, трек от центра первого слова до центра leaf, метка по
