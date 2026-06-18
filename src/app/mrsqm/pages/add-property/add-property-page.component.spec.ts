@@ -148,8 +148,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
   it('шаг 1 (Адрес): без locationId → возвращает строку-ошибку', () => {
     component.step.set(1);
     component.locationId.set(null);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(typeof result).toBe('string');
     expect(result).toBeTruthy();
   });
@@ -157,8 +156,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
   it('шаг 1 (Адрес): c locationId → возвращает null', () => {
     component.step.set(1);
     component.locationId.set('some-location-id');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
 
@@ -179,8 +177,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     } as unknown as FilterOptions);
     component.unitTypeId.set('apt-id');
     component.areaSqft.set('');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(typeof result).toBe('string');
     expect(result).toBeTruthy();
   });
@@ -195,8 +192,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     } as unknown as FilterOptions);
     component.unitTypeId.set('apt-id');
     component.areaSqft.set('1200');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
 
@@ -205,8 +201,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
   it('шаг 3 (Цена): без price → возвращает ошибку', () => {
     component.step.set(3);
     component.price.set('');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(typeof result).toBe('string');
     expect(result).toBeTruthy();
   });
@@ -214,8 +209,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
   it('шаг 3 (Цена): с ценой → возвращает null', () => {
     component.step.set(3);
     component.price.set('1,200,000');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
 
@@ -225,8 +219,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     component.step.set(5);
     component.listingType.set('official');
     component.titleDeedNumber.set('');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(typeof result).toBe('string');
     expect(result).toBeTruthy();
   });
@@ -235,16 +228,14 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     component.step.set(5);
     component.listingType.set('official');
     component.titleDeedNumber.set('TD-123456');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    const result = (component as any)._validateStep();
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
 
   it('шаги без обязательной валидации (4, 6, 7) → возвращают null', () => {
     for (const s of [4, 6, 7]) {
       component.step.set(s);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-      expect((component as any)._validateStep()).toBeNull();
+      expect((component as any)._validateStep()).toBeNull(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
   });
 });
