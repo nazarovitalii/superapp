@@ -4,6 +4,7 @@ import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { SnackService } from '../../../core/snack/snack.service';
 import {
   FilterOptions,
   PropertyDetail,
@@ -41,6 +42,12 @@ class FakeSaved {
   async toggle(id: string): Promise<boolean> {
     this.toggleCalls.push(id);
     return this.toggleResult;
+  }
+}
+class FakeSnack {
+  lastParams: unknown = null;
+  open(params: unknown): void {
+    this.lastParams = params;
   }
 }
 
@@ -118,11 +125,13 @@ const makeComponent = (): {
   photos: FakePhotos;
   create: FakeCreate;
   saved: FakeSaved;
+  snack: FakeSnack;
 } => {
   const supa = new FakeSupabase();
   const photos = new FakePhotos();
   const create = new FakeCreate();
   const saved = new FakeSaved();
+  const snack = new FakeSnack();
   TestBed.configureTestingModule({
     imports: [PropertyDetailComponent],
     providers: [
@@ -130,11 +139,12 @@ const makeComponent = (): {
       { provide: PropertyPhotoService, useValue: photos },
       { provide: PropertyCreateService, useValue: create },
       { provide: SavedPropertiesService, useValue: saved },
+      { provide: SnackService, useValue: snack },
     ],
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
-  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved };
+  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved, snack };
 };
 
 describe('PropertyDetailComponent', () => {
@@ -248,15 +258,15 @@ describe('PropertyDetailComponent', () => {
     expect(comp.isEditing()).toBe(false);
   });
 
-  it('saveEdit отклоняет некорректную цену', async () => {
-    const { comp, supa } = makeComponent();
+  it('saveEdit отклоняет некорректную цену и показывает снек', async () => {
+    const { comp, supa, snack } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });
     await comp.loadProperty();
     comp.startEdit();
     comp.editPrice.set('abc');
     await comp.saveEdit();
     expect(comp.isEditing()).toBe(true);
-    expect(comp.ownerMsg()).toBe('Укажите корректную цену');
+    expect((snack.lastParams as { msg: string }).msg).toBe('Укажите корректную цену');
   });
 
   it('archive меняет статус в detail', async () => {

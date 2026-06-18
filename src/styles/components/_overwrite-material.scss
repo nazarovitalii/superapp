@@ -440,6 +440,13 @@ body.isVerticalActionBar .cdk-overlay-pane.mat-mdc-tooltip-panel {
   pointer-events: none;
 }
 
+// SNACK — MrSQM custom snack (нижний-левый, стиль строки ленты)
+// panelClass приземляется на .mat-mdc-snack-bar-container с этим классом
+.mrsqm-snack .mdc-snackbar__surface {
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--task-selected-shadow, var(--task-detail-shadow));
+}
+
 // SNACK
 // Move snack bar above mobile bottom nav for all touch devices
 @include media-queries.mq(xs, max) {

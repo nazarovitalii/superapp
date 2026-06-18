@@ -162,16 +162,29 @@
         </div>
       }
 
-      <!-- Кнопка избранного под фото -->
-      <button
-        type="button"
-        class="fav-btn"
-        [class.is-saved]="isSaved()"
-        (click)="toggleSaved()"
-      >
-        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-        {{ isSaved() ? 'В избранном' : 'Добавить в избранное' }}
-      </button>
+      <!-- Ряд кнопок-пилюль под фото: избранное + поднять вверх (только владельцу) -->
+      <div class="action-pills">
+        <button
+          type="button"
+          class="fav-btn"
+          [class.is-saved]="isSaved()"
+          (click)="toggleSaved()"
+        >
+          <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+          {{ isSaved() ? 'In Favourites' : 'Add to Favourites' }}
+        </button>
+        @if (isOwner()) {
+          <button
+            type="button"
+            class="fav-btn"
+            (click)="actualize()"
+            [disabled]="ownerBusy()"
+          >
+            <mat-icon>arrow_upward</mat-icon>
+            Поднять вверх
+          </button>
+        }
+      </div>
 
       <div class="detail-body">
         <!-- ── 2. Цена и тип сделки ──────────────────────────────────────── -->
@@ -189,9 +202,6 @@
             }
           </span>
           <div class="type-chips">
-            <span class="type-chip">
-              {{ vm().dealType === 'sale' ? 'Продажа' : 'Аренда' }}
-            </span>
             @if (vm().previousPrice) {
               <span class="type-chip"> <mat-icon>trending_down</mat-icon>Снижение </span>
             }
@@ -443,6 +453,7 @@
                 {{ vm().locationPath }} <span class="loc-scope-tag">(что видишь ты)</span>
               </p>
               @if (vm().publicLocationPath) {
+                <div class="loc-divider"></div>
                 <p class="section-text section-text--muted">
                   {{ vm().publicLocationPath }}
                   <span class="loc-scope-tag">(что видят все)</span>
@@ -503,22 +514,6 @@
           </div>
         }
 
-        <!-- ── 8. Статистика ─────────────────────────────────────────────── -->
-        @if (vm().updatedLabel || vm().viewsCount !== null) {
-          <div class="stats-row">
-            @if (vm().updatedLabel) {
-              <span class="stat-item">
-                <mat-icon>schedule</mat-icon>Обновлено {{ vm().updatedLabel }}
-              </span>
-            }
-            @if (vm().viewsCount !== null) {
-              <span class="stat-item">
-                <mat-icon>visibility</mat-icon>{{ vm().viewsCount }} просм.
-              </span>
-            }
-          </div>
-        }
-
         <!-- ── Управление своим объектом (is_owner) ──────────────────────── -->
         @if (isOwner()) {
           <div class="owner-actions">
@@ -570,13 +565,6 @@
                 </button>
                 <button
                   mat-stroked-button
-                  (click)="actualize()"
-                  [disabled]="ownerBusy()"
-                >
-                  <mat-icon>refresh</mat-icon>Актуализировать
-                </button>
-                <button
-                  mat-stroked-button
                   [matMenuTriggerFor]="archiveMenu"
                   [disabled]="ownerBusy()"
                 >
@@ -597,9 +585,6 @@
                   </button>
                 </mat-menu>
               </div>
-            }
-            @if (ownerMsg(); as msg) {
-              <div class="owner-msg">{{ msg }}</div>
             }
           </div>
         }

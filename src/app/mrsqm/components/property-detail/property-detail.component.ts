@@ -35,6 +35,8 @@ import {
   PropertyOwnerService,
 } from '../../services/property-owner.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { SnackService } from '../../../core/snack/snack.service';
+import { SnackType } from '../../../core/snack/snack.model';
 import Swiper from 'swiper';
 import { Navigation, Thumbs } from 'swiper/modules';
 
@@ -58,6 +60,7 @@ export class PropertyDetailComponent implements OnDestroy {
   private readonly _createService = inject(PropertyCreateService);
   private readonly _ownerService = inject(PropertyOwnerService);
   private readonly _saved = inject(SavedPropertiesService);
+  private readonly _snack = inject(SnackService);
   private readonly _injector = inject(Injector);
 
   @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
@@ -160,13 +163,6 @@ export class PropertyDetailComponent implements OnDestroy {
       titleDeedYear: d?.title_deed_year ?? null,
       plotNumber: d?.plot_number ?? null,
       municipalityNumber: d?.municipality_number ?? null,
-      viewsCount: d?.views_count ?? null,
-      updatedLabel: this._relativeDate(
-        d?.last_actualized_at ??
-          d?.published_at ??
-          f.last_actualized_at ??
-          f.published_at,
-      ),
       agentName: d?.agent?.full_name ?? f.owner_full_name,
       agentPhoto: d?.agent?.photo_url ?? f.owner_photo_url,
       agentAgency: d?.agent?.agency_name ?? f.owner_agency_name,
@@ -355,16 +351,29 @@ export class PropertyDetailComponent implements OnDestroy {
   // ─── Действия владельца над своим объектом (is_owner) ──────────────────────
   readonly isOwner = computed(() => this.detail()?.is_owner ?? false);
   readonly ownerBusy = signal(false);
-  readonly ownerMsg = signal<string | null>(null);
   readonly isEditing = signal(false);
   readonly editPrice = signal('');
   readonly editDescription = signal('');
+
+  /** Помощник: показать снек-сообщение с общим конфигом (низ-лево, стиль ленты). */
+  private _notify(msg: string, type: SnackType, ico?: string): void {
+    this._snack.open({
+      msg,
+      type,
+      ...(ico ? { ico } : {}),
+      isSkipTranslate: true,
+      config: {
+        horizontalPosition: 'left',
+        verticalPosition: 'bottom',
+        panelClass: 'mrsqm-snack',
+      },
+    });
+  }
 
   startEdit(): void {
     const d = this.detail();
     this.editPrice.set(d ? String(d.price) : '');
     this.editDescription.set(d?.description ?? '');
-    this.ownerMsg.set(null);
     this.isEditing.set(true);
   }
 
@@ -377,19 +386,18 @@ export class PropertyDetailComponent implements OnDestroy {
     if (!d) return;
     const price = Number(String(this.editPrice()).replace(/[^\d.]/g, ''));
     if (!price || price <= 0) {
-      this.ownerMsg.set('Укажите корректную цену');
+      this._notify('Укажите корректную цену', 'ERROR');
       return;
     }
     const description = this.editDescription().trim() || null;
     this.ownerBusy.set(true);
-    this.ownerMsg.set(null);
     try {
       await this._ownerService.updateProperty(d.id, price, description);
       this.detail.set({ ...d, price, description });
       this.isEditing.set(false);
-      this.ownerMsg.set('Сохранено');
+      this._notify('Сохранено', 'SUCCESS');
     } catch {
-      this.ownerMsg.set('Не удалось сохранить');
+      this._notify('Не удалось сохранить', 'ERROR');
     } finally {
       this.ownerBusy.set(false);
     }
@@ -399,13 +407,12 @@ export class PropertyDetailComponent implements OnDestroy {
     const d = this.detail();
     if (!d) return;
     this.ownerBusy.set(true);
-    this.ownerMsg.set(null);
     try {
       await this._ownerService.actualizeProperty(d.id);
       this.detail.set({ ...d, last_actualized_at: new Date().toISOString() });
-      this.ownerMsg.set('Объект актуализирован');
+      this._notify('Объект актуализирован и поднят наверх', 'SUCCESS', 'arrow_upward');
     } catch {
-      this.ownerMsg.set('Не удалось актуализировать');
+      this._notify('Не удалось актуализировать', 'ERROR');
     } finally {
       this.ownerBusy.set(false);
     }
@@ -415,15 +422,15 @@ export class PropertyDetailComponent implements OnDestroy {
     const d = this.detail();
     if (!d) return;
     this.ownerBusy.set(true);
-    this.ownerMsg.set(null);
     try {
       await this._ownerService.archiveProperty(d.id, status);
       this.detail.set({ ...d, status });
-      this.ownerMsg.set(
+      this._notify(
         status === 'archived_sold' ? 'Отмечено: продан' : 'Снято с публикации',
+        'SUCCESS',
       );
     } catch {
-      this.ownerMsg.set('Не удалось изменить статус');
+      this._notify('Не удалось изменить статус', 'ERROR');
     } finally {
       this.ownerBusy.set(false);
     }
