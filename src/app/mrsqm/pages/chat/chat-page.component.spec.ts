@@ -50,6 +50,13 @@ describe('ChatPageComponent', () => {
     expect(component.loadingHistory()).toBeFalse();
   });
 
+  it('показывает ошибку, если история не загрузилась (не молчит)', async () => {
+    loadHistorySpy.and.rejectWith(new Error('Failed to fetch'));
+    await createComponent();
+    expect(component.error()).toContain('Failed to fetch');
+    expect(component.loadingHistory()).toBeFalse();
+  });
+
   it('send добавляет пузырь юзера и пустой ассистента, streaming=true', async () => {
     await createComponent();
     component.send('привет');

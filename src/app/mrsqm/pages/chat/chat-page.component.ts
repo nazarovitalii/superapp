@@ -92,8 +92,13 @@ export class ChatPageComponent implements OnDestroy {
     try {
       const history: ChatHistoryMessage[] = await this._gpt.loadHistory();
       this.messages.set(history.map((m) => ({ role: m.role, text: m.text })));
-    } catch {
-      // История недоступна — лента пустая, не критично
+    } catch (e) {
+      // История не загрузилась (сеть/CORS/401/500) — показываем причину,
+      // чтобы пустая лента не выглядела как «история не сохраняется».
+      // Ввод остаётся рабочим (футер виден всегда).
+      this.error.set(
+        'Не удалось загрузить историю чата: ' + ((e as Error)?.message ?? String(e)),
+      );
     } finally {
       this.loadingHistory.set(false);
     }
