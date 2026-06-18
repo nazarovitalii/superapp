@@ -302,3 +302,32 @@
 | `9f3f600a3` | 16:24 | feat(feed): приватный адрес — публичный в ленте по охвату, два пути в карточке (V-10,V-11)                                                                       |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `3b2446d01` | 16:28 | fix(feed): публичный режим адреса не падает в location_name (V-10, приватность)                                                                                  |
+| `55128ad22` | 17:07 | docs(feed): батч 2026-06-18d — спека/TODO/database + миграции приватности адреса (применены)                                                                     |
+| `b016e3420` | 17:10 | docs: переписка + резюме дня 2026-06-18 (батч 18d)                                                                                                               |
+| `c671d2d68` | 17:50 | docs(chat): спека редизайна таба AI Chat (S-3, ChatGPT-вид в теме SP)                                                                                            |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `8879fd0c7` | 17:59 | style(feed): тулбар — кегль 14px, компактные меню, убрана линия (W-2,W-5,W-6)                                                                                    |
+| `37b837f51` | 18:02 | docs(chat): план редизайна таба AI Chat (S-3, 2 задачи, TDD)                                                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `0c8cda696` | 18:06 | feat(feed): окно локаций сворачивается, фикс ширины, Commercial allowlist (W-1,W-4)                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `7593e06ca` | 18:13 | feat(chat): UI-логика редизайна — чипы, авто-скролл, авто-рост поля (S-3)                                                                                        |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `323f3a230` | 18:19 | feat(chat): ChatGPT-вид таба AI Chat в теме SP — лента, чипы, композер-пилюля (S-3)                                                                              |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `44e224f88` | 18:22 | style(chat): suppress chip transition/active transform under reduced-motion (S-3)                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `e6ae9c04c` | 18:32 | fix(feed): overflow-детект локаций — effect в injection context (W-1)                                                                                            |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `fc11140be` | 18:34 | style(add-property): селекты месяц/год — стиль формы + chevron (W-3)                                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `4efafcfc4` | 18:38 | fix(feed): актуализация/архив/правка владельца перезагружают ленту (W-7)                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `91d2f594f` | 18:47 | style(chat): prettier-форматирование спеки — перенос длинных строк (S-3)                                                                                         |
+| `cc10292a9` | 18:49 | docs(chat): tabs/tests под редизайн таба AI Chat (S-3, ChatGPT-вид)                                                                                              |
