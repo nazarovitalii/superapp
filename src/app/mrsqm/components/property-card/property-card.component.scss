@@ -118,13 +118,14 @@
 
 .col-beds,
 .col-size {
-  text-align: right;
+  text-align: center;
 }
 
 // Beds: число сверху, «maid» серым ниже
 .col-beds {
   display: flex;
   flex-direction: column;
+  align-items: center;
   line-height: 1.15;
 }
 
@@ -137,6 +138,8 @@
 .col-type {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 
   .type-handover {
     font-size: 0.72rem;
@@ -148,7 +151,8 @@
 .col-price {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  text-align: center;
 
   .price-old {
     font-size: 0.72rem;
@@ -177,7 +181,7 @@
 .col-agent {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   overflow: hidden;
 
   .agent-name,
@@ -185,6 +189,7 @@
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
   }
 
   .agent-agency {
