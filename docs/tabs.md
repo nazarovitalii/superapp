@@ -48,6 +48,8 @@ task-box стили Super Productivity (тени/токены/радиусы tas
 - **Hover-кнопки справа** (как task-hover-controls в инбоксе): при наведении
   выезжают «закладка» и «открыть карточку» (`right_panel_open`). Только на pointer-устройствах.
 - **Типографика строки:** все тексты 14px, один цвет (`--text-color`), без жирности/курсива.
+- **Выравнивание колонок (F-center):** Тип · Beds · Площадь · Цена · иконки · Агент —
+  центрированы по горизонтали; Адрес и Дата — без изменений (слева/справа).
 - **Избранное** — иконка `bookmark` в hover-кнопках, toggle `save_property`, состояние
   из `saved_properties`. Отдельного экрана нет.
 - Sticky-шапка таблицы. Пагинация: `p_limit=20`, «Загрузить ещё».
@@ -201,16 +203,36 @@ RPC `publish_property` **не существует**. Справочники —
 блок в стиле task-detail-panel с иконкой, заголовком (17px) и «Шаг N/8» справа.
 Поля и чипы на шаге — 15px. Навигация: Назад / Далее / Опубликовать.
 
-### Поля формы (8 шагов, реализовано 2026-06-15; реструктуризация 2026-06-18 FC-4)
+### Поля формы (8 шагов; реструктуризация FC-4 + батч 2026-06-18b «форма v3»)
 
-1. **Категория** — category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house) + **Сделка**: sale|rent (+ price_period для rent). [Сделка влита в Категорию, FC-4]
-2. **Адрес** — каскад до leaf: `search_locations` (mode=search) → выбор → `search_locations` (mode=info) отдаёт children. Внутри комьюнити (children>10) «Уточните адрес» — **глобальный поиск по всем нижним уровням** (sub_community/cluster/building), отфильтрованный по `community_name` (не только прямые дети). Выше комьюнити (город→комьюнити) — фильтр прямых children: поиск если >10, чипы если ≤10. leaf = children пуст. Building info из `location_developers`. Бегунок приватности адреса F-12b (`public_location_id`, минимум — комьюнити)
-3. **Параметры** — набор полей зависит от unit_type (`property-type-fields.ts`): beds/baths, чекбоксы `is_maid`/`is_hotel_pool`/`is_vastu` (**три строки, галочка слева у метки**, FC-2; vastu только residential apartment/house), BUA `area_sqft`, `plot_sqft`, `floor_level_id` (Low/Mid/High), `floors_in_unit` (G+…), мультиселекты `view_ids`/`position_ids`/`amenity_ids`, `furnished`. (Планировка вынесена в шаг 7; «номер этажа» убрано)
-4. **Цена** — price (AED) + торг
-5. **Состояние** — handover; **Off-Plan заблокирован, если у локации `project_status='completed'`** (Ready форсится; дизейбл чипа + гард + реконсиляция при смене локации, FC-3); off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until` (месяц+год); distress
-6. **Листинг** — listing_type, visibility. Документы (Title Deed №/год, plot/municipality number) + заметка Form A — **только для official**; для pocket-листинга документы не нужны
-7. **Фото и планировка** — `layout_id` (`community_layouts`, если есть для типа) + загрузка фото (нарезка в браузере → Storage `property_photos`, P-5b). [новый шаг, FC-4]
-8. **Описание** — текст
+Все обязательные поля помечены **серой звёздочкой `*`** (AP-11). Спека батча:
+`docs/superpowers/specs/2026-06-18b-add-property-v3-and-slider-design.md`.
+
+1. **Категория** — **первой строкой Сделка** sale|rent (+ price_period для rent, AP-8), затем
+   category → unit_type → sub_type (uuid из `get_filter_options`; подтип только для apartment/house).
+2. **Адрес** — каскад до leaf: `search_locations` (mode=search, **descendant-поиск с `p_limit=50`**,
+   AP-2 — иначе подстрока типа «Vista»→«Golf Vista» выбивалась из топ-8) → `search_locations`
+   (mode=info) отдаёт children. Внутри комьюнити (children>10) «Уточните адрес» — глобальный поиск,
+   отфильтрованный по `community_name`. Building info из `location_developers`. **Developer-автокомплит**
+   (RPC `search_developers`) показывается, когда leaf выбран и по нему НЕТ `location_developers`
+   (`buildingInfo()===null`, AP-5) → `developer_id` в payload. Бегунок приватности «**Что видят коллеги**»
+   (AP-3): кастомные **круглые точки по уровням**, трек от центра первого слова до центра leaf, метка по
+   центру, клик по точке ≥ комьюнити (AP-S2; `public_location_id`, минимум — комьюнити).
+3. **Параметры** — поля зависят от unit_type (`property-type-fields.ts`): **Спальни\*/Санузлы\*
+   (обязательные)**, чекбоксы `is_maid`/`is_hotel_pool`/`is_vastu` (**три строки, метки слева,
+   чекбоксы выровнены в колонку**; «Vastu Compliant»; vastu только residential apartment/house),
+   **Планировка `layout_id`** (`community_layouts`, **над площадью, только `house`**, Q2), BUA `area_sqft`\*,
+   `plot_sqft`\*, `floor_level_id`, `floors_in_unit`, мультиселекты `view_ids`/`position_ids`/`amenity_ids`,
+   `furnished`.
+4. **Цена** — price (AED)\* + торг
+5. **Состояние** — handover; **Off-Plan заблокирован при `project_status='completed'`** (FC-3);
+   off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until`; distress
+6. **Листинг** — listing_type, visibility. Документы (Title Deed №\*/год, plot/municipality) — только official
+7. **Описание** — текст
+8. **Фото** — **строчная галерея с перетаскиванием порядка (CDK DragDrop)**: первое = главное,
+   кнопка «Сделать главным» (AP-7); ниже строка **«Floor Plan»** — до 4 фото планировки, тоже
+   reorder (AP-10). Порядок = `order_index` при загрузке. Floor plans грузятся с `photo_type='floor_plan'`
+   (префикс пути `fp_`); в галерее карточки НЕ показываются (`getPhotos` отдаёт только `gallery`).
 
 **Расхождение таксономии:** в живой БД `hotel_apartment` — коммерческий unit_type
 (в CSV-матрице он был подтипом Apartment); «Residential Land» в БД = `land`.

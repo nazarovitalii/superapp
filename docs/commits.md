@@ -217,3 +217,38 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `d6372edc2` | 02:33 | docs: tabs+TODO под FC-1..FC-4 (форма-реструктуризация + карточка Вариант A)                                                                                     |
 | `3229d932d` | 02:39 | docs: переписка + резюме дня 2026-06-18 (FC-1..FC-4)                                                                                                             |
+| `81f96b7ac` | 03:00 | docs: spec+TODO для формы v3 + бегунок + лента-центрирование (AP-\*, F-center)                                                                                   |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `9fe4af911` | 03:03 | feat(add-property): Sale/Rent наверх + чекбоксы колонкой + layout в Параметры (B1)                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `040674955` | 03:10 | feat(add-property): спальни/санузлы обязательные + серые звёздочки required (B2)                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `fced24012` | 03:15 | feat(add-property): разбить последний шаг — Описание(7)/Фото(8) (B3)                                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `863b5645f` | 03:22 | feat(add-property): фото reorder (DragDrop) + сделать главным + Floor Plan до 4 (B4)                                                                             |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `372099a3f` | 03:30 | feat(add-property): бегунок адреса — коллеги, центр, ширина адреса, точки по уровням (B5)                                                                        |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `9cf552241` | 03:35 | style(feed): центрировать колонки Тип/Beds/Площадь/Цена/иконки/Агент (F-center)                                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `da9feef1a` | 03:43 | feat(add-property): поиск адреса limit-fix (AP-2) + developer-автокомплит (AP-5)                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `522c75632` | 03:45 | style(add-property): размер лого девелопера в выпадашке (B7 fix)                                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `ac28efdb2` | 03:53 | fix(property-detail): не показывать floor_plan-фото в галерее карточки (getPhotos gallery-only)                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
