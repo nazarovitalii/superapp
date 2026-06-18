@@ -258,3 +258,4 @@
 | `115ed50c0` | 04:16 | migrate: search_in_scope → applied/                                                                                                                              |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `4c47155ed` | 04:19 | feat(add-property): уточнение адреса через search_in_scope (серверный скоуп, AP-2)                                                                               |
+| `6722e5784` | 04:23 | docs: search_in_scope в database.md + AP-2 серверный скоуп (tabs/TODO)                                                                                           |
