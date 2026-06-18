@@ -1,0 +1,88 @@
+<div class="chat">
+  <!-- Загрузка истории -->
+  @if (loadingHistory()) {
+    <div class="chat-spinner">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else {
+    <!-- Лента сообщений -->
+    <div class="chat-messages">
+      <!-- Пустое состояние -->
+      @if (messages().length === 0) {
+        <div class="chat-empty">
+          <mat-icon class="chat-empty-icon">smart_toy</mat-icon>
+          <p class="chat-empty-text">
+            Привет! Я AI-ассистент MrSQM. Спросите меня о рынке недвижимости Дубая,
+            объявлениях или районах — помогу найти нужное.
+          </p>
+        </div>
+      }
+
+      <!-- Пузыри сообщений -->
+      @for (m of messages(); track $index) {
+        <div
+          class="msg"
+          [class.user]="m.role === 'user'"
+          [class.assistant]="m.role === 'assistant'"
+        >
+          <div class="msg-bubble">
+            @if (m.role === 'assistant') {
+              <markdown [data]="m.text" />
+              @if (m.streaming) {
+                <span
+                  class="msg-cursor"
+                  aria-hidden="true"
+                ></span>
+              }
+            } @else {
+              {{ m.text }}
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Статус инструмента -->
+    @if (status()) {
+      <div class="chat-status">{{ status() }}</div>
+    }
+
+    <!-- Ошибка -->
+    @if (error()) {
+      <div class="chat-error">{{ error() }}</div>
+    }
+  }
+
+  <!-- Поле ввода (всегда видно) -->
+  <div class="chat-footer">
+    <textarea
+      class="chat-input"
+      [(ngModel)]="draft"
+      [value]="draft()"
+      placeholder="Напишите сообщение…"
+      rows="1"
+      (keydown)="onKeyDown($event)"
+    ></textarea>
+
+    @if (!streaming()) {
+      <button
+        mat-icon-button
+        class="chat-send-btn"
+        [disabled]="!draft().trim()"
+        (click)="onSendClick()"
+        aria-label="Отправить"
+      >
+        <mat-icon>send</mat-icon>
+      </button>
+    } @else {
+      <button
+        mat-icon-button
+        class="chat-stop-btn"
+        (click)="stop()"
+        aria-label="Остановить"
+      >
+        <mat-icon>stop_circle</mat-icon>
+      </button>
+    }
+  </div>
+</div>

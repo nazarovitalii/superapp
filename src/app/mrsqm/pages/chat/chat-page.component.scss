@@ -1,0 +1,234 @@
+@use '../../../../styles/_globals.scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+// ─── Корневой контейнер чата ──────────────────────────────────────────────
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 var(--s);
+}
+
+// ─── Спиннер при загрузке истории ────────────────────────────────────────
+
+.chat-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+// ─── Лента сообщений ──────────────────────────────────────────────────────
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s);
+  padding: var(--s) 0;
+}
+
+// ─── Пустое состояние ────────────────────────────────────────────────────
+
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--s2);
+  padding: var(--s6) var(--s2);
+  color: var(--text-color-muted);
+  text-align: center;
+}
+
+.chat-empty-icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  opacity: 0.4;
+  color: var(--c-primary);
+}
+
+.chat-empty-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 460px;
+  color: var(--text-color-muted);
+}
+
+// ─── Пузыри сообщений ────────────────────────────────────────────────────
+
+.msg {
+  display: flex;
+
+  &.user {
+    justify-content: flex-end;
+
+    .msg-bubble {
+      background: var(--c-primary);
+      color: var(--palette-primary-contrast-500, #fff);
+      border-radius: var(--task-border-radius) var(--task-border-radius) 4px
+        var(--task-border-radius);
+      max-width: 72%;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      padding: var(--s-half) var(--s);
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+  }
+
+  &.assistant {
+    justify-content: flex-start;
+
+    .msg-bubble {
+      background: var(--task-c-bg);
+      border: 1px solid var(--extra-border-color);
+      border-radius: var(--task-border-radius) var(--task-border-radius)
+        var(--task-border-radius) 4px;
+      max-width: 80%;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      padding: var(--s-half) var(--s);
+      overflow-wrap: anywhere;
+      color: var(--text-color);
+
+      // Убираем лишние отступы markdown внутри пузыря
+      markdown,
+      ::ng-deep markdown {
+        p:first-child {
+          margin-top: 0;
+        }
+        p:last-child {
+          margin-bottom: 0;
+        }
+        p {
+          margin: 0.4em 0;
+        }
+        ul,
+        ol {
+          margin: 0.4em 0;
+          padding-left: 1.4em;
+        }
+        li {
+          margin: 0.2em 0;
+        }
+        code {
+          background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
+          border-radius: 3px;
+          padding: 0.1em 0.35em;
+          font-size: 0.875em;
+        }
+        pre {
+          background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
+          border-radius: var(--task-border-radius);
+          padding: var(--s-half) var(--s);
+          overflow-x: auto;
+          font-size: 0.875em;
+        }
+      }
+    }
+  }
+}
+
+// Мигающий курсор во время стрима
+.msg-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--text-color-muted);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+// ─── Статус инструмента ───────────────────────────────────────────────────
+
+.chat-status {
+  padding: var(--s-quarter) var(--s);
+  font-size: 0.8125rem;
+  color: var(--text-color-muted);
+  font-style: italic;
+}
+
+// ─── Ошибка ───────────────────────────────────────────────────────────────
+
+.chat-error {
+  margin: var(--s-quarter) 0;
+  padding: var(--s-half) var(--s);
+  border-radius: var(--task-border-radius);
+  background: var(--warn-c, rgba(200, 50, 50, 0.1));
+  color: var(--warn-dark, #c62828);
+  font-size: 0.875rem;
+  border: 1px solid var(--warn-c, rgba(200, 50, 50, 0.25));
+}
+
+// ─── Футер с полем ввода ──────────────────────────────────────────────────
+
+.chat-footer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-half);
+  padding: var(--s-half) 0 var(--s);
+  border-top: 1px solid var(--extra-border-color);
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  resize: none;
+  min-height: 44px;
+  max-height: 160px;
+  padding: var(--s-half) var(--s);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--task-border-radius);
+  background: var(--task-c-bg);
+  color: var(--text-color);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  line-height: 1.5;
+  outline: none;
+  overflow-y: auto;
+
+  &::placeholder {
+    color: var(--text-color-muted);
+  }
+
+  &:focus {
+    border-color: var(--c-primary);
+  }
+}
+
+.chat-send-btn,
+.chat-stop-btn {
+  flex: 0 0 auto;
+  color: var(--c-primary);
+}
+
+.chat-stop-btn {
+  color: var(--warn-dark, #c62828);
+}
