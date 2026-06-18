@@ -88,6 +88,167 @@ const activeBuildingInfo = (): BuildingInfo => ({
   project_status: 'under_construction',
 });
 
+// ── Ожидаемые константы (FC-4) ────────────────────────────────────────────────
+const EXPECTED_STEPS = [
+  'Категория',
+  'Адрес',
+  'Параметры',
+  'Цена',
+  'Состояние',
+  'Листинг',
+  'Фото и планировка',
+  'Описание',
+] as const;
+const EXPECTED_STEP_ICONS = [
+  'category',
+  'place',
+  'tune',
+  'payments',
+  'event_available',
+  'verified',
+  'photo_library',
+  'description',
+] as const;
+
+describe('AddPropertyPageComponent — структура шагов (FC-4)', () => {
+  let component: AddPropertyPageComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('STEPS содержит 8 шагов', () => {
+    expect(component.steps.length).toBe(8);
+  });
+
+  it('STEPS имеет ожидаемый порядок (FC-4)', () => {
+    expect([...component.steps]).toEqual([...EXPECTED_STEPS]);
+  });
+
+  it('STEP_ICONS имеет ожидаемый порядок (FC-4)', () => {
+    expect([...component.stepIcons]).toEqual([...EXPECTED_STEP_ICONS]);
+  });
+
+  // ── _validateStep: гейт шага 1 (Адрес) ───────────────────────────────────
+
+  it('шаг 1 (Адрес): без locationId → возвращает строку-ошибку', () => {
+    component.step.set(1);
+    component.locationId.set(null);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 1 (Адрес): c locationId → возвращает null', () => {
+    component.step.set(1);
+    component.locationId.set('some-location-id');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(result).toBeNull();
+  });
+
+  // ── _validateStep: гейт шага 2 (Параметры) ───────────────────────────────
+
+  it('шаг 2 (Параметры): bua-тип без areaSqft → возвращает ошибку', () => {
+    component.step.set(2);
+    // Имитируем тип с полем bua через fields() — устанавливаем unitTypeId на
+    // тип, у которого typeFieldsFor возвращает bua=true. Самый прямой способ:
+    // убедиться, что ветка bua сработала. Так как options могут быть пустыми,
+    // подменим computed fields напрямую через форсирование areaSqft.
+    // Способ: выставим unit_type с value 'apartment' (bua=true по typeFieldsFor).
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt-id', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt-id');
+    component.areaSqft.set('');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 2 (Параметры): bua-тип с areaSqft → возвращает null', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt-id', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt-id');
+    component.areaSqft.set('1200');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(result).toBeNull();
+  });
+
+  // ── _validateStep: гейт шага 3 (Цена) ────────────────────────────────────
+
+  it('шаг 3 (Цена): без price → возвращает ошибку', () => {
+    component.step.set(3);
+    component.price.set('');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 3 (Цена): с ценой → возвращает null', () => {
+    component.step.set(3);
+    component.price.set('1,200,000');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(result).toBeNull();
+  });
+
+  // ── _validateStep: гейт шага 5 (Листинг) ────────────────────────────────
+
+  it('шаг 5 (Листинг): official без titleDeedNumber → возвращает ошибку', () => {
+    component.step.set(5);
+    component.listingType.set('official');
+    component.titleDeedNumber.set('');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 5 (Листинг): official c titleDeedNumber → возвращает null', () => {
+    component.step.set(5);
+    component.listingType.set('official');
+    component.titleDeedNumber.set('TD-123456');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    const result = (component as any)._validateStep();
+    expect(result).toBeNull();
+  });
+
+  it('шаги без обязательной валидации (4, 6, 7) → возвращают null', () => {
+    for (const s of [4, 6, 7]) {
+      component.step.set(s);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+      expect((component as any)._validateStep()).toBeNull();
+    }
+  });
+});
+
 describe('AddPropertyPageComponent — Off-Plan гейтинг (FC-3)', () => {
   let component: AddPropertyPageComponent;
 

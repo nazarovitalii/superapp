@@ -28,25 +28,25 @@ import {
 import { typeFieldsFor, TypeFields } from './property-type-fields';
 
 const SQFT_TO_SQM = 0.092903;
-// 8 шагов формы (порядок согласован: Категория → Сделка → … → Описание).
+// 8 шагов формы (порядок согласован: Категория+Сделка → Адрес → … → Фото и планировка → Описание).
 const STEPS = [
   'Категория',
-  'Сделка',
   'Адрес',
   'Параметры',
   'Цена',
   'Состояние',
   'Листинг',
+  'Фото и планировка',
   'Описание',
 ] as const;
 const STEP_ICONS = [
   'category',
-  'sell',
   'place',
   'tune',
   'payments',
   'event_available',
   'verified',
+  'photo_library',
   'description',
 ] as const;
 
@@ -81,16 +81,14 @@ export class AddPropertyPageComponent {
 
   readonly options = signal<FilterOptions | null>(null);
 
-  // ─── Шаг 1: Категория / тип ────────────────────────────────────────────
+  // ─── Шаг 1: Категория / тип + Сделка ──────────────────────────────────
   readonly categoryId = signal<string | null>(null);
   readonly unitTypeId = signal<string | null>(null);
   readonly subTypeId = signal<string | null>(null);
-
-  // ─── Шаг 2: Сделка ─────────────────────────────────────────────────────
   readonly dealType = signal<DealType>('sale');
   readonly pricePeriod = signal<string>('yearly');
 
-  // ─── Шаг 3: Адрес (каскад до leaf) ─────────────────────────────────────
+  // ─── Шаг 2: Адрес (каскад до leaf) ─────────────────────────────────────
   readonly locQuery = signal<string>('');
   readonly locResults = signal<LocationSearchItem[]>([]);
   readonly locLoading = signal<boolean>(false);
@@ -109,7 +107,7 @@ export class AddPropertyPageComponent {
   // адрес виден публично. По умолчанию = leaf (полный адрес).
   readonly revealIndex = signal<number>(0);
 
-  // ─── Шаг 4: Параметры (зависят от типа) ────────────────────────────────
+  // ─── Шаг 3: Параметры (зависят от типа) ────────────────────────────────
   readonly bedrooms = signal<number | null>(null);
   readonly bathrooms = signal<number | null>(null);
   readonly isMaid = signal(false);
@@ -125,11 +123,11 @@ export class AddPropertyPageComponent {
   readonly amenityIds = signal<string[]>([]);
   readonly furnished = signal<string | null>(null);
 
-  // ─── Шаг 5: Цена ───────────────────────────────────────────────────────
+  // ─── Шаг 4: Цена ───────────────────────────────────────────────────────
   readonly price = signal<string>('');
   readonly isNegotiable = signal(false);
 
-  // ─── Шаг 6: Состояние ──────────────────────────────────────────────────
+  // ─── Шаг 5: Состояние ──────────────────────────────────────────────────
   readonly handover = signal<string>('ready');
   // Off-Plan недоступен, если проект уже сдан (project_status='completed').
   readonly offPlanLocked = computed(
@@ -142,7 +140,7 @@ export class AddPropertyPageComponent {
   readonly leaseYear = signal<string>('');
   readonly isDistress = signal(false);
 
-  // ─── Шаг 7: Листинг ────────────────────────────────────────────────────
+  // ─── Шаг 6: Листинг ────────────────────────────────────────────────────
   readonly listingType = signal<string>('pocket');
   readonly visibility = signal<string>('public');
   readonly titleDeedNumber = signal<string>('');
@@ -150,7 +148,7 @@ export class AddPropertyPageComponent {
   readonly plotNumber = signal<string>('');
   readonly municipalityNumber = signal<string>('');
 
-  // ─── Шаг 8: Описание + фото ────────────────────────────────────────────
+  // ─── Шаг 7: Фото и планировка / Шаг 8: Описание ───────────────────────
   readonly description = signal<string>('');
   readonly photos = signal<File[]>([]);
   readonly previews = signal<string[]>([]);
@@ -275,7 +273,7 @@ export class AddPropertyPageComponent {
     this.subTypeId.set(null);
   }
 
-  // ─── Шаг 3: поиск и каскад локаций ──────────────────────────────────────
+  // ─── Шаг 2: поиск и каскад локаций ──────────────────────────────────────
   onLocInput(val: string): void {
     this.locQuery.set(val);
     if (this._locTimer) clearTimeout(this._locTimer);
@@ -389,7 +387,7 @@ export class AddPropertyPageComponent {
     this.revealIndex.set(0);
   }
 
-  // ─── Шаг 6: выбор готовности с проверкой гейта ─────────────────────────
+  // ─── Шаг 5: выбор готовности с проверкой гейта ─────────────────────────
   // Игнорируем offplan, если проект уже сдан (offPlanLocked).
   selectHandover(value: string): void {
     if (value === 'offplan' && this.offPlanLocked()) return;
@@ -402,7 +400,7 @@ export class AddPropertyPageComponent {
     if (this.offPlanLocked() && this.handover() === 'offplan') this.handover.set('ready');
   }
 
-  // ─── Шаг 8: фото ────────────────────────────────────────────────────────
+  // ─── Шаг 7: фото ────────────────────────────────────────────────────────
   onPhotosSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const list = input.files;
@@ -443,20 +441,20 @@ export class AddPropertyPageComponent {
         if (tf.subType && this.subTypesForUnitType().length && !this.subTypeId())
           return 'Выберите подтип';
         return null;
-      case 2:
+      case 1:
         if (!this.locationId())
           return this.addrPath().length
             ? 'Уточните адрес до конечного уровня'
             : 'Выберите локацию';
         return null;
-      case 3:
+      case 2:
         if (tf.bua && !this.areaSqft()) return 'Укажите площадь (BUA)';
         if (!tf.bua && tf.plot && !this.plotSqft()) return 'Укажите площадь участка';
         return null;
-      case 4:
+      case 3:
         if (!this.price()) return 'Укажите цену';
         return null;
-      case 6:
+      case 5:
         if (this.listingType() === 'official' && !this.titleDeedNumber())
           return 'Для официального листинга укажите номер Title Deed';
         return null;

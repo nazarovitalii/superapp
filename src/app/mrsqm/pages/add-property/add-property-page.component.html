@@ -28,7 +28,7 @@
         </div>
 
         <div class="block-content">
-          <!-- ШАГ 1: Категория → Тип → Подтип -->
+          <!-- ШАГ 1: Категория → Тип → Подтип + Сделка -->
           @if (step() === 0) {
             <div class="field">
               <span class="field-label">Категория</span>
@@ -81,10 +81,7 @@
                 </div>
               </div>
             }
-          }
 
-          <!-- ШАГ 2: Сделка -->
-          @if (step() === 1) {
             <div class="field">
               <span class="field-label">Тип сделки</span>
               <div class="chips">
@@ -120,8 +117,8 @@
             }
           }
 
-          <!-- ШАГ 3: Адрес (каскад до конечного уровня) -->
-          @if (step() === 2) {
+          <!-- ШАГ 2: Адрес (каскад до конечного уровня) -->
+          @if (step() === 1) {
             @if (!isLeaf()) {
               <!-- Поиск, пока корневая локация не выбрана -->
               @if (!addrPath().length) {
@@ -331,8 +328,8 @@
             }
           }
 
-          <!-- ШАГ 4: Параметры (зависят от типа) -->
-          @if (step() === 3) {
+          <!-- ШАГ 3: Параметры (зависят от типа) -->
+          @if (step() === 2) {
             @if (fields().rooms) {
               <div class="field">
                 <span class="field-label">Спальни</span>
@@ -462,24 +459,6 @@
               </div>
             }
 
-            @if (fields().layout && communityLayouts().length) {
-              <div class="field">
-                <span class="field-label">Планировка</span>
-                <div class="chips">
-                  @for (l of communityLayouts(); track l.id) {
-                    <button
-                      type="button"
-                      class="chip"
-                      [class.sel]="layoutId() === l.id"
-                      (click)="layoutId.set(l.id)"
-                    >
-                      {{ l.name }}
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
             @if (fields().views && options()!.views.length) {
               <div class="field">
                 <span class="field-label">Вид из окна</span>
@@ -551,8 +530,8 @@
             }
           }
 
-          <!-- ШАГ 5: Цена -->
-          @if (step() === 4) {
+          <!-- ШАГ 4: Цена -->
+          @if (step() === 3) {
             <div class="field">
               <span class="field-label">Цена, AED</span>
               <input
@@ -572,8 +551,8 @@
             </label>
           }
 
-          <!-- ШАГ 6: Состояние -->
-          @if (step() === 5) {
+          <!-- ШАГ 5: Состояние -->
+          @if (step() === 4) {
             <div class="field">
               <span class="field-label">Готовность</span>
               <div class="chips">
@@ -672,8 +651,8 @@
             </label>
           }
 
-          <!-- ШАГ 7: Листинг -->
-          @if (step() === 6) {
+          <!-- ШАГ 6: Листинг -->
+          @if (step() === 5) {
             <div class="field">
               <span class="field-label">Тип листинга</span>
               <div class="chips">
@@ -767,17 +746,25 @@
             </p>
           }
 
-          <!-- ШАГ 8: Описание + фото -->
-          @if (step() === 7) {
-            <div class="field">
-              <span class="field-label">Описание</span>
-              <textarea
-                rows="5"
-                [ngModel]="description()"
-                (ngModelChange)="description.set($event)"
-                placeholder="Опишите объект…"
-              ></textarea>
-            </div>
+          <!-- ШАГ 7: Фото и планировка -->
+          @if (step() === 6) {
+            @if (fields().layout && communityLayouts().length) {
+              <div class="field">
+                <span class="field-label">Планировка</span>
+                <div class="chips">
+                  @for (l of communityLayouts(); track l.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="layoutId() === l.id"
+                      (click)="layoutId.set(l.id)"
+                    >
+                      {{ l.name }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
 
             <div class="field">
               <span class="field-label">Фотографии</span>
@@ -818,6 +805,19 @@
                   Первое фото — главное. Фото сжимаются в браузере (WebP) перед загрузкой.
                 </p>
               }
+            </div>
+          }
+
+          <!-- ШАГ 8: Описание -->
+          @if (step() === 7) {
+            <div class="field">
+              <span class="field-label">Описание</span>
+              <textarea
+                rows="5"
+                [ngModel]="description()"
+                (ngModelChange)="description.set($event)"
+                placeholder="Опишите объект…"
+              ></textarea>
             </div>
           }
         </div>
