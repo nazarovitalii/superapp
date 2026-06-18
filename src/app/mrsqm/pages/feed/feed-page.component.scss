@@ -679,6 +679,38 @@
   white-space: nowrap;
 }
 
+// Колонка чекбоксов в шапке — центрируем кнопку сброса выделения
+.th-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+// Кнопка «снять всё выделение» — серая, но понятная (× над колонкой чекбоксов)
+.th-clear-sel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  transition: color var(--transition-duration-s) ease;
+
+  &:hover {
+    color: var(--text-color);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+  }
+}
+
 // U-5: выровнять заголовки под ячейки карточки
 // th-address — слева (дефолт); th-photo — пусто
 .th-type,

@@ -390,7 +390,20 @@
 
   <!-- Шапка таблицы — колонки (U-5: text-align выровнен под ячейки карточки) -->
   <div class="table-header">
-    <div class="th th-select"></div>
+    <!-- При выбранных чекбоксах — кнопка «снять всё выделение» над колонкой чекбоксов -->
+    <div class="th th-select">
+      @if (selection.count() > 0) {
+        <button
+          type="button"
+          class="th-clear-sel"
+          (click)="selection.clear()"
+          [attr.aria-label]="'Снять всё выделение'"
+          title="Снять выделение"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
     <div class="th th-address">Адрес</div>
     <div class="th th-type">Тип</div>
     <div class="th th-beds">Beds</div>
