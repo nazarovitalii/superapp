@@ -294,7 +294,8 @@
   display: flex;
   gap: var(--s);
 
-  input {
+  input,
+  select {
     width: 100%;
   }
 }

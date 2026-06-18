@@ -736,20 +736,34 @@
                 <div class="field">
                   <span class="field-label">Занято до (необязательно)</span>
                   <div class="lease-row">
-                    <input
-                      type="text"
-                      inputmode="numeric"
+                    <select
                       [ngModel]="leaseMonth()"
                       (ngModelChange)="leaseMonth.set($event)"
-                      placeholder="Месяц (1-12)"
-                    />
-                    <input
-                      type="text"
-                      inputmode="numeric"
+                    >
+                      <option
+                        value=""
+                        disabled
+                      >
+                        Месяц
+                      </option>
+                      @for (m of monthOptions; track m.value) {
+                        <option [value]="m.value">{{ m.label }}</option>
+                      }
+                    </select>
+                    <select
                       [ngModel]="leaseYear()"
                       (ngModelChange)="leaseYear.set($event)"
-                      placeholder="Год"
-                    />
+                    >
+                      <option
+                        value=""
+                        disabled
+                      >
+                        Год
+                      </option>
+                      @for (y of yearOptions(); track y) {
+                        <option [value]="y">{{ y }}</option>
+                      }
+                    </select>
                   </div>
                 </div>
               }

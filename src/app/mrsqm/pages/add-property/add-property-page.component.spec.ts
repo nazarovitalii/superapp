@@ -746,3 +746,46 @@ describe('AddPropertyPageComponent — developer-автокомплит (AP-5)',
     expect(component.devResults()).toEqual([]);
   });
 });
+
+// ─── yearOptions (V-6) ────────────────────────────────────────────────────────
+describe('AddPropertyPageComponent — yearOptions (V-6)', () => {
+  let component: AddPropertyPageComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('yearOptions() возвращает ровно 6 значений', () => {
+    expect(component.yearOptions().length).toBe(6);
+  });
+
+  it('yearOptions() первое значение — текущий год строкой', () => {
+    const currentYear = new Date().getFullYear();
+    expect(component.yearOptions()[0]).toBe(String(currentYear));
+  });
+
+  it('yearOptions() последнее значение — текущий год + 5 строкой', () => {
+    const currentYear = new Date().getFullYear();
+    expect(component.yearOptions()[5]).toBe(String(currentYear + 5));
+  });
+
+  it('yearOptions() содержит строки (не числа)', () => {
+    for (const y of component.yearOptions()) {
+      expect(typeof y).toBe('string');
+    }
+  });
+});
