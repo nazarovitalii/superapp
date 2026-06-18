@@ -6,7 +6,6 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
@@ -54,7 +53,6 @@ const DEFAULT_TOOL_LABEL = 'Работаю…';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    FormsModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
@@ -161,8 +159,20 @@ export class ChatPageComponent implements OnDestroy {
   stop(): void {
     this._abort?.abort();
     this._abort = null;
+    // Убираем мигающий курсор с последнего пузыря ассистента
+    this.messages.update((msgs) => {
+      const last = msgs[msgs.length - 1];
+      if (!last || last.role !== 'assistant') return msgs;
+      return [...msgs.slice(0, -1), { ...last, streaming: false }];
+    });
     this.streaming.set(false);
     this.status.set(null);
+  }
+
+  // ─── Обработка ввода (input → обновить сигнал draft) ─────────────────────
+
+  onInput(event: Event): void {
+    this.draft.set((event.target as HTMLTextAreaElement).value);
   }
 
   // ─── Обработка ввода (Enter без Shift → отправить) ───────────────────────

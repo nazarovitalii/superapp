@@ -91,4 +91,25 @@ describe('ChatPageComponent', () => {
     expect(component.error()).toBe('сбой');
     expect(component.streaming()).toBeFalse();
   });
+
+  it('textarea input обновляет draft и send использует набранный текст', async () => {
+    await createComponent();
+    const ta = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+
+    // Симулируем ввод текста пользователем
+    ta.value = 'привет ИИ';
+    ta.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // draft() должен отразить введённый текст
+    expect(component.draft()).toBe('привет ИИ');
+
+    // Отправка через onSendClick — должен передать набранный текст в streamMessage
+    const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
+    component.onSendClick();
+
+    expect(mockGpt.streamMessage).toHaveBeenCalledWith('привет ИИ', jasmine.any(Object));
+    // После отправки draft очищается
+    expect(component.draft()).toBe('');
+  });
 });
