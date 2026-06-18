@@ -18,16 +18,16 @@
       [attr.aria-label]="isSelected() ? 'Снять выбор' : 'Выбрать объект'"
     ></done-toggle>
 
-    <!-- Адрес: leaf + метка off-plan (U-7) + community -->
+    <!-- Адрес: leaf + метка off-plan (U-7) + community; источник зависит от охвата (V-10) -->
     <div class="col col-address">
       <span class="addr-leaf"
-        >{{ property().location_name || property().community_name || '—' }}
+        >{{ addr().leaf }}
         @if (property().handover === 'offplan') {
           <span class="addr-offplan"> (off-plan)</span>
         }
       </span>
-      @if (property().community_name && property().location_name) {
-        <span class="addr-community">{{ property().community_name }}</span>
+      @if (addr().community) {
+        <span class="addr-community">{{ addr().community }}</span>
       }
     </div>
 

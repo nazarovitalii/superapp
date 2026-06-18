@@ -264,6 +264,9 @@ export interface PropertyFeedItem {
   plot_sqft?: number | null;
   location_name: string | null;
   community_name: string | null;
+  // Публичный leaf-адрес и community для не-My охватов (get_feed отдаёт при скрытом адресе).
+  public_location_name?: string | null;
+  public_community_name?: string | null;
   // Кол-во комментариев — иконка комментариев в строке ленты при > 0.
   comments_count?: number | null;
   description: string | null;

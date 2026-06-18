@@ -338,6 +338,7 @@
         [isActive]="selectedPropertyId === p.id"
         [isSaved]="savedIds().has(p.id)"
         [isSelected]="selection.selectedIds().has(p.id)"
+        [showPublicAddress]="filter.scope() !== 'my'"
         (cardClick)="openDetail(p)"
         (toggleClick)="toggleDetail(p)"
         (saveClick)="toggleSaved(p)"

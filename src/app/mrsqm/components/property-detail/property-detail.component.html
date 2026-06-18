@@ -433,14 +433,24 @@
           </div>
         }
 
-        <!-- ── 4. Локация ────────────────────────────────────────────────── -->
-        @if (vm().locationPath; as loc) {
+        <!-- ── 4. Локация (V-11) ────────────────────────────────────────── -->
+        <!-- Блок виден даже у не-владельца со скрытым адресом: только publicLocationPath -->
+        @if (vm().locationPath || vm().publicLocationPath) {
           <div class="section">
             <div class="section-label"><mat-icon>place</mat-icon>Расположение</div>
-            <p class="section-text">{{ loc }}</p>
-            @if (vm().publicLocationPath) {
-              <p class="section-text section-text--muted">
-                {{ vm().publicLocationPath }}
+            @if (isOwner() && vm().locationPath) {
+              <p class="section-text">
+                {{ vm().locationPath }} <span class="loc-scope-tag">(что видишь ты)</span>
+              </p>
+              @if (vm().publicLocationPath) {
+                <p class="section-text section-text--muted">
+                  {{ vm().publicLocationPath }}
+                  <span class="loc-scope-tag">(что видят все)</span>
+                </p>
+              }
+            } @else {
+              <p class="section-text">
+                {{ vm().publicLocationPath ?? vm().locationPath }}
               </p>
             }
           </div>

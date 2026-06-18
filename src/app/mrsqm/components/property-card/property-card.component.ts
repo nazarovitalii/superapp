@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PropertyFeedItem } from '../../types/database';
 import { DoneToggleComponent } from '../../../ui/done-toggle/done-toggle.component';
 import { formatFeedDate } from '../../util/feed-date.util';
+import { resolveFeedAddress } from '../../util/feed-address.util';
 
 @Component({
   selector: 'mrsqm-property-card',
@@ -26,6 +27,8 @@ export class PropertyCardComponent {
   readonly isSaved = input(false);
   // Чекбокс множественного выбора (как done-toggle в инбоксе).
   readonly isSelected = input(false);
+  // V-10: показывать публичный адрес (true = не-My охват; false = My Inventory → полный).
+  readonly showPublicAddress = input(false);
   readonly cardClick = output<void>();
   // Клик по закладке — отдельно от клика по карточке (stopPropagation в шаблоне).
   readonly saveClick = output<void>();
@@ -38,5 +41,10 @@ export class PropertyCardComponent {
     formatFeedDate(
       this.property().last_actualized_at ?? this.property().published_at ?? null,
     ),
+  );
+
+  // V-10: резолв адреса по охвату — чистая функция, только computed (hot-path).
+  readonly addr = computed(() =>
+    resolveFeedAddress(this.property(), this.showPublicAddress()),
   );
 }
