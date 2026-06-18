@@ -20,6 +20,7 @@ import {
   BuildingInfo,
   CommunityLayout,
   DealType,
+  DeveloperSearchItem,
   FilterOptionId,
   FilterOptions,
   LocationBreadcrumbItem,
@@ -110,6 +111,15 @@ export class AddPropertyPageComponent {
   // Бегунок приватности адреса: индекс уровня в addrPath, до которого
   // адрес виден публично. По умолчанию = leaf (полный адрес).
   readonly revealIndex = signal<number>(0);
+
+  // ─── Шаг 2: Девелопер (AP-5) — ручной ввод, когда leaf без location_developers ─
+  // Показывается только при isLeaf && buildingInfo===null.
+  readonly devQuery = signal<string>('');
+  readonly devResults = signal<DeveloperSearchItem[]>([]);
+  readonly devLoading = signal<boolean>(false);
+  readonly pickedDeveloperId = signal<string | null>(null);
+  readonly pickedDeveloperName = signal<string | null>(null);
+  private _devTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ─── Шаг 3: Параметры (зависят от типа) ────────────────────────────────
   readonly bedrooms = signal<number | null>(null);
@@ -210,6 +220,10 @@ export class AddPropertyPageComponent {
   });
   readonly childrenAsSearch = computed(
     () => this.children().length > CHILDREN_SELECT_THRESHOLD,
+  );
+  // Поле «Девелопер» видно только при leaf и отсутствии данных в location_developers.
+  readonly showDeveloperField = computed(
+    () => this.isLeaf() && this.buildingInfo() === null,
   );
 
   // ─── Поиск по всем нижним уровням внутри комьюнити ──────────────────────
@@ -322,7 +336,9 @@ export class AddPropertyPageComponent {
     this._descTimer = setTimeout(async () => {
       this.descLoading.set(true);
       try {
-        const all = await this._service.searchLocations(val);
+        // AP-2: 50 кандидатов до клиентского фильтра по community_name,
+        // чтобы подстрочные совпадения (напр. «Golf Vista») не обрезались.
+        const all = await this._service.searchLocations(val, 50);
         const pathIds = new Set(this.addrPath().map((p) => p.id));
         this.descResults.set(
           all.filter((r) => r.community_name === comm.name && !pathIds.has(r.id)),
@@ -400,6 +416,52 @@ export class AddPropertyPageComponent {
     this._developerId.set(null);
     this.layoutId.set(null);
     this.revealIndex.set(0);
+    // AP-5: сбросить выбранного девелопера.
+    this._clearDevState();
+  }
+
+  // ─── Шаг 2: Девелопер (AP-5) ─────────────────────────────────────────────
+  // Внутренний сброс всех dev-сигналов (используется из resetLocation и clearDeveloper).
+  private _clearDevState(): void {
+    if (this._devTimer) {
+      clearTimeout(this._devTimer);
+      this._devTimer = null;
+    }
+    this.devQuery.set('');
+    this.devResults.set([]);
+    this.devLoading.set(false);
+    this.pickedDeveloperId.set(null);
+    this.pickedDeveloperName.set(null);
+  }
+
+  onDeveloperInput(val: string): void {
+    this.devQuery.set(val);
+    if (this._devTimer) clearTimeout(this._devTimer);
+    if (val.trim().length < 2) {
+      this.devResults.set([]);
+      return;
+    }
+    this._devTimer = setTimeout(async () => {
+      this.devLoading.set(true);
+      try {
+        this.devResults.set(await this._service.searchDevelopers(val));
+      } catch {
+        this.devResults.set([]);
+      } finally {
+        this.devLoading.set(false);
+      }
+    }, 250);
+  }
+
+  pickDeveloper(d: DeveloperSearchItem): void {
+    this.pickedDeveloperId.set(d.id);
+    this.pickedDeveloperName.set(d.name);
+    this.devResults.set([]);
+    this.devQuery.set('');
+  }
+
+  clearDeveloper(): void {
+    this._clearDevState();
   }
 
   // ─── Шаг 5: выбор готовности с проверкой гейта ─────────────────────────
@@ -613,7 +675,8 @@ export class AddPropertyPageComponent {
       handover: this.handover(),
       occupancy_status: this.handover() === 'ready' ? this.occupancy() : null,
       lease_until: lease,
-      developer_id: isOffplan ? this._developerId() : null,
+      // AP-5: вручную выбранный девелопер перекрывает developer_ids из локации.
+      developer_id: this.pickedDeveloperId() ?? (isOffplan ? this._developerId() : null),
       completion_year: isOffplan ? num(this.completionYear()) : null,
       completion_q: isOffplan ? this.completionQ() : null,
       is_distress: this.isDistress(),

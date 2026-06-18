@@ -444,3 +444,10 @@ export interface LocationSearchResult {
   full_path: string | null;
   level: string | null;
 }
+
+// ─── Результат RPC search_developers ─────────────────────────────────────────
+export interface DeveloperSearchItem {
+  id: string;
+  name: string;
+  logo_url: string | null;
+}

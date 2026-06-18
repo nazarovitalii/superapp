@@ -3,6 +3,7 @@ import { MrsqmSupabaseService } from './supabase.service';
 import {
   BuildingInfo,
   CommunityLayout,
+  DeveloperSearchItem,
   FilterOptions,
   LocationInfo,
   LocationSearchItem,
@@ -29,7 +30,10 @@ export class PropertyCreateService {
 
   // Поиск локаций (RPC search_locations, p_mode='search'). Возвращает []
   // при коротком запросе или ошибке (RPC сам валидирует длину >= 2).
-  async searchLocations(query: string): Promise<LocationSearchItem[]> {
+  // limit: по умолчанию 8 для глобального поиска; передайте 50 для поиска
+  // внутри комьюнити (AP-2), чтобы «Golf Vista» не обрезался до клиентского
+  // фильтра по community_name.
+  async searchLocations(query: string, limit = 8): Promise<LocationSearchItem[]> {
     const q = query.trim();
     if (q.length < 2) {
       return [];
@@ -37,7 +41,20 @@ export class PropertyCreateService {
     const res = await this._supabase.rpc<{
       results?: LocationSearchItem[];
       error?: string;
-    }>('search_locations', { p_mode: 'search', p_query: q, p_limit: 8 });
+    }>('search_locations', { p_mode: 'search', p_query: q, p_limit: limit });
+    return res?.results ?? [];
+  }
+
+  // Поиск девелоперов (RPC search_developers, AP-5). Возвращает [] при
+  // запросе короче 2 символов. Ответ — { results: DeveloperSearchItem[] }.
+  async searchDevelopers(query: string): Promise<DeveloperSearchItem[]> {
+    const q = query.trim();
+    if (q.length < 2) {
+      return [];
+    }
+    const res = await this._supabase.rpc<{
+      results?: DeveloperSearchItem[];
+    }>('search_developers', { p_query: q });
     return res?.results ?? [];
   }
 

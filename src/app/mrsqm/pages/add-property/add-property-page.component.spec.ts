@@ -6,6 +6,7 @@ import { PropertyPhotoService } from '../../services/property-photo.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import {
   BuildingInfo,
+  DeveloperSearchItem,
   FilterOptions,
   LocationSearchItem,
   LocationInfo,
@@ -43,7 +44,7 @@ class FakePropertyCreateService {
   async getCommunityLayouts(_communityId: string): Promise<[]> {
     return [];
   }
-  async searchLocations(_query: string): Promise<LocationSearchItem[]> {
+  async searchLocations(_query: string, _limit?: number): Promise<LocationSearchItem[]> {
     return [];
   }
   async locationInfo(_id: string): Promise<LocationInfo | null> {
@@ -51,6 +52,9 @@ class FakePropertyCreateService {
   }
   async createProperty(_payload: unknown): Promise<string> {
     return 'new-id';
+  }
+  async searchDevelopers(_query: string): Promise<DeveloperSearchItem[]> {
+    return [];
   }
 }
 
@@ -589,5 +593,104 @@ describe('AddPropertyPageComponent — selectReveal (B5)', () => {
     component.revealIndex.set(1);
     component.selectReveal(3);
     expect(component.revealIndex()).toBe(3);
+  });
+});
+
+// ─── Девелопер-автокомплит: AP-5 ─────────────────────────────────────────────
+describe('AddPropertyPageComponent — developer-автокомплит (AP-5)', () => {
+  let component: AddPropertyPageComponent;
+
+  const fakeDev = (): DeveloperSearchItem => ({
+    id: 'dev-1',
+    name: 'Emaar Properties',
+    logo_url: null,
+  });
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  // ── showDeveloperField ────────────────────────────────────────────────────
+
+  it('showDeveloperField() === false, когда не leaf', () => {
+    component.locationId.set(null);
+    component.buildingInfo.set(null);
+    expect(component.showDeveloperField()).toBeFalse();
+  });
+
+  it('showDeveloperField() === false, когда leaf и buildingInfo !== null', () => {
+    component.locationId.set('leaf-id');
+    component.buildingInfo.set(activeBuildingInfo());
+    expect(component.showDeveloperField()).toBeFalse();
+  });
+
+  it('showDeveloperField() === true, когда leaf и buildingInfo === null', () => {
+    component.locationId.set('leaf-id');
+    component.buildingInfo.set(null);
+    expect(component.showDeveloperField()).toBeTrue();
+  });
+
+  // ── pickDeveloper ────────────────────────────────────────────────────────
+
+  it('pickDeveloper: устанавливает pickedDeveloperId и pickedDeveloperName', () => {
+    component.pickDeveloper(fakeDev());
+    expect(component.pickedDeveloperId()).toBe('dev-1');
+    expect(component.pickedDeveloperName()).toBe('Emaar Properties');
+  });
+
+  it('pickDeveloper: очищает devResults и devQuery', () => {
+    component.devResults.set([fakeDev()]);
+    component.devQuery.set('Emaar');
+    component.pickDeveloper(fakeDev());
+    expect(component.devResults()).toEqual([]);
+    expect(component.devQuery()).toBe('');
+  });
+
+  // ── clearDeveloper ───────────────────────────────────────────────────────
+
+  it('clearDeveloper: сбрасывает pickedDeveloperId и pickedDeveloperName', () => {
+    component.pickDeveloper(fakeDev());
+    component.clearDeveloper();
+    expect(component.pickedDeveloperId()).toBeNull();
+    expect(component.pickedDeveloperName()).toBeNull();
+  });
+
+  it('clearDeveloper: очищает devQuery и devResults', () => {
+    component.devQuery.set('Emaar');
+    component.devResults.set([fakeDev()]);
+    component.clearDeveloper();
+    expect(component.devQuery()).toBe('');
+    expect(component.devResults()).toEqual([]);
+  });
+
+  // ── resetLocation сбрасывает developer-состояние ─────────────────────────
+
+  it('resetLocation: сбрасывает picked-developer', () => {
+    component.pickDeveloper(fakeDev());
+    component.resetLocation();
+    expect(component.pickedDeveloperId()).toBeNull();
+    expect(component.pickedDeveloperName()).toBeNull();
+  });
+
+  it('resetLocation: очищает devQuery и devResults', () => {
+    component.devQuery.set('Emaar');
+    component.devResults.set([fakeDev()]);
+    component.resetLocation();
+    expect(component.devQuery()).toBe('');
+    expect(component.devResults()).toEqual([]);
   });
 });

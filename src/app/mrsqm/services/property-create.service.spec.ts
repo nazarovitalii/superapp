@@ -98,7 +98,7 @@ describe('PropertyCreateService', () => {
     expect(fake.rpcCalls.length).toBe(0);
   });
 
-  it('searchLocations прокидывает results из RPC', async () => {
+  it('searchLocations прокидывает results из RPC с дефолтным limit=8', async () => {
     fake.rpcResult = { results: [{ id: 'l1', name: 'Marina' }] };
     const res = await svc.searchLocations('marina');
     expect(res.length).toBe(1);
@@ -108,6 +108,38 @@ describe('PropertyCreateService', () => {
       p_query: 'marina',
       p_limit: 8,
     });
+  });
+
+  // AP-2: limit прокидывается в RPC
+  it('searchLocations(query, 50) передаёт p_limit: 50 в RPC (AP-2)', async () => {
+    fake.rpcResult = { results: [] };
+    await svc.searchLocations('golf vista', 50);
+    expect(fake.rpcCalls[0].params).toEqual({
+      p_mode: 'search',
+      p_query: 'golf vista',
+      p_limit: 50,
+    });
+  });
+
+  // AP-5: searchDevelopers
+  it('searchDevelopers возвращает [] при запросе короче 2 символов без вызова RPC', async () => {
+    const res = await svc.searchDevelopers('e');
+    expect(res).toEqual([]);
+    expect(fake.rpcCalls.length).toBe(0);
+  });
+
+  it('searchDevelopers вызывает RPC search_developers с p_query', async () => {
+    fake.rpcResult = { results: [{ id: 'd1', name: 'Emaar', logo_url: null }] };
+    const res = await svc.searchDevelopers('Emaar');
+    expect(res.length).toBe(1);
+    expect(fake.rpcCalls[0].fn).toBe('search_developers');
+    expect(fake.rpcCalls[0].params).toEqual({ p_query: 'Emaar' });
+  });
+
+  it('searchDevelopers возвращает [] если results отсутствует в ответе RPC', async () => {
+    fake.rpcResult = {};
+    const res = await svc.searchDevelopers('Damac');
+    expect(res).toEqual([]);
   });
 
   it('getFilterOptions кэширует результат (один вызов RPC)', async () => {

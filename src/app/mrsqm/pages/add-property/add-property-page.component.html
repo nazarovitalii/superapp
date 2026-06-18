@@ -349,6 +349,59 @@
                   </div>
                 </div>
               }
+
+              <!-- AP-5: Девелопер — только когда leaf без данных location_developers -->
+              @if (showDeveloperField()) {
+                <div class="field">
+                  <span class="field-label">Девелопер</span>
+                  @if (pickedDeveloperName()) {
+                    <!-- Выбранный девелопер: чип с кнопкой сброса -->
+                    <div class="loc-selected">
+                      <mat-icon>business</mat-icon>
+                      <span>{{ pickedDeveloperName() }}</span>
+                      <button
+                        type="button"
+                        class="loc-clear"
+                        (click)="clearDeveloper()"
+                        title="Сбросить девелопера"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  } @else {
+                    <!-- Поиск девелопера -->
+                    <input
+                      type="text"
+                      [ngModel]="devQuery()"
+                      (ngModelChange)="onDeveloperInput($event)"
+                      placeholder="Название девелопера…"
+                    />
+                    @if (devLoading()) {
+                      <div class="loc-hint">Поиск…</div>
+                    }
+                    @if (devResults().length) {
+                      <div class="loc-dropdown">
+                        @for (d of devResults(); track d.id) {
+                          <button
+                            type="button"
+                            class="loc-item"
+                            (click)="pickDeveloper(d)"
+                          >
+                            @if (d.logo_url) {
+                              <img
+                                [src]="d.logo_url"
+                                alt=""
+                                class="dev-logo"
+                              />
+                            }
+                            <span class="loc-name">{{ d.name }}</span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
             }
           }
 
