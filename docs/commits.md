@@ -215,3 +215,4 @@
 | `5f6462726` | 02:22 | chore(add-property): убрать лишние eslint-disable из FC-4 тестов (предупреждения линтера)                                                                        |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `d6372edc2` | 02:33 | docs: tabs+TODO под FC-1..FC-4 (форма-реструктуризация + карточка Вариант A)                                                                                     |
