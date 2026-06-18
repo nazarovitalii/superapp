@@ -252,3 +252,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `ac28efdb2` | 03:53 | fix(property-detail): не показывать floor_plan-фото в галерее карточки (getPhotos gallery-only)                                                                  |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `6f5ec8a96` | 03:56 | docs: tabs+TODO под форму v3 (AP-2..AP-S2) + F-center                                                                                                            |
