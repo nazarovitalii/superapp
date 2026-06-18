@@ -64,13 +64,28 @@
                     <button
                       type="button"
                       class="msg-action"
-                      [class.active]="m.feedback === 'dislike'"
+                      [class.active]="
+                        m.feedback === 'dislike' || feedbackReasonIdx() === $index
+                      "
                       (click)="setFeedback($index, 'dislike')"
                       aria-label="Не нравится"
                     >
                       <mat-icon>thumb_down</mat-icon>
                     </button>
                   </div>
+                  @if (feedbackReasonIdx() === $index) {
+                    <div class="msg-reason-chips">
+                      @for (r of dislikeReasons; track r.key) {
+                        <button
+                          type="button"
+                          class="msg-reason-chip"
+                          (click)="setDislikeReason($index, r.key)"
+                        >
+                          {{ r.label }}
+                        </button>
+                      }
+                    </div>
+                  }
                 }
               </div>
             } @else {

@@ -25,9 +25,8 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
   streaming?: boolean;
-  // Оценка ответа (визуальная; сохранение требует эндпоинта на gpt-сервисе)
+  messageId?: string;
   feedback?: 'like' | 'dislike';
-  // Флаг «скопировано» для временной смены иконки
   copied?: boolean;
 }
 
@@ -52,6 +51,17 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 const DEFAULT_TOOL_LABEL = 'Работаю…';
+
+// Причины дизлайка (key → /chat/feedback reason, label — на чипе)
+const DISLIKE_REASONS = [
+  { key: 'inaccurate', label: 'Неточно' },
+  { key: 'not_understood', label: 'Не понял задачу' },
+  { key: 'bad_listing', label: 'Плохие объявления' },
+  { key: 'wrong_price', label: 'Неверные цены' },
+  { key: 'other', label: 'Другое' },
+] as const;
+
+type DislikeReasonKey = (typeof DISLIKE_REASONS)[number]['key'];
 
 // Чипы-подсказки для пустого экрана (label — на чипе, prompt — что уходит в send)
 const SUGGESTIONS: Suggestion[] = [
@@ -107,9 +117,12 @@ export class ChatPageComponent implements OnDestroy {
   readonly draft = signal<string>('');
   // Лента «приклеена» к низу — авто-скролл следует за стримом
   readonly pinnedToBottom = signal<boolean>(true);
+  // Индекс сообщения, для которого открыт picker причины дизлайка (null = закрыт)
+  readonly feedbackReasonIdx = signal<number | null>(null);
 
   // Чипы-подсказки (read-only)
   readonly suggestions: readonly Suggestion[] = SUGGESTIONS;
+  readonly dislikeReasons: typeof DISLIKE_REASONS = DISLIKE_REASONS;
 
   constructor() {
     void this._init();
@@ -124,7 +137,9 @@ export class ChatPageComponent implements OnDestroy {
   private async _init(): Promise<void> {
     try {
       const history: ChatHistoryMessage[] = await this._gpt.loadHistory();
-      this.messages.set(history.map((m) => ({ role: m.role, text: m.text })));
+      this.messages.set(
+        history.map((m) => ({ role: m.role, text: m.text, messageId: m.id })),
+      );
     } catch (e) {
       // История не загрузилась (сеть/CORS/401/500) — показываем причину,
       // чтобы пустая лента не выглядела как «история не сохраняется».
@@ -170,11 +185,11 @@ export class ChatPageComponent implements OnDestroy {
         });
         this._scheduleScroll();
       },
-      onDone: () => {
+      onDone: (messageId?: string) => {
         this.messages.update((msgs) => {
           const last = msgs[msgs.length - 1];
           if (!last) return msgs;
-          return [...msgs.slice(0, -1), { ...last, streaming: false }];
+          return [...msgs.slice(0, -1), { ...last, streaming: false, messageId }];
         });
         this.streaming.set(false);
         this.status.set(null);
@@ -253,8 +268,36 @@ export class ChatPageComponent implements OnDestroy {
   setFeedback(index: number, kind: 'like' | 'dislike'): void {
     const msg = this.messages()[index];
     if (!msg) return;
-    // Повторный клик по той же оценке снимает её
-    this._patchMsg(index, { feedback: msg.feedback === kind ? undefined : kind });
+
+    if (kind === 'like') {
+      const next = msg.feedback === 'like' ? undefined : 'like';
+      this._patchMsg(index, { feedback: next });
+      this.feedbackReasonIdx.set(null);
+      if (msg.messageId) {
+        void this._gpt.sendFeedback(msg.messageId, next === 'like' ? 1 : 0);
+      }
+    } else {
+      if (msg.feedback === 'dislike') {
+        // повторный клик — снять
+        this._patchMsg(index, { feedback: undefined });
+        this.feedbackReasonIdx.set(null);
+        if (msg.messageId) void this._gpt.sendFeedback(msg.messageId, 0);
+      } else if (this.feedbackReasonIdx() === index) {
+        // picker уже открыт → закрыть
+        this.feedbackReasonIdx.set(null);
+      } else {
+        // открыть picker причины (commit после выбора)
+        this.feedbackReasonIdx.set(index);
+      }
+    }
+  }
+
+  setDislikeReason(index: number, reason: DislikeReasonKey): void {
+    const msg = this.messages()[index];
+    if (!msg) return;
+    this._patchMsg(index, { feedback: 'dislike' });
+    this.feedbackReasonIdx.set(null);
+    if (msg.messageId) void this._gpt.sendFeedback(msg.messageId, -1, reason);
   }
 
   // Иммутабельно патчит сообщение по индексу

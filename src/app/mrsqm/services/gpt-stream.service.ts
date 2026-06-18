@@ -15,11 +15,12 @@ export interface StreamHandlers {
   onToolStart?: (tool: string) => void;
   onToolDone?: (tool: string) => void;
   onToken?: (text: string) => void;
-  onDone?: () => void;
+  onDone?: (messageId?: string) => void;
   onError?: (message: string) => void;
 }
 
 export interface ChatHistoryMessage {
+  id?: string;
   role: 'user' | 'assistant';
   text: string;
   created_at: string;
@@ -117,6 +118,29 @@ export class GptStreamService {
   }
 
   /**
+   * Отправляет оценку ответа ассистента.
+   * reaction: 1 = 👍, -1 = 👎, 0 = снять оценку.
+   * Ошибки не пробрасываются — оценка best-effort, UI не блокируется.
+   */
+  async sendFeedback(
+    messageId: string,
+    reaction: 0 | 1 | -1,
+    reason?: string,
+    comment?: string,
+  ): Promise<void> {
+    const token = await this._getToken();
+    if (!token) return;
+    const body: Record<string, unknown> = { message_id: messageId, reaction };
+    if (reason !== undefined) body['reason'] = reason;
+    if (comment !== undefined) body['comment'] = comment;
+    await fetch(`${this._baseUrl}/chat/feedback`, {
+      method: 'POST',
+      headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  }
+
+  /**
    * Отправляет сообщение без стриминга, возвращает готовый текст ответа.
    */
   async sendNonStreaming(text: string): Promise<string> {
@@ -191,7 +215,7 @@ export class GptStreamService {
         h.onToken?.(ev.data['text'] as string);
         break;
       case 'done':
-        h.onDone?.();
+        h.onDone?.(ev.data['message_id'] as string | undefined);
         break;
       case 'error':
         h.onError?.(ev.data['message'] as string);

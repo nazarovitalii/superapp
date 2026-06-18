@@ -33,6 +33,7 @@ describe('ChatPageComponent', () => {
           return mockAbortController as unknown as AbortController;
         }),
       loadHistory: jasmine.createSpy('loadHistory').and.resolveTo([]),
+      sendFeedback: jasmine.createSpy('sendFeedback').and.resolveTo(undefined),
     };
 
     loadHistorySpy = mockGptStreamService.loadHistory;
@@ -213,15 +214,42 @@ describe('ChatPageComponent', () => {
     expect(component.messages()[0].copied).toBeTrue();
   });
 
-  it('setFeedback ставит и снимает оценку повторным кликом', async () => {
+  it('setFeedback: like ставится и снимается; dislike требует выбора причины', async () => {
     loadHistorySpy.and.resolveTo([{ role: 'assistant', text: 'ответ', created_at: 'x' }]);
     await createComponent();
+
+    // лайк ставится сразу
     component.setFeedback(0, 'like');
     expect(component.messages()[0].feedback).toBe('like');
-    component.setFeedback(0, 'like'); // повторный клик — снять
+
+    // повторный клик снимает
+    component.setFeedback(0, 'like');
     expect(component.messages()[0].feedback).toBeUndefined();
+
+    // дизлайк: открывает reason picker, feedback ещё не commit
     component.setFeedback(0, 'dislike');
+    expect(component.feedbackReasonIdx()).toBe(0);
+    expect(component.messages()[0].feedback).toBeUndefined();
+
+    // выбор причины → commit
+    component.setDislikeReason(0, 'inaccurate');
     expect(component.messages()[0].feedback).toBe('dislike');
+    expect(component.feedbackReasonIdx()).toBeNull();
+
+    // повторный клик дизл. → снять
+    component.setFeedback(0, 'dislike');
+    expect(component.messages()[0].feedback).toBeUndefined();
+  });
+
+  it('setFeedback вызывает sendFeedback если есть messageId', async () => {
+    loadHistorySpy.and.resolveTo([
+      { id: 'msg-1', role: 'assistant', text: 'ответ', created_at: 'x' },
+    ]);
+    await createComponent();
+    const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
+
+    component.setFeedback(0, 'like');
+    expect(mockGpt.sendFeedback).toHaveBeenCalledWith('msg-1', 1);
   });
 
   it('композер: textarea + кнопка отправки внутри .chat-composer', async () => {

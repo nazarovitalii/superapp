@@ -212,6 +212,33 @@
   overflow-wrap: anywhere;
 }
 
+// Чипы причины дизлайка
+.msg-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-quarter);
+  margin-top: var(--s-half);
+}
+
+.msg-reason-chip {
+  padding: 3px var(--s-half);
+  border: 1px solid var(--extra-border-color);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-color-muted);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+
+  &:hover {
+    border-color: var(--warn-dark, #c62828);
+    color: var(--warn-dark, #c62828);
+  }
+}
+
 // Индикатор печати
 .msg-typing {
   display: inline-block;
@@ -451,7 +478,8 @@
     color: var(--text-color-muted);
     -webkit-text-fill-color: var(--text-color-muted);
   }
-  .chat-chip {
+  .chat-chip,
+  .msg-reason-chip {
     transition: none;
   }
 }
