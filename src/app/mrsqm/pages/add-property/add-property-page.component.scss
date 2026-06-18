@@ -128,6 +128,12 @@
   color: var(--text-color);
 }
 
+// Серая звёздочка у обязательных полей (не красная — не алерт, просто маркер)
+.req-star {
+  color: var(--text-color-muted, #9e9e9e);
+  margin-left: 2px;
+}
+
 .field input,
 .field textarea {
   width: 100%;

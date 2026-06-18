@@ -448,6 +448,8 @@ export class AddPropertyPageComponent {
             : 'Выберите локацию';
         return null;
       case 2:
+        if (tf.rooms && (this.bedrooms() === null || this.bathrooms() === null))
+          return 'Укажите спальни и санузлы';
         if (tf.bua && !this.areaSqft()) return 'Укажите площадь (BUA)';
         if (!tf.bua && tf.plot && !this.plotSqft()) return 'Укажите площадь участка';
         return null;

@@ -182,7 +182,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     expect(result).toBeTruthy();
   });
 
-  it('шаг 2 (Параметры): bua-тип с areaSqft → возвращает null', () => {
+  it('шаг 2 (Параметры): bua-тип с areaSqft и beds/baths → возвращает null', () => {
     component.step.set(2);
     component.options.set({
       ...FAKE_OPTIONS,
@@ -191,6 +191,8 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
       ],
     } as unknown as FilterOptions);
     component.unitTypeId.set('apt-id');
+    component.bedrooms.set(2);
+    component.bathrooms.set(2);
     component.areaSqft.set('1200');
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
@@ -237,6 +239,73 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
       component.step.set(s);
       expect((component as any)._validateStep()).toBeNull(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
+  });
+
+  // ── _validateStep: спальни/санузлы обязательные (B2) ─────────────────────
+
+  it('шаг 2 (Параметры): тип с rooms, без bedrooms → возвращает ошибку', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt-id', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt-id');
+    component.bedrooms.set(null);
+    component.bathrooms.set(1);
+    component.areaSqft.set('1200');
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 2 (Параметры): тип с rooms, без bathrooms → возвращает ошибку', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt-id', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt-id');
+    component.bedrooms.set(2);
+    component.bathrooms.set(null);
+    component.areaSqft.set('1200');
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 2 (Параметры): тип с rooms, оба заполнены, с areaSqft → возвращает null', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt-id', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt-id');
+    component.bedrooms.set(2);
+    component.bathrooms.set(2);
+    component.areaSqft.set('1200');
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(result).toBeNull();
+  });
+
+  it('шаг 2 (Параметры): тип без rooms (land), beds/baths null → не возвращает ошибку beds/baths', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [{ id: 'land-id', value: 'land', label_en: 'Land', parent_id: null }],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('land-id');
+    component.bedrooms.set(null);
+    component.bathrooms.set(null);
+    component.plotSqft.set('3500');
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    // land не имеет rooms → проверка beds/baths не применяется
+    expect(result).toBeNull();
   });
 });
 

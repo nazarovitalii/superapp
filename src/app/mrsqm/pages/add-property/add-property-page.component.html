@@ -31,7 +31,7 @@
           <!-- ШАГ 1: Тип сделки → Период оплаты → Категория → Тип → Подтип -->
           @if (step() === 0) {
             <div class="field">
-              <span class="field-label">Тип сделки</span>
+              <span class="field-label">Тип сделки<span class="req-star">*</span></span>
               <div class="chips">
                 @for (d of options()!.deal_types; track d.value) {
                   <button
@@ -65,7 +65,7 @@
             }
 
             <div class="field">
-              <span class="field-label">Категория</span>
+              <span class="field-label">Категория<span class="req-star">*</span></span>
               <div class="chips">
                 @for (c of options()!.categories; track c.id) {
                   <button
@@ -82,7 +82,9 @@
 
             @if (unitTypesForCategory().length) {
               <div class="field">
-                <span class="field-label">Тип объекта</span>
+                <span class="field-label"
+                  >Тип объекта<span class="req-star">*</span></span
+                >
                 <div class="chips">
                   @for (u of unitTypesForCategory(); track u.id) {
                     <button
@@ -100,7 +102,7 @@
 
             @if (fields().subType && subTypesForUnitType().length) {
               <div class="field">
-                <span class="field-label">Подтип</span>
+                <span class="field-label">Подтип<span class="req-star">*</span></span>
                 <div class="chips">
                   @for (s of subTypesForUnitType(); track s.id) {
                     <button
@@ -123,7 +125,7 @@
               <!-- Поиск, пока корневая локация не выбрана -->
               @if (!addrPath().length) {
                 <div class="field">
-                  <span class="field-label">Локация</span>
+                  <span class="field-label">Локация<span class="req-star">*</span></span>
                   <input
                     type="text"
                     [ngModel]="locQuery()"
@@ -243,7 +245,7 @@
             } @else {
               <!-- leaf выбран -->
               <div class="field">
-                <span class="field-label">Адрес</span>
+                <span class="field-label">Адрес<span class="req-star">*</span></span>
                 <div class="loc-selected">
                   <mat-icon>place</mat-icon>
                   <span>{{ addrLabel() }}</span>
@@ -332,7 +334,7 @@
           @if (step() === 2) {
             @if (fields().rooms) {
               <div class="field">
-                <span class="field-label">Спальни</span>
+                <span class="field-label">Спальни<span class="req-star">*</span></span>
                 <div class="chips">
                   @for (b of options()!.bedrooms; track b.value) {
                     <button
@@ -348,7 +350,7 @@
               </div>
 
               <div class="field">
-                <span class="field-label">Санузлы</span>
+                <span class="field-label">Санузлы<span class="req-star">*</span></span>
                 <div class="chips">
                   @for (b of options()!.bathrooms; track b.value) {
                     <button
@@ -421,7 +423,9 @@
 
             @if (fields().bua) {
               <div class="field">
-                <span class="field-label">Площадь BUA, sqft</span>
+                <span class="field-label"
+                  >Площадь BUA, sqft<span class="req-star">*</span></span
+                >
                 <input
                   type="text"
                   inputmode="numeric"
@@ -433,7 +437,9 @@
             }
             @if (fields().plot) {
               <div class="field">
-                <span class="field-label">Площадь участка (Plot), sqft</span>
+                <span class="field-label"
+                  >Площадь участка (Plot), sqft<span class="req-star">*</span></span
+                >
                 <input
                   type="text"
                   inputmode="numeric"
@@ -553,7 +559,7 @@
           <!-- ШАГ 4: Цена -->
           @if (step() === 3) {
             <div class="field">
-              <span class="field-label">Цена, AED</span>
+              <span class="field-label">Цена, AED<span class="req-star">*</span></span>
               <input
                 [ngModel]="price()"
                 (ngModelChange)="onPriceInput($event)"
@@ -715,7 +721,9 @@
                  Для pocket-листинга документы не требуются. -->
             @if (listingType() === 'official') {
               <div class="field">
-                <span class="field-label">Title Deed №</span>
+                <span class="field-label"
+                  >Title Deed №<span class="req-star">*</span></span
+                >
                 <input
                   type="text"
                   [ngModel]="titleDeedNumber()"
