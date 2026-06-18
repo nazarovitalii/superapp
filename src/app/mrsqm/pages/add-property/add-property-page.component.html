@@ -28,8 +28,42 @@
         </div>
 
         <div class="block-content">
-          <!-- ШАГ 1: Категория → Тип → Подтип + Сделка -->
+          <!-- ШАГ 1: Тип сделки → Период оплаты → Категория → Тип → Подтип -->
           @if (step() === 0) {
+            <div class="field">
+              <span class="field-label">Тип сделки</span>
+              <div class="chips">
+                @for (d of options()!.deal_types; track d.value) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.sel]="dealType() === d.value"
+                    (click)="dealType.set($any(d.value))"
+                  >
+                    {{ d.label_en }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (dealType() === 'rent') {
+              <div class="field">
+                <span class="field-label">Период оплаты</span>
+                <div class="chips">
+                  @for (p of options()!.price_periods; track p.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="pricePeriod() === p.value"
+                      (click)="pricePeriod.set(p.value)"
+                    >
+                      {{ p.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
             <div class="field">
               <span class="field-label">Категория</span>
               <div class="chips">
@@ -76,40 +110,6 @@
                       (click)="subTypeId.set(s.id)"
                     >
                       {{ s.label_en }}
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
-            <div class="field">
-              <span class="field-label">Тип сделки</span>
-              <div class="chips">
-                @for (d of options()!.deal_types; track d.value) {
-                  <button
-                    type="button"
-                    class="chip"
-                    [class.sel]="dealType() === d.value"
-                    (click)="dealType.set($any(d.value))"
-                  >
-                    {{ d.label_en }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            @if (dealType() === 'rent') {
-              <div class="field">
-                <span class="field-label">Период оплаты</span>
-                <div class="chips">
-                  @for (p of options()!.price_periods; track p.value) {
-                    <button
-                      type="button"
-                      class="chip"
-                      [class.sel]="pricePeriod() === p.value"
-                      (click)="pricePeriod.set(p.value)"
-                    >
-                      {{ p.label_en }}
                     </button>
                   }
                 </div>
@@ -365,38 +365,58 @@
 
               @if (fields().maid || fields().hotelPool || fields().vastu) {
                 <div class="field">
-                  @if (fields().maid) {
-                    <label class="check-row">
-                      <input
-                        type="checkbox"
-                        [ngModel]="isMaid()"
-                        (ngModelChange)="isMaid.set($event)"
-                      />
-                      <span>Maid room</span>
-                    </label>
-                  }
-                  @if (fields().hotelPool) {
-                    <label class="check-row">
-                      <input
-                        type="checkbox"
-                        [ngModel]="isHotelPool()"
-                        (ngModelChange)="isHotelPool.set($event)"
-                      />
-                      <span>Hotel apartment</span>
-                    </label>
-                  }
-                  @if (fields().vastu) {
-                    <label class="check-row">
-                      <input
-                        type="checkbox"
-                        [ngModel]="isVastu()"
-                        (ngModelChange)="isVastu.set($event)"
-                      />
-                      <span>Vastu</span>
-                    </label>
-                  }
+                  <div class="check-group">
+                    @if (fields().maid) {
+                      <label class="check-row">
+                        <span class="check-label">Maid room</span>
+                        <input
+                          type="checkbox"
+                          [ngModel]="isMaid()"
+                          (ngModelChange)="isMaid.set($event)"
+                        />
+                      </label>
+                    }
+                    @if (fields().hotelPool) {
+                      <label class="check-row">
+                        <span class="check-label">Hotel Apartment</span>
+                        <input
+                          type="checkbox"
+                          [ngModel]="isHotelPool()"
+                          (ngModelChange)="isHotelPool.set($event)"
+                        />
+                      </label>
+                    }
+                    @if (fields().vastu) {
+                      <label class="check-row">
+                        <span class="check-label">Vastu Compliant</span>
+                        <input
+                          type="checkbox"
+                          [ngModel]="isVastu()"
+                          (ngModelChange)="isVastu.set($event)"
+                        />
+                      </label>
+                    }
+                  </div>
                 </div>
               }
+            }
+
+            @if (fields().layout && communityLayouts().length) {
+              <div class="field">
+                <span class="field-label">Планировка</span>
+                <div class="chips">
+                  @for (l of communityLayouts(); track l.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="layoutId() === l.id"
+                      (click)="layoutId.set(l.id)"
+                    >
+                      {{ l.name }}
+                    </button>
+                  }
+                </div>
+              </div>
             }
 
             @if (fields().bua) {
@@ -746,26 +766,8 @@
             </p>
           }
 
-          <!-- ШАГ 7: Фото и планировка -->
+          <!-- ШАГ 7: Фото -->
           @if (step() === 6) {
-            @if (fields().layout && communityLayouts().length) {
-              <div class="field">
-                <span class="field-label">Планировка</span>
-                <div class="chips">
-                  @for (l of communityLayouts(); track l.id) {
-                    <button
-                      type="button"
-                      class="chip"
-                      [class.sel]="layoutId() === l.id"
-                      (click)="layoutId.set(l.id)"
-                    >
-                      {{ l.name }}
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
             <div class="field">
               <span class="field-label">Фотографии</span>
               <label class="photo-add">

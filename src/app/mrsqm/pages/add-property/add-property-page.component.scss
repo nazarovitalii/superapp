@@ -446,15 +446,26 @@
   color: var(--text-color);
 }
 
-// Компактные чекбоксы: галочка рядом с меткой слева (maid/hotel/vastu)
+// Вариант B: метка слева фикс. ширина, чекбоксы в вертикальную колонку
+.check-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .check-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: flex-start;
   font-size: 15px;
   color: var(--text-color);
   cursor: pointer;
+}
+
+.check-label {
+  min-width: 148px; // шире самой длинной метки «Hotel Apartment»
+  font-size: 15px;
 }
 
 .note {

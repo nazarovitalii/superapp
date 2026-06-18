@@ -98,7 +98,6 @@ const CONFIG: Record<string, TypeFields> = {
   villa_commercial: f({
     bua: true,
     plot: true,
-    layout: true,
     views: true,
     amenities: true,
     furnished: true,
