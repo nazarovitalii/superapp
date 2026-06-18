@@ -370,3 +370,11 @@
 | `46359ca41` | 20:55 | feat(feed): тост-подтверждение при добавлении/удалении из избранного (18f T4)                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `8c33848fc` | 22:49 | docs: экспорт переписки + спека 18f + commits.md (S-3 финал)                                                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `5ced1774d` | 22:56 | style(chat): 16px, bubble тaller, composer 16px radius + тень + выше (S-3)                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `e52b30420` | 23:09 | feat(chat): POST /chat/feedback — sendFeedback API, messageId из SSE/истории, reason-чипы для дизлайка (S-4)                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `6b0f91dc7` | 23:10 | fix(feed): фикс-ширина селектов тулбара, поиск тянется на всю ленту, дропдаун локаций 14px+запятая, тип в 2 строки, maid/агентство 14px серым                    |
