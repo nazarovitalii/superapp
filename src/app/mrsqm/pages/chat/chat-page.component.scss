@@ -7,16 +7,13 @@
   overflow: hidden;
 }
 
-// ─── Корневой контейнер ───────────────────────────────────────────────────
+// ─── Корневой контейнер (на всю ширину) ───────────────────────────────────
 .chat {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 768px;
-  margin: 0 auto;
   width: 100%;
-  padding: 0 var(--s);
 }
 
 .chat-spinner {
@@ -26,16 +23,24 @@
   flex: 1;
 }
 
-// ─── Лента ────────────────────────────────────────────────────────────────
+// ─── Лента: скролл на всю ширину (скролбар у края окна) ────────────────────
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+// Центрированная колонка с контентом внутри скролл-области
+.chat-inner {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: var(--s2) var(--s) var(--s);
+  min-height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--s2);
-  padding: var(--s2) 0 var(--s);
-  scroll-behavior: smooth;
 }
 
 // ─── Пустое состояние ─────────────────────────────────────────────────────
@@ -80,40 +85,6 @@
   line-height: 1.5;
   color: var(--text-color-muted);
   max-width: 420px;
-}
-
-.chat-suggestions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-half);
-  width: 100%;
-  max-width: 520px;
-  margin-top: var(--s);
-}
-
-.chat-chip {
-  text-align: left;
-  padding: var(--s-half) var(--s);
-  border: 1px solid var(--extra-border-color);
-  border-radius: var(--task-border-radius);
-  background: var(--task-c-bg);
-  color: var(--text-color);
-  font-size: 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    background 0.15s,
-    transform 0.1s;
-
-  &:hover {
-    border-color: var(--c-primary);
-    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
-  }
-
-  &:active {
-    transform: scale(0.99);
-  }
 }
 
 // ─── Сообщения ────────────────────────────────────────────────────────────
@@ -208,12 +179,14 @@
   }
 }
 
+// Юзер-сообщение — нейтральная карточка в стиле строки ленты (не синий пузырь)
 .msg-bubble {
-  max-width: 78%;
+  max-width: 80%;
   padding: var(--s-half) var(--s);
-  border-radius: 18px 18px 4px 18px;
-  background: var(--c-primary);
-  color: var(--palette-primary-contrast-500, #fff);
+  border-radius: var(--task-border-radius);
+  background: var(--task-c-bg);
+  border: 1px solid var(--extra-border-color);
+  color: var(--text-color);
   font-size: 0.95rem;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -267,7 +240,7 @@
 .chat-scroll-down {
   position: absolute;
   left: 50%;
-  bottom: 84px;
+  bottom: 96px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -289,10 +262,48 @@
   }
 }
 
-// ─── Композер ─────────────────────────────────────────────────────────────
+// ─── Низ: подсказки + композер ────────────────────────────────────────────
 .chat-footer {
   flex-shrink: 0;
-  padding: var(--s-half) 0 var(--s);
+  width: 100%;
+}
+
+// Центрированная колонка + приподнят над краем окна
+.chat-footer-inner {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: var(--s-half) var(--s) var(--s2);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half);
+}
+
+// Полоска подсказок над композером
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-half);
+}
+
+.chat-chip {
+  padding: var(--s-quarter) var(--s);
+  border: 1px solid var(--extra-border-color);
+  border-radius: 999px;
+  background: var(--task-c-bg);
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+
+  &:hover {
+    border-color: var(--c-primary);
+    color: var(--text-color);
+  }
 }
 
 .chat-composer {
@@ -419,9 +430,5 @@
   }
   .chat-chip {
     transition: none;
-
-    &:active {
-      transform: none;
-    }
   }
 }

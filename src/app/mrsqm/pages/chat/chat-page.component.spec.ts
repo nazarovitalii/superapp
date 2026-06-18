@@ -167,6 +167,13 @@ describe('ChatPageComponent', () => {
     expect(chips.length).toBe(4);
   });
 
+  it('подсказки видны над композером даже при наличии истории', async () => {
+    loadHistorySpy.and.resolveTo([{ role: 'user', text: 'было', created_at: 'x' }]);
+    await createComponent();
+    // история есть, но поле пустое → полоска чипов всё равно показана
+    expect(fixture.nativeElement.querySelectorAll('.chat-chip').length).toBe(4);
+  });
+
   it('клик по чипу вызывает streamMessage', async () => {
     await createComponent();
     const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
