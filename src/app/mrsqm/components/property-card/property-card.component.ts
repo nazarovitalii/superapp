@@ -47,4 +47,16 @@ export class PropertyCardComponent {
   readonly addr = computed(() =>
     resolveFeedAddress(this.property(), this.showPublicAddress()),
   );
+
+  // Тип объекта в колонку: двухсловный тип («Hotel Apartment») всегда
+  // разбиваем на две строки — второе слово на новой. Иначе — одной строкой.
+  // Мемоизировано через computed (hot-path: без вычислений в шаблоне).
+  readonly typeLines = computed<{ first: string; second: string | null }>(() => {
+    const raw = (this.property().property_type ?? '').trim();
+    if (!raw) return { first: '—', second: null };
+    const parts = raw.split(/\s+/);
+    return parts.length === 2
+      ? { first: parts[0], second: parts[1] }
+      : { first: raw, second: null };
+  });
 }

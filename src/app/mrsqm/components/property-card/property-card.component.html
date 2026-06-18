@@ -31,9 +31,12 @@
       }
     </div>
 
-    <!-- Тип: Apartment / Villa (U-6: перенос на 2 строки, без Ready/Off-Plan) -->
+    <!-- Тип: Apartment / Villa (U-6: двухсловный тип — второе слово на 2-й строке) -->
     <div class="col col-type">
-      <span class="type-name">{{ property().property_type || '—' }}</span>
+      <span class="type-name">{{ typeLines().first }}</span>
+      @if (typeLines().second) {
+        <span class="type-name">{{ typeLines().second }}</span>
+      }
     </div>
 
     <!-- Beds: число сверху, «maid» серым снизу (vastu в ленте не показываем) -->

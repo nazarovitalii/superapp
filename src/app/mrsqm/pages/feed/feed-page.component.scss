@@ -16,11 +16,12 @@
   width: 100%;
 }
 
-// Тулбар ленты (Bayut-style): одна строка контролов на всю ширину таблицы.
+// Тулбар ленты (Bayut-style): одна строка контролов на всю ширину ленты.
+// nowrap: при сужении сжимается ТОЛЬКО поле поиска, селекты фиксированы.
 .feed-toolbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--s-half);
   padding: var(--s) 5px var(--s-half);
 }
@@ -97,10 +98,30 @@
   }
 }
 
-// U-8: охват фиксированной ширины — сокращена ~20% (13.5rem → 10.75rem),
-// поле поиска flex:1 заберёт освободившееся место
+// Селекты фиксированной ширины — каждый по своей самой длинной метке,
+// чтобы при смене значения ширина не «прыгала». space-between: метка слева,
+// стрелка справа; короткие метки добиваются до min-width → ширина постоянна.
+// Тянется при сужении только поле поиска (см. .tb-search), селекты фиксированы.
 .scope-select {
-  min-width: 10.75rem;
+  // «Friends Inventory · 9 999»
+  min-width: 13.75rem;
+}
+.seg-select {
+  // «All Segments»
+  min-width: 9rem;
+}
+.deal-select {
+  // «Sale» / «Rent»
+  min-width: 6rem;
+}
+.tb-type-select {
+  // «Residential» / «Apartment · 3» / «Тип объекта»
+  min-width: 10rem;
+}
+.scope-select,
+.seg-select,
+.deal-select,
+.tb-type-select {
   justify-content: space-between;
 }
 
@@ -121,10 +142,10 @@
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  // 1C: сужен — освобождает место для селектов с увеличенным padding
-  flex: 1 1 200px;
-  min-width: 150px;
-  max-width: 340px;
+  // Единственный тянущийся элемент тулбара: растёт до ширины ленты и
+  // сжимается первым при сужении (селекты фиксированы, nowrap у .feed-toolbar).
+  flex: 1 1 160px;
+  min-width: 130px;
   // 1C: высота 44px
   height: 44px;
   padding: 0 var(--s);
@@ -300,7 +321,7 @@
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-size: 0.8125rem;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
 
@@ -324,9 +345,9 @@
   white-space: nowrap;
 }
 
+// Верхний уровень (комьюнити/город) — инлайн после названия через запятую,
+// серым, тот же кегль (14px от .tb-suggest-item). Не выносим вправо.
 .tb-suggest-sub {
-  margin-left: auto;
-  font-size: 0.6875rem;
   color: var(--text-color-muted);
   white-space: nowrap;
 }

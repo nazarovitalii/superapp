@@ -115,12 +115,17 @@
                 (mousedown)="pickLocation(l)"
               >
                 <mat-icon>place</mat-icon>
-                <span class="tb-suggest-name">{{ l.name }}</span>
-                @if (l.community_name || l.city_name) {
-                  <span class="tb-suggest-sub">{{
-                    l.community_name ?? l.city_name
-                  }}</span>
-                }
+                <!-- Имя + верхний уровень через запятую. Обе части — элементы:
+                     Angular убирает whitespace-only узлы МЕЖДУ элементами,
+                     поэтому пробела перед запятой не будет. -->
+                <span class="tb-suggest-name">
+                  <span class="tb-suggest-leaf">{{ l.name }}</span>
+                  @if (l.community_name || l.city_name) {
+                    <span class="tb-suggest-sub"
+                      >, {{ l.community_name ?? l.city_name }}</span
+                    >
+                  }
+                </span>
               </button>
             }
           }
@@ -163,7 +168,7 @@
     <!-- 3. Сегмент: All Segments / Ready / Off-Plan -->
     <button
       type="button"
-      class="tb-select"
+      class="tb-select seg-select"
       [class.isActive]="filter.handover() !== null"
       [matMenuTriggerFor]="segMenu"
     >
@@ -191,7 +196,7 @@
     <!-- 4. Сделка: Sale / Rent -->
     <button
       type="button"
-      class="tb-select"
+      class="tb-select deal-select"
       [matMenuTriggerFor]="dealMenu"
     >
       <span>{{ dealLabel() }}</span>
