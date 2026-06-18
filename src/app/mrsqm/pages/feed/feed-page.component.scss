@@ -67,8 +67,8 @@
   border: 1px solid var(--extra-border-color);
   background: var(--task-c-bg);
   color: inherit;
-  // Размер текста = тело ленты (14px), без жирности
-  font-size: 0.875rem;
+  // Размер текста = тело ленты (14px), без жирности — литерал, как .first-line (W-6)
+  font-size: 14px;
   font-weight: 400;
   white-space: nowrap;
   cursor: pointer;
@@ -149,7 +149,7 @@
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-size: 0.875rem;
+  font-size: 14px; // W-6: кегль = тело ленты
   font-family: inherit;
   outline: none;
 
@@ -164,7 +164,7 @@
   align-items: center;
   gap: var(--s-quarter);
   max-width: 100%;
-  font-size: 0.875rem;
+  font-size: 14px; // W-6: кегль = тело ленты
   font-weight: 400;
   color: var(--c-primary);
   overflow: hidden;
@@ -275,7 +275,7 @@
   border: 1px solid var(--c-primary);
   background: var(--task-c-bg);
   color: var(--c-primary);
-  font-size: 0.875rem;
+  font-size: 14px; // W-6: кегль = тело ленты
   font-weight: 400;
   cursor: pointer;
   flex: 0 0 auto;
@@ -287,17 +287,30 @@
   }
 }
 
-// V-4: компактные пункты выпадающих меню тулбара (охват / сегмент / сделка).
+// W-2/V-4: компактные пункты выпадающих меню тулбара (охват / сегмент / сделка / сортировка).
 // Класс .tb-menu вешается на <mat-menu> → стиль scoped, не глобальный Material-override.
-::ng-deep .tb-menu .mat-mdc-menu-item {
-  font-size: 0.875rem; // 14px — кегль ленты
-  min-height: 36px; // компактная высота строки
-}
+// M3-токен задаёт размер через CSS-переменную; .mdc-list-item__primary-text — фолбэк.
+::ng-deep .tb-menu {
+  // M3-токен — основной способ задать кегль пунктов меню
+  --mat-menu-item-label-text-size: 14px;
 
-::ng-deep .tb-menu .mat-mdc-menu-item .mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+  .mat-mdc-menu-item {
+    font-size: 14px; // фолбэк для не-M3 окружений
+    min-height: 36px; // компактная высота строки
+  }
+
+  // Прямой таргет текста — фолбэк если токен не подтягивается
+  .mat-mdc-menu-item .mdc-list-item__primary-text {
+    font-size: 14px;
+  }
+
+  // radio-индикатор: уменьшаем с 24px до 18px
+  .mat-mdc-menu-item .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: var(--s-half);
+  }
 }
 
 // ─── Мега-дропдаун типа (V-9: полировка — сегмент-табы, состояния, чипы) ────
@@ -494,7 +507,7 @@
   top: 0;
   z-index: 10;
   background: var(--bg);
-  border-bottom: 1px solid var(--extra-border-color);
+  // W-5: убрана серая линия под тулбаром
 }
 
 .th {

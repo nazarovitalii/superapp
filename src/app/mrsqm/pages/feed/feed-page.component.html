@@ -280,7 +280,10 @@
     >
       <mat-icon>swap_vert</mat-icon>
     </button>
-    <mat-menu #sortMenu="matMenu">
+    <mat-menu
+      #sortMenu="matMenu"
+      class="tb-menu"
+    >
       @for (o of sortOptions; track o.value) {
         <button
           mat-menu-item
