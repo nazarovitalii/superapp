@@ -71,18 +71,24 @@ export class PropertyPhotoService {
     if (error) throw error;
   }
 
-  // Фото объекта для карточки (select под RLS photos_select, сорт по order_index).
-  // Ошибка/нет данных → []. Видимость ограничивает сама RLS (вложенный к properties).
-  // Фильтруем только gallery: floor_plan-фото хранятся отдельно и не должны
-  // попадать в основную галерею карточки (у них тот же order_index, начиная с 0).
+  // Фото объекта для карточки: gallery (сначала) + floor_plan (в конце).
+  // Нельзя сортировать глобально по order_index — у floor_plan свой счётчик с 0.
+  // Поэтому: тянем оба типа без серверной сортировки, затем JS-сортировка:
+  //   ключ = (rank типа: gallery=0, floor_plan=1) * 1e6 + order_index.
+  // Ошибка/нет данных → []. Видимость ограничивает RLS (вложенный к properties).
   async getPhotos(propertyId: string): Promise<PropertyPhoto[]> {
     const { data, error } = await this._supabase.client
       .from('property_photos')
       .select('full_url, thumb_url, order_index, photo_type')
       .eq('property_id', propertyId)
-      .eq('photo_type', 'gallery')
-      .order('order_index', { ascending: true });
-    return error ? [] : ((data as PropertyPhoto[]) ?? []);
+      .in('photo_type', ['gallery', 'floor_plan']);
+    if (error || !data) return [];
+    const typeRank: Record<string, number> = { gallery: 0, floor_plan: 1 };
+    const sortKey = (p: PropertyPhoto): number => {
+      const rank = (typeRank[p.photo_type] ?? 9) * 1_000_000;
+      return rank + (p.order_index ?? 0);
+    };
+    return (data as PropertyPhoto[]).sort((a, b) => sortKey(a) - sortKey(b));
   }
 
   private async _upload(path: string, blob: Blob): Promise<string> {

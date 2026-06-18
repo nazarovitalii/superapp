@@ -364,7 +364,32 @@ describe('PropertyDetailComponent', () => {
     expect(actions.textContent).toContain('Редактировать');
   });
 
-  it('typeLabel собирает категория + тип + подтип (+ hotel pool)', async () => {
+  // V-8: typeCategory / typeSubtype (заменяет typeLabel)
+  it('typeCategory возвращает категорию из справочника', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({ category_id: 'c1', unit_type_id: 'u1', sub_type_id: 's1' });
+    create.options = {
+      categories: [{ id: 'c1', value: 'residential', label_en: 'Residential' }],
+      unit_types: [{ id: 'u1', value: 'apartment', label_en: 'Apartment' }],
+      sub_types: [{ id: 's1', value: 'flat', label_en: 'Flat' }],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().typeCategory).toBe('Residential');
+  });
+
+  it('typeSubtype возвращает подтип, фолбэк на unit_type', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({ category_id: 'c1', unit_type_id: 'u1', sub_type_id: 's1' });
+    create.options = {
+      categories: [{ id: 'c1', value: 'residential', label_en: 'Residential' }],
+      unit_types: [{ id: 'u1', value: 'apartment', label_en: 'Apartment' }],
+      sub_types: [{ id: 's1', value: 'flat', label_en: 'Flat' }],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().typeSubtype).toBe('Flat');
+  });
+
+  it('typeSubtype добавляет суффикс (hotel apartment) при is_hotel_pool', async () => {
     const { comp, supa, create } = makeComponent();
     supa.rpcResult = detail({
       category_id: 'c1',
@@ -378,7 +403,27 @@ describe('PropertyDetailComponent', () => {
       sub_types: [{ id: 's1', value: 'flat', label_en: 'Flat' }],
     };
     await comp.loadProperty();
-    expect(comp.vm().typeLabel).toBe('Residential Apartment - Flat (hotel apartment)');
+    expect(comp.vm().typeSubtype).toBe('Flat (hotel apartment)');
+  });
+
+  it('typeSubtype null когда нет ни sub_type_id ни unit_type_id', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({ unit_type_id: null, sub_type_id: null });
+    create.options = {
+      categories: [{ id: 'c1', value: 'residential', label_en: 'Residential' }],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().typeSubtype).toBeNull();
+  });
+
+  it('typeSubtype фолбэк на unit_type если sub_type_id отсутствует', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({ unit_type_id: 'u1', sub_type_id: null });
+    create.options = {
+      unit_types: [{ id: 'u1', value: 'apartment', label_en: 'Apartment' }],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().typeSubtype).toBe('Apartment');
   });
 
   // ─── Слой 2b: Project-блок, active-listings, slider-адрес, vastu ─────────────

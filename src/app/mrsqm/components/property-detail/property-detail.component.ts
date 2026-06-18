@@ -175,8 +175,9 @@ export class PropertyDetailComponent implements OnDestroy {
       agentActiveListings: d?.agent?.active_listings_count ?? null,
       whatsapp: d?.agent?.whatsapp_phone ?? null,
       telegram: d?.agent?.tg_username ?? null,
-      typeLabel: this._composeType(
-        d?.category_id,
+      // V-8: категория и подтип разделены на два поля
+      typeCategory: this._label(d?.category_id, opts?.categories),
+      typeSubtype: this._composeSubtype(
         d?.unit_type_id,
         d?.sub_type_id,
         d?.is_hotel_pool ?? false,
@@ -525,22 +526,18 @@ export class PropertyDetailComponent implements OnDestroy {
     return `${Math.floor(days / 365)} г. назад`;
   }
 
-  // «Residential Apartment - Flat (hotel apartment)» из справочников.
-  private _composeType(
-    categoryId: string | null | undefined,
+  // V-8: подтип объекта — sub_type, фолбэк на unit_type; суффикс hotel apartment при is_hotel_pool.
+  private _composeSubtype(
     unitTypeId: string | null | undefined,
     subTypeId: string | null | undefined,
     isHotelPool: boolean,
     opts: FilterOptions | null,
   ): string | null {
-    const cat = this._label(categoryId, opts?.categories);
     const unit = this._label(unitTypeId, opts?.unit_types);
     const sub = this._label(subTypeId, opts?.sub_types);
-    const head = [cat, unit].filter(Boolean).join(' ');
-    let out = sub ? (head ? `${head} - ${sub}` : sub) : head;
-    if (!out) return null;
-    if (isHotelPool) out += ' (hotel apartment)';
-    return out;
+    const base = sub ?? unit;
+    if (!base) return null;
+    return isHotelPool ? `${base} (hotel apartment)` : base;
   }
 
   // Дата в формате DD.MM.YYYY (для Created/Updated).

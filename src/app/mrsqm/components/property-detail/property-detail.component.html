@@ -207,6 +207,72 @@
           </div>
         </div>
 
+        <!-- ── 7. Агент ──────────────────────────────────────────────────── -->
+        <div class="section agent-section">
+          <div class="section-label"><mat-icon>person</mat-icon>Агент</div>
+          <div class="agent-row">
+            @if (vm().agentPhoto) {
+              <img
+                class="agent-avatar"
+                [src]="vm().agentPhoto"
+                [alt]="vm().agentName ?? ''"
+              />
+            } @else {
+              <div class="agent-avatar agent-avatar--placeholder">
+                <mat-icon>person</mat-icon>
+              </div>
+            }
+            <div class="agent-info">
+              <div class="agent-name">{{ vm().agentName }}</div>
+              @if (vm().agentAgency) {
+                <div class="agent-agency">{{ vm().agentAgency }}</div>
+              }
+              @if (vm().agentEmirate) {
+                <div class="agent-agency">{{ vm().agentEmirate }}</div>
+              }
+              @if (vm().agentLangs?.length) {
+                <div class="agent-langs">{{ vm().agentLangs!.join(', ') }}</div>
+              }
+              @if (vm().agentActiveListings !== null) {
+                <div class="agent-agency">
+                  Активных листингов: {{ vm().agentActiveListings }}
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (vm().agentAbout) {
+            <p class="section-text">{{ vm().agentAbout }}</p>
+          }
+
+          @if (vm().whatsapp; as phone) {
+            <button
+              mat-flat-button
+              class="whatsapp-btn"
+              (click)="openWhatsApp(phone)"
+            >
+              <mat-icon>chat</mat-icon>
+              WhatsApp
+            </button>
+          }
+          @if (vm().telegram; as tg) {
+            <button
+              mat-stroked-button
+              class="tg-btn"
+              (click)="openTelegram(tg)"
+            >
+              <mat-icon>send</mat-icon>
+              Telegram
+            </button>
+          }
+          @if (!vm().whatsapp && !vm().telegram) {
+            <div class="pro-hint">
+              <mat-icon>lock</mat-icon>
+              Контакт агента доступен на <strong>Pro</strong>
+            </div>
+          }
+        </div>
+
         <!-- ── Tech: характеристики «Поле: Значение» ─────────────────────── -->
         <div class="section">
           <div class="section-label"><mat-icon>info</mat-icon>Характеристики</div>
@@ -217,10 +283,16 @@
                 vm().dealType === 'sale' ? 'Sale' : 'Rent'
               }}</span>
             </div>
-            @if (vm().typeLabel) {
+            @if (vm().typeCategory) {
               <div class="kv-row">
-                <span class="kv-label">Type</span>
-                <span class="kv-value">{{ vm().typeLabel }}</span>
+                <span class="kv-label">Type</span
+                ><span class="kv-value">{{ vm().typeCategory }}</span>
+              </div>
+            }
+            @if (vm().typeSubtype) {
+              <div class="kv-row">
+                <span class="kv-label">Subtype</span
+                ><span class="kv-value">{{ vm().typeSubtype }}</span>
               </div>
             }
             @if (vm().bedrooms !== null) {
@@ -420,72 +492,6 @@
             <p class="section-text description-text">{{ vm().description }}</p>
           </div>
         }
-
-        <!-- ── 7. Агент ──────────────────────────────────────────────────── -->
-        <div class="section agent-section">
-          <div class="section-label"><mat-icon>person</mat-icon>Агент</div>
-          <div class="agent-row">
-            @if (vm().agentPhoto) {
-              <img
-                class="agent-avatar"
-                [src]="vm().agentPhoto"
-                [alt]="vm().agentName ?? ''"
-              />
-            } @else {
-              <div class="agent-avatar agent-avatar--placeholder">
-                <mat-icon>person</mat-icon>
-              </div>
-            }
-            <div class="agent-info">
-              <div class="agent-name">{{ vm().agentName }}</div>
-              @if (vm().agentAgency) {
-                <div class="agent-agency">{{ vm().agentAgency }}</div>
-              }
-              @if (vm().agentEmirate) {
-                <div class="agent-agency">{{ vm().agentEmirate }}</div>
-              }
-              @if (vm().agentLangs?.length) {
-                <div class="agent-langs">{{ vm().agentLangs!.join(', ') }}</div>
-              }
-              @if (vm().agentActiveListings !== null) {
-                <div class="agent-agency">
-                  Активных листингов: {{ vm().agentActiveListings }}
-                </div>
-              }
-            </div>
-          </div>
-
-          @if (vm().agentAbout) {
-            <p class="section-text">{{ vm().agentAbout }}</p>
-          }
-
-          @if (vm().whatsapp; as phone) {
-            <button
-              mat-flat-button
-              class="whatsapp-btn"
-              (click)="openWhatsApp(phone)"
-            >
-              <mat-icon>chat</mat-icon>
-              WhatsApp
-            </button>
-          }
-          @if (vm().telegram; as tg) {
-            <button
-              mat-stroked-button
-              class="tg-btn"
-              (click)="openTelegram(tg)"
-            >
-              <mat-icon>send</mat-icon>
-              Telegram
-            </button>
-          }
-          @if (!vm().whatsapp && !vm().telegram) {
-            <div class="pro-hint">
-              <mat-icon>lock</mat-icon>
-              Контакт агента доступен на <strong>Pro</strong>
-            </div>
-          }
-        </div>
 
         <!-- ── 8. Статистика ─────────────────────────────────────────────── -->
         @if (vm().updatedLabel || vm().viewsCount !== null) {
