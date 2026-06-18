@@ -143,7 +143,7 @@
 .msg-body {
   min-width: 0;
   flex: 1 1 auto;
-  font-size: 17px; // текст ответа ассистента
+  font-size: 16px; // текст ответа ассистента
   line-height: 1.6;
   color: var(--text-color);
   overflow-wrap: anywhere;
@@ -201,13 +201,13 @@
 // Юзер-сообщение — нейтральная карточка в стиле строки ленты (не синий пузырь)
 .msg-bubble {
   max-width: 80%;
-  padding: var(--s-half) var(--s);
+  padding: var(--s) var(--s);
   border-radius: var(--task-border-radius);
   background: var(--task-c-bg);
   border: 1px solid var(--extra-border-color);
   color: var(--text-color);
-  font-size: 17px; // текст сообщения юзера
-  line-height: 1.5;
+  font-size: 16px; // текст сообщения юзера
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -287,12 +287,11 @@
   width: 100%;
 }
 
-// Центрированная колонка; приподнят над краем окна (низ --s3),
-// сверху больше воздуха, чтобы подсказки не сливались с ответом бота (верх --s3)
+// Центрированная колонка; плавает над краем окна с увеличенным нижним отступом
 .chat-footer-inner {
   max-width: 768px;
   margin: 0 auto;
-  padding: var(--s3) var(--s) var(--s3);
+  padding: var(--s3) var(--s) 48px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -328,16 +327,20 @@
 
 .chat-composer {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--s-half);
-  padding: var(--s-quarter) var(--s-quarter) var(--s-quarter) var(--s);
+  padding: var(--s-half) var(--s-quarter) var(--s-half) var(--s);
   border: 1px solid var(--extra-border-color);
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--task-c-bg);
-  transition: border-color 0.15s;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 
   &:focus-within {
     border-color: var(--c-primary);
+    box-shadow: 0 4px 28px rgba(0, 0, 0, 0.15);
   }
 }
 
@@ -349,11 +352,11 @@
   background: transparent;
   color: var(--text-color);
   font-family: inherit;
-  font-size: 17px; // как текст сообщений, без iOS-зума на фокусе
+  font-size: 16px; // без iOS-зума на фокусе
   line-height: 1.5;
   min-height: 24px;
   max-height: 160px;
-  padding: 8px 0;
+  padding: 6px 0;
   overflow-y: auto;
 
   &::placeholder {
