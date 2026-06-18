@@ -34,9 +34,6 @@
             [class.assistant]="m.role === 'assistant'"
           >
             @if (m.role === 'assistant') {
-              <div class="msg-avatar">
-                <mat-icon>smart_toy</mat-icon>
-              </div>
               <div class="msg-body">
                 <markdown [data]="m.text" />
                 @if (m.streaming) {
@@ -44,6 +41,36 @@
                     class="msg-typing"
                     aria-hidden="true"
                   ></span>
+                }
+                @if (!m.streaming) {
+                  <div class="msg-actions">
+                    <button
+                      type="button"
+                      class="msg-action"
+                      (click)="copyMessage($index)"
+                      [attr.aria-label]="m.copied ? 'Скопировано' : 'Копировать ответ'"
+                    >
+                      <mat-icon>{{ m.copied ? 'check' : 'content_copy' }}</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="msg-action"
+                      [class.active]="m.feedback === 'like'"
+                      (click)="setFeedback($index, 'like')"
+                      aria-label="Нравится"
+                    >
+                      <mat-icon>thumb_up</mat-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="msg-action"
+                      [class.active]="m.feedback === 'dislike'"
+                      (click)="setFeedback($index, 'dislike')"
+                      aria-label="Не нравится"
+                    >
+                      <mat-icon>thumb_down</mat-icon>
+                    </button>
+                  </div>
                 }
               </div>
             } @else {

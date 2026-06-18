@@ -184,15 +184,17 @@ describe('ChatPageComponent', () => {
     expect(mockGpt.streamMessage).toHaveBeenCalled();
   });
 
-  it('ассистентский месседж: маркер-бот + тело, без пузыря', async () => {
+  it('ассистентский месседж: тело без аватара и без пузыря, со строкой действий', async () => {
     loadHistorySpy.and.resolveTo([
       { role: 'assistant', text: 'привет', created_at: 'x' },
     ]);
     await createComponent();
     const a = fixture.nativeElement.querySelector('.msg.assistant');
-    expect(a.querySelector('.msg-avatar')).toBeTruthy();
+    expect(a.querySelector('.msg-avatar')).toBeNull(); // иконку-робота убрали
     expect(a.querySelector('.msg-body')).toBeTruthy();
     expect(a.querySelector('.msg-bubble')).toBeNull();
+    // под завершённым ответом — 3 действия: копировать / лайк / дизлайк
+    expect(a.querySelectorAll('.msg-action').length).toBe(3);
   });
 
   it('юзерский месседж: пузырь', async () => {
@@ -200,6 +202,26 @@ describe('ChatPageComponent', () => {
     await createComponent();
     const u = fixture.nativeElement.querySelector('.msg.user');
     expect(u.querySelector('.msg-bubble')).toBeTruthy();
+  });
+
+  it('copyMessage помечает сообщение скопированным', async () => {
+    loadHistorySpy.and.resolveTo([
+      { role: 'assistant', text: 'ответ для копии', created_at: 'x' },
+    ]);
+    await createComponent();
+    component.copyMessage(0);
+    expect(component.messages()[0].copied).toBeTrue();
+  });
+
+  it('setFeedback ставит и снимает оценку повторным кликом', async () => {
+    loadHistorySpy.and.resolveTo([{ role: 'assistant', text: 'ответ', created_at: 'x' }]);
+    await createComponent();
+    component.setFeedback(0, 'like');
+    expect(component.messages()[0].feedback).toBe('like');
+    component.setFeedback(0, 'like'); // повторный клик — снять
+    expect(component.messages()[0].feedback).toBeUndefined();
+    component.setFeedback(0, 'dislike');
+    expect(component.messages()[0].feedback).toBe('dislike');
   });
 
   it('композер: textarea + кнопка отправки внутри .chat-composer', async () => {

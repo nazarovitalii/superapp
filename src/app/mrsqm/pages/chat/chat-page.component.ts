@@ -25,6 +25,10 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
   streaming?: boolean;
+  // Оценка ответа (визуальная; сохранение требует эндпоинта на gpt-сервисе)
+  feedback?: 'like' | 'dislike';
+  // Флаг «скопировано» для временной смены иконки
+  copied?: boolean;
 }
 
 interface Suggestion {
@@ -233,6 +237,31 @@ export class ChatPageComponent implements OnDestroy {
     this.draft.set('');
     this._autoGrow();
     this.send(text);
+  }
+
+  // ─── Действия под ответом (копировать / оценка) ──────────────────────────
+
+  copyMessage(index: number): void {
+    const msg = this.messages()[index];
+    if (!msg) return;
+    // Копирование best-effort: нет clipboard или отказ (не в фокусе) — не критично
+    void navigator.clipboard?.writeText(msg.text)?.catch(() => {});
+    this._patchMsg(index, { copied: true });
+    setTimeout(() => this._patchMsg(index, { copied: false }), 1500);
+  }
+
+  setFeedback(index: number, kind: 'like' | 'dislike'): void {
+    const msg = this.messages()[index];
+    if (!msg) return;
+    // Повторный клик по той же оценке снимает её
+    this._patchMsg(index, { feedback: msg.feedback === kind ? undefined : kind });
+  }
+
+  // Иммутабельно патчит сообщение по индексу
+  private _patchMsg(index: number, patch: Partial<ChatMessage>): void {
+    this.messages.update((msgs) =>
+      msgs.map((m, i) => (i === index ? { ...m, ...patch } : m)),
+    );
   }
 
   // ─── Скролл ленты ─────────────────────────────────────────────────────────

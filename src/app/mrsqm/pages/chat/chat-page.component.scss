@@ -102,29 +102,48 @@
   }
 }
 
-.msg-avatar {
-  flex: 0 0 auto;
+// Строка действий под ответом ассистента (копировать / лайк / дизлайк)
+.msg-actions {
+  display: flex;
+  gap: var(--s-quarter);
+  margin-top: var(--s-quarter);
+}
+
+.msg-action {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
-  color: var(--c-primary);
-  margin-top: 2px;
+  border: none;
+  background: transparent;
+  border-radius: var(--task-border-radius);
+  color: var(--text-color-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+    color: var(--text-color);
+  }
+
+  &.active {
+    color: var(--c-primary);
   }
 }
 
 .msg-body {
   min-width: 0;
   flex: 1 1 auto;
-  font-size: 1rem; // 16px — текст ответа ассистента
+  font-size: 17px; // текст ответа ассистента
   line-height: 1.6;
   color: var(--text-color);
   overflow-wrap: anywhere;
@@ -187,7 +206,7 @@
   background: var(--task-c-bg);
   border: 1px solid var(--extra-border-color);
   color: var(--text-color);
-  font-size: 1rem; // 16px — текст сообщения юзера
+  font-size: 17px; // текст сообщения юзера
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -207,7 +226,7 @@
 
 // ─── Статус инструмента (shimmer) ─────────────────────────────────────────
 .chat-status {
-  padding: var(--s-quarter) calc(28px + var(--s-half));
+  padding: var(--s-quarter) 0;
   font-size: 0.85rem;
 }
 
@@ -268,15 +287,16 @@
   width: 100%;
 }
 
-// Центрированная колонка + приподнят над краем окна
+// Центрированная колонка; приподнят над краем окна (низ --s3),
+// сверху больше воздуха, чтобы подсказки не сливались с ответом бота (верх --s3)
 .chat-footer-inner {
   max-width: 768px;
   margin: 0 auto;
-  padding: var(--s-half) var(--s) var(--s2);
+  padding: var(--s3) var(--s) var(--s3);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--s-half);
+  gap: var(--s);
 }
 
 // Полоска подсказок над композером
@@ -329,7 +349,7 @@
   background: transparent;
   color: var(--text-color);
   font-family: inherit;
-  font-size: 1rem; // 16px — совпадает с текстом сообщений, без iOS-зума на фокусе
+  font-size: 17px; // как текст сообщений, без iOS-зума на фокусе
   line-height: 1.5;
   min-height: 24px;
   max-height: 160px;
