@@ -73,11 +73,14 @@ export class PropertyPhotoService {
 
   // Фото объекта для карточки (select под RLS photos_select, сорт по order_index).
   // Ошибка/нет данных → []. Видимость ограничивает сама RLS (вложенный к properties).
+  // Фильтруем только gallery: floor_plan-фото хранятся отдельно и не должны
+  // попадать в основную галерею карточки (у них тот же order_index, начиная с 0).
   async getPhotos(propertyId: string): Promise<PropertyPhoto[]> {
     const { data, error } = await this._supabase.client
       .from('property_photos')
       .select('full_url, thumb_url, order_index, photo_type')
       .eq('property_id', propertyId)
+      .eq('photo_type', 'gallery')
       .order('order_index', { ascending: true });
     return error ? [] : ((data as PropertyPhoto[]) ?? []);
   }
