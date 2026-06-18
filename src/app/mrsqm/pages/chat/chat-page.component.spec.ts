@@ -160,4 +160,41 @@ describe('ChatPageComponent', () => {
     // После отправки draft очищается
     expect(component.draft()).toBe('');
   });
+
+  it('пустой экран: рендерит 4 чипа-подсказки', async () => {
+    await createComponent(); // loadHistory по умолчанию резолвит [] → пусто
+    const chips = fixture.nativeElement.querySelectorAll('.chat-chip');
+    expect(chips.length).toBe(4);
+  });
+
+  it('клик по чипу вызывает streamMessage', async () => {
+    await createComponent();
+    const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
+    const firstChip = fixture.nativeElement.querySelector('.chat-chip') as HTMLButtonElement;
+    firstChip.click();
+    expect(mockGpt.streamMessage).toHaveBeenCalled();
+  });
+
+  it('ассистентский месседж: маркер-бот + тело, без пузыря', async () => {
+    loadHistorySpy.and.resolveTo([{ role: 'assistant', text: 'привет', created_at: 'x' }]);
+    await createComponent();
+    const a = fixture.nativeElement.querySelector('.msg.assistant');
+    expect(a.querySelector('.msg-avatar')).toBeTruthy();
+    expect(a.querySelector('.msg-body')).toBeTruthy();
+    expect(a.querySelector('.msg-bubble')).toBeNull();
+  });
+
+  it('юзерский месседж: пузырь', async () => {
+    loadHistorySpy.and.resolveTo([{ role: 'user', text: 'вопрос', created_at: 'x' }]);
+    await createComponent();
+    const u = fixture.nativeElement.querySelector('.msg.user');
+    expect(u.querySelector('.msg-bubble')).toBeTruthy();
+  });
+
+  it('композер: textarea + кнопка отправки внутри .chat-composer', async () => {
+    await createComponent();
+    const composer = fixture.nativeElement.querySelector('.chat-composer');
+    expect(composer.querySelector('textarea')).toBeTruthy();
+    expect(composer.querySelector('.chat-send')).toBeTruthy();
+  });
 });

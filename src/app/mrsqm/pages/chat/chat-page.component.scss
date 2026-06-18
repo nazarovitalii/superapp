@@ -7,19 +7,17 @@
   overflow: hidden;
 }
 
-// ─── Корневой контейнер чата ──────────────────────────────────────────────
-
+// ─── Корневой контейнер ───────────────────────────────────────────────────
 .chat {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 760px;
+  max-width: 768px;
   margin: 0 auto;
   width: 100%;
   padding: 0 var(--s);
 }
-
-// ─── Спиннер при загрузке истории ────────────────────────────────────────
 
 .chat-spinner {
   display: flex;
@@ -28,155 +26,233 @@
   flex: 1;
 }
 
-// ─── Лента сообщений ──────────────────────────────────────────────────────
-
+// ─── Лента ────────────────────────────────────────────────────────────────
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--s);
-  padding: var(--s) 0;
+  gap: var(--s2);
+  padding: var(--s2) 0 var(--s);
+  scroll-behavior: smooth;
 }
 
-// ─── Пустое состояние ────────────────────────────────────────────────────
-
+// ─── Пустое состояние ─────────────────────────────────────────────────────
 .chat-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: var(--s2);
+  gap: var(--s);
   padding: var(--s6) var(--s2);
-  color: var(--text-color-muted);
   text-align: center;
 }
 
-.chat-empty-icon {
-  font-size: 56px;
-  width: 56px;
-  height: 56px;
-  opacity: 0.4;
+.chat-empty-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
   color: var(--c-primary);
+
+  mat-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+  }
 }
 
-.chat-empty-text {
+.chat-empty-title {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.6;
-  max-width: 460px;
-  color: var(--text-color-muted);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-color);
 }
 
-// ─── Пузыри сообщений ────────────────────────────────────────────────────
+.chat-empty-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-color-muted);
+  max-width: 420px;
+}
 
+.chat-suggestions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-half);
+  width: 100%;
+  max-width: 520px;
+  margin-top: var(--s);
+}
+
+.chat-chip {
+  text-align: left;
+  padding: var(--s-half) var(--s);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--task-border-radius);
+  background: var(--task-c-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+
+  &:hover {
+    border-color: var(--c-primary);
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+// ─── Сообщения ────────────────────────────────────────────────────────────
 .msg {
   display: flex;
-
-  &.user {
-    justify-content: flex-end;
-
-    .msg-bubble {
-      background: var(--c-primary);
-      color: var(--palette-primary-contrast-500, #fff);
-      border-radius: var(--task-border-radius) var(--task-border-radius) 4px
-        var(--task-border-radius);
-      max-width: 72%;
-      font-size: 0.9375rem;
-      line-height: 1.5;
-      padding: var(--s-half) var(--s);
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-    }
-  }
+  gap: var(--s-half);
+  animation: msg-in 0.16s ease-out;
 
   &.assistant {
     justify-content: flex-start;
+  }
 
-    .msg-bubble {
-      background: var(--task-c-bg);
-      border: 1px solid var(--extra-border-color);
-      border-radius: var(--task-border-radius) var(--task-border-radius)
-        var(--task-border-radius) 4px;
-      max-width: 80%;
-      font-size: 0.9375rem;
-      line-height: 1.6;
+  &.user {
+    justify-content: flex-end;
+  }
+}
+
+.msg-avatar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+  color: var(--c-primary);
+  margin-top: 2px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.msg-body {
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  overflow-wrap: anywhere;
+
+  markdown,
+  ::ng-deep markdown {
+    p:first-child {
+      margin-top: 0;
+    }
+    p:last-child {
+      margin-bottom: 0;
+    }
+    p {
+      margin: 0.5em 0;
+    }
+    ul,
+    ol {
+      margin: 0.5em 0;
+      padding-left: 1.4em;
+    }
+    li {
+      margin: 0.2em 0;
+    }
+    a {
+      color: var(--c-primary);
+    }
+    code {
+      background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
+      border-radius: 3px;
+      padding: 0.1em 0.35em;
+      font-size: 0.875em;
+    }
+    pre {
+      background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
+      border-radius: var(--task-border-radius);
       padding: var(--s-half) var(--s);
-      overflow-wrap: anywhere;
-      color: var(--text-color);
-
-      // Убираем лишние отступы markdown внутри пузыря
-      markdown,
-      ::ng-deep markdown {
-        p:first-child {
-          margin-top: 0;
-        }
-        p:last-child {
-          margin-bottom: 0;
-        }
-        p {
-          margin: 0.4em 0;
-        }
-        ul,
-        ol {
-          margin: 0.4em 0;
-          padding-left: 1.4em;
-        }
-        li {
-          margin: 0.2em 0;
-        }
-        code {
-          background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
-          border-radius: 3px;
-          padding: 0.1em 0.35em;
-          font-size: 0.875em;
-        }
-        pre {
-          background: var(--bg-lighter, rgba(0, 0, 0, 0.06));
-          border-radius: var(--task-border-radius);
-          padding: var(--s-half) var(--s);
-          overflow-x: auto;
-          font-size: 0.875em;
-        }
-      }
+      overflow-x: auto;
+      font-size: 0.875em;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 0.5em 0;
+      font-size: 0.9em;
+    }
+    th,
+    td {
+      border: 1px solid var(--extra-border-color);
+      padding: 0.3em 0.6em;
+      text-align: left;
     }
   }
 }
 
-// Мигающий курсор во время стрима
-.msg-cursor {
+.msg-bubble {
+  max-width: 78%;
+  padding: var(--s-half) var(--s);
+  border-radius: 18px 18px 4px 18px;
+  background: var(--c-primary);
+  color: var(--palette-primary-contrast-500, #fff);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// Индикатор печати
+.msg-typing {
   display: inline-block;
-  width: 2px;
-  height: 1em;
-  background: var(--text-color-muted);
-  margin-left: 2px;
-  vertical-align: text-bottom;
-  animation: blink 1s step-end infinite;
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  vertical-align: middle;
+  animation: typing-pulse 1s ease-in-out infinite;
 }
 
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-// ─── Статус инструмента ───────────────────────────────────────────────────
-
+// ─── Статус инструмента (shimmer) ─────────────────────────────────────────
 .chat-status {
-  padding: var(--s-quarter) var(--s);
-  font-size: 0.8125rem;
-  color: var(--text-color-muted);
-  font-style: italic;
+  padding: var(--s-quarter) calc(28px + var(--s-half));
+  font-size: 0.85rem;
+}
+
+.chat-status-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-color-muted) 25%,
+    var(--text-color) 50%,
+    var(--text-color-muted) 75%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.6s linear infinite;
 }
 
 // ─── Ошибка ───────────────────────────────────────────────────────────────
-
 .chat-error {
   margin: var(--s-quarter) 0;
   padding: var(--s-half) var(--s);
@@ -187,48 +263,158 @@
   border: 1px solid var(--warn-c, rgba(200, 50, 50, 0.25));
 }
 
-// ─── Футер с полем ввода ──────────────────────────────────────────────────
+// ─── Кнопка «вниз» ────────────────────────────────────────────────────────
+.chat-scroll-down {
+  position: absolute;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--extra-border-color);
+  background: var(--task-c-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  z-index: 2;
 
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ─── Композер ─────────────────────────────────────────────────────────────
 .chat-footer {
+  flex-shrink: 0;
+  padding: var(--s-half) 0 var(--s);
+}
+
+.chat-composer {
   display: flex;
   align-items: flex-end;
   gap: var(--s-half);
-  padding: var(--s-half) 0 var(--s);
-  border-top: 1px solid var(--extra-border-color);
-  flex-shrink: 0;
+  padding: var(--s-quarter) var(--s-quarter) var(--s-quarter) var(--s);
+  border: 1px solid var(--extra-border-color);
+  border-radius: 24px;
+  background: var(--task-c-bg);
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--c-primary);
+  }
 }
 
 .chat-input {
   flex: 1;
   resize: none;
-  min-height: 44px;
-  max-height: 160px;
-  padding: var(--s-half) var(--s);
-  border: 1px solid var(--extra-border-color);
-  border-radius: var(--task-border-radius);
-  background: var(--task-c-bg);
-  color: var(--text-color);
-  font-size: 0.9375rem;
-  font-family: inherit;
-  line-height: 1.5;
+  border: none;
   outline: none;
+  background: transparent;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  min-height: 24px;
+  max-height: 160px;
+  padding: 8px 0;
   overflow-y: auto;
 
   &::placeholder {
     color: var(--text-color-muted);
   }
+}
 
-  &:focus {
-    border-color: var(--c-primary);
+.chat-send,
+.chat-stop {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 }
 
-.chat-send-btn,
-.chat-stop-btn {
-  flex: 0 0 auto;
-  color: var(--c-primary);
+.chat-send {
+  background: var(--c-primary);
+  color: var(--palette-primary-contrast-500, #fff);
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
 }
 
-.chat-stop-btn {
+.chat-stop {
+  background: transparent;
   color: var(--warn-dark, #c62828);
+  border: 1px solid var(--extra-border-color);
+}
+
+// ─── Анимации ─────────────────────────────────────────────────────────────
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typing-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-messages {
+    scroll-behavior: auto;
+  }
+  .msg {
+    animation: none;
+  }
+  .msg-typing {
+    animation: none;
+    opacity: 0.6;
+  }
+  .chat-status-text {
+    animation: none;
+    color: var(--text-color-muted);
+    -webkit-text-fill-color: var(--text-color-muted);
+  }
 }

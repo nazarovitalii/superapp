@@ -2,87 +2,124 @@
   <!-- Загрузка истории -->
   @if (loadingHistory()) {
     <div class="chat-spinner">
-      <mat-spinner diameter="40" />
+      <mat-spinner diameter="36" />
     </div>
   } @else {
     <!-- Лента сообщений -->
-    <div class="chat-messages">
+    <div
+      #messagesEl
+      class="chat-messages"
+      (scroll)="onMessagesScroll($event)"
+    >
       <!-- Пустое состояние -->
       @if (messages().length === 0) {
         <div class="chat-empty">
-          <mat-icon class="chat-empty-icon">smart_toy</mat-icon>
-          <p class="chat-empty-text">
-            Привет! Я AI-ассистент MrSQM. Спросите меня о рынке недвижимости Дубая,
-            объявлениях или районах — помогу найти нужное.
+          <div class="chat-empty-badge">
+            <mat-icon>smart_toy</mat-icon>
+          </div>
+          <h2 class="chat-empty-title">Чем помочь по рынку Дубая?</h2>
+          <p class="chat-empty-sub">
+            Спросите про объявления, районы или цены — найду нужное на платформе.
           </p>
+          <div class="chat-suggestions">
+            @for (s of suggestions; track s.label) {
+              <button
+                type="button"
+                class="chat-chip"
+                (click)="sendSuggestion(s.prompt)"
+              >
+                {{ s.label }}
+              </button>
+            }
+          </div>
         </div>
       }
 
-      <!-- Пузыри сообщений -->
+      <!-- Сообщения -->
       @for (m of messages(); track $index) {
         <div
           class="msg"
           [class.user]="m.role === 'user'"
           [class.assistant]="m.role === 'assistant'"
         >
-          <div class="msg-bubble">
-            @if (m.role === 'assistant') {
+          @if (m.role === 'assistant') {
+            <div class="msg-avatar">
+              <mat-icon>smart_toy</mat-icon>
+            </div>
+            <div class="msg-body">
               <markdown [data]="m.text" />
               @if (m.streaming) {
                 <span
-                  class="msg-cursor"
+                  class="msg-typing"
                   aria-hidden="true"
                 ></span>
               }
-            } @else {
-              {{ m.text }}
-            }
-          </div>
+            </div>
+          } @else {
+            <div class="msg-bubble">{{ m.text }}</div>
+          }
         </div>
+      }
+
+      <!-- Статус инструмента (shimmer) -->
+      @if (status()) {
+        <div class="chat-status">
+          <span class="chat-status-text">{{ status() }}</span>
+        </div>
+      }
+
+      <!-- Ошибка -->
+      @if (error()) {
+        <div class="chat-error">{{ error() }}</div>
       }
     </div>
 
-    <!-- Статус инструмента -->
-    @if (status()) {
-      <div class="chat-status">{{ status() }}</div>
-    }
-
-    <!-- Ошибка -->
-    @if (error()) {
-      <div class="chat-error">{{ error() }}</div>
+    <!-- Кнопка «вниз» при отлистывании -->
+    @if (!pinnedToBottom()) {
+      <button
+        type="button"
+        class="chat-scroll-down"
+        (click)="scrollToBottom()"
+        aria-label="Прокрутить вниз"
+      >
+        <mat-icon>arrow_downward</mat-icon>
+      </button>
     }
   }
 
-  <!-- Поле ввода (всегда видно) -->
+  <!-- Композер (всегда виден) -->
   <div class="chat-footer">
-    <textarea
-      class="chat-input"
-      [value]="draft()"
-      (input)="onInput($event)"
-      placeholder="Напишите сообщение…"
-      rows="1"
-      (keydown)="onKeyDown($event)"
-    ></textarea>
+    <div class="chat-composer">
+      <textarea
+        #inputEl
+        class="chat-input"
+        [value]="draft()"
+        (input)="onInput($event)"
+        (keydown)="onKeyDown($event)"
+        placeholder="Напишите сообщение…"
+        rows="1"
+      ></textarea>
 
-    @if (!streaming()) {
-      <button
-        mat-icon-button
-        class="chat-send-btn"
-        [disabled]="!draft().trim()"
-        (click)="onSendClick()"
-        aria-label="Отправить"
-      >
-        <mat-icon>send</mat-icon>
-      </button>
-    } @else {
-      <button
-        mat-icon-button
-        class="chat-stop-btn"
-        (click)="stop()"
-        aria-label="Остановить"
-      >
-        <mat-icon>stop_circle</mat-icon>
-      </button>
-    }
+      @if (!streaming()) {
+        <button
+          type="button"
+          class="chat-send"
+          [disabled]="!draft().trim()"
+          (click)="onSendClick()"
+          aria-label="Отправить"
+        >
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="chat-stop"
+          (click)="stop()"
+          aria-label="Остановить"
+        >
+          <mat-icon>stop</mat-icon>
+        </button>
+      }
+    </div>
   </div>
 </div>

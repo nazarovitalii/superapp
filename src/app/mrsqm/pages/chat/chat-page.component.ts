@@ -10,7 +10,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatButtonModule } from '@angular/material/button';
 import { MarkdownComponent } from 'ngx-markdown';
 import {
   GptStreamService,
@@ -80,13 +79,7 @@ const INPUT_MAX_HEIGHT = 160;
   selector: 'mrsqm-chat-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatButtonModule,
-    MarkdownComponent,
-  ],
+  imports: [CommonModule, MatIconModule, MatProgressSpinnerModule, MarkdownComponent],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })
