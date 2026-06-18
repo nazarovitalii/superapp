@@ -146,6 +146,7 @@ export interface BuildingInfo {
   completion_q: string | null;
   total_floors: number | null;
   total_units: number | null;
+  project_status: string | null;
 }
 
 // Планировка из справочника комьюнити (community_layouts).

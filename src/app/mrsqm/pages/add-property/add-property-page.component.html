@@ -582,12 +582,16 @@
                     type="button"
                     class="chip"
                     [class.sel]="handover() === h.value"
-                    (click)="handover.set(h.value)"
+                    [disabled]="h.value === 'offplan' && offPlanLocked()"
+                    (click)="selectHandover(h.value)"
                   >
                     {{ h.label_en }}
                   </button>
                 }
               </div>
+              @if (offPlanLocked()) {
+                <p class="note">Проект уже сдан — Off-Plan недоступен.</p>
+              }
             </div>
 
             @if (handover() === 'offplan') {

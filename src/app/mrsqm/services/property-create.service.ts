@@ -57,7 +57,7 @@ export class PropertyCreateService {
     const { data, error } = await this._supabase.client
       .from('location_developers')
       .select(
-        'project_name, built_year, completion_year, completion_q, total_floors, total_units',
+        'project_name, built_year, completion_year, completion_q, total_floors, total_units, project_status',
       )
       .eq('location_id', locationId)
       .order('confidence', { ascending: false, nullsFirst: false })

@@ -131,6 +131,10 @@ export class AddPropertyPageComponent {
 
   // ─── Шаг 6: Состояние ──────────────────────────────────────────────────
   readonly handover = signal<string>('ready');
+  // Off-Plan недоступен, если проект уже сдан (project_status='completed').
+  readonly offPlanLocked = computed(
+    () => this.buildingInfo()?.project_status === 'completed',
+  );
   readonly completionYear = signal<string>('');
   readonly completionQ = signal<string | null>(null);
   readonly occupancy = signal<string>('vacant');
@@ -366,6 +370,8 @@ export class AddPropertyPageComponent {
     ]);
     this.buildingInfo.set(info);
     this.communityLayouts.set(layouts);
+    // Если проект уже сдан (completed), а ранее был выбран Off-Plan — форсируем Ready.
+    this._reconcileHandover();
   }
 
   resetLocation(): void {
@@ -381,6 +387,19 @@ export class AddPropertyPageComponent {
     this._developerId.set(null);
     this.layoutId.set(null);
     this.revealIndex.set(0);
+  }
+
+  // ─── Шаг 6: выбор готовности с проверкой гейта ─────────────────────────
+  // Игнорируем offplan, если проект уже сдан (offPlanLocked).
+  selectHandover(value: string): void {
+    if (value === 'offplan' && this.offPlanLocked()) return;
+    this.handover.set(value);
+  }
+
+  // Реконсиляция после смены локации: если проект completed и уже выбран offplan —
+  // принудительно ставим ready.
+  private _reconcileHandover(): void {
+    if (this.offPlanLocked() && this.handover() === 'offplan') this.handover.set('ready');
   }
 
   // ─── Шаг 8: фото ────────────────────────────────────────────────────────
