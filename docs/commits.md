@@ -333,3 +333,40 @@
 | `cc10292a9` | 18:49 | docs(chat): tabs/tests под редизайн таба AI Chat (S-3, ChatGPT-вид)                                                                                              |
 | `b37a7bb4d` | 18:52 | docs(feed): батч 2026-06-18e — спека + TODO (W-1…W-7 done)                                                                                                       |
 | `5c2fc3b60` | 18:56 | docs: переписка + резюме дня 2026-06-18 (батч 18e)                                                                                                               |
+| `3aa49c44e` | 19:13 | docs: переписка 2026-06-18 (финальный экспорт) + commits.md                                                                                                      |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `b74cb16e2` | 19:36 | fix(chat): полноширинный скролл, подсказки над композером, юзер-карточка в стиле ленты (S-3)                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `3b0d07395` | 20:04 | style(chat): текст сообщений и поле ввода — 16px (S-3)                                                                                                           |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `dce37d960` | 20:13 | fix(feed): тулбар — автокомплит адреса, меню-селекты, высота 44px (18f T1)                                                                                       |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f2e6f34d5` | 20:20 | fix(feed): закрывать панель адресов при удалении до 1 + центровка галочки меню (18f T1)                                                                          |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `306f7ab00` | 20:24 | feat(feed): дата — Today→время в ленте, формат Created/Updated в панели (18f T2)                                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `49a84f880` | 20:33 | feat(property-detail): тексты/кнопки/табы/локация + сообщения через SnackService (18f T3)                                                                        |
+| `acabc219f` | 20:37 | fix(property-detail): повысить специфичность стиля снекбара .mrsqm-snack (18f T3)                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `e270c49bf` | 20:41 | feat(chat): действия под ответом (копир./лайк/дизлайк), убран аватар, 17px, больше воздуха (S-3)                                                                 |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `a63e26892` | 20:45 | test(feed): добавить spec для property-card hover-controls и click wiring (18f T4)                                                                               |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `46359ca41` | 20:55 | feat(feed): тост-подтверждение при добавлении/удалении из избранного (18f T4)                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
