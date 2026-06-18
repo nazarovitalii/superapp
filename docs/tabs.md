@@ -157,15 +157,22 @@ TODO: district через `search_locations` (API-2).
 - **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
   Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
 - **Tech (характеристики)** — формат «Поле: Значение»: Deal · Type (категория+тип+подтип
-  +«hotel apartment») · Bedrooms (+maid) · Bathrooms · BUA (`area_sqft`) · Plot (`plot_sqft`) ·
-  Floor (`floor_level_id`) · Floors (`floors_in_unit`) · Furnished · Handover · Completion ·
-  Occupancy (+`lease_until`) · Created · Updated. (Layout-имя и «+vastu» — слой 2)
+  +«hotel apartment») · Bedrooms (+maid, **+vastu** при `is_vastu`) · Bathrooms · BUA (`area_sqft`) ·
+  Plot (`plot_sqft`) · Floor (`floor_level_id`) · Floors (`floors_in_unit`) · Furnished · Handover ·
+  Completion · Occupancy (+`lease_until`) · Created · Updated. (Layout-имя — слой 4)
 - **Особенности** — views/positions/amenities (id → названия через `get_filter_options`)
-- **Локация** — полный путь `location_full_path`
+- **Локация** — полный путь `location_full_path`; ниже серым — адрес по бегунку
+  (`public_location_path`, что видят коллеги) если задан (слой 2b)
+- **Project** (слой 2b, из `location_developers` по leaf-`location_id`; NULL → блок скрыт,
+  наполнено пока Damac Hills): Name (`project_group_name`) · Building/Cluster/Project
+  (подпись по `is_building`, значение `project_name`) · Developer (`developer_name`) ·
+  Completion (`project_status`→Off-Plan/Ready) · Handover (completed→`built_year`, иначе
+  `completion_q`+`completion_year`). Каждая строка скрыта, если источник NULL
 - **Девелопер** — логотип (`developer_logo_url`) + название
 - **Документы** (только official) — Title Deed, plot, municipality
 - **Описание**
-- **Агент** (из вложенного `agent{}`) — фото, имя, агентство, эмират, языки, «о себе»;
+- **Агент** (из вложенного `agent{}`) — фото, имя, агентство, эмират, языки, «о себе»,
+  **«Активных листингов: N»** (`active_listings_count`, слой 2b);
   **WhatsApp** + **Telegram** только если контакт != null (Pro или в сети), иначе
   заглушка «Доступно на Pro»
 - **Статистика** — «Обновлено N дней назад» + `views_count`

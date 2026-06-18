@@ -191,3 +191,7 @@
 | `dd2474c4c` | 00:39 | fix(types): is_vastu в PropertyInsert, убрать из PropertyFeedItem (чинит тест-бандл)                                                                             |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `60d5b6266` | 00:40 | docs: commits.md журнал                                                                                                                                          |
+| `ab6f6c50b` | 00:58 | migrate: get_property M-2b применён → applied/ (active_listings/slider/is_vastu/project); database.md синхрон                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `6b7cc580c` | 01:04 | feat(property-detail): Project-блок + active-listings + slider-адрес + vastu (слой 2b)                                                                           |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
