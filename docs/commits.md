@@ -272,3 +272,12 @@
 | `62d494cae` | 05:21 | fix(chat): textarea-сигнал binding + stop чистит курсор (S-2)                                                                                                    |
 | `cc4562b46` | 13:14 | feat(chat): подключить ChatPageComponent к роуту mrsqm/chat (S-2)                                                                                                |
 | `7cce2c19b` | 13:18 | docs(chat): S-2 готов — tabs/TODO/tests обновлены, S-2.1 follow-up                                                                                               |
+| `22fc00d62` | 13:43 | docs: экспорт переписки 2026-06-18 (S-2 AI Chat, 1162 хода)                                                                                                      |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `0446192c9` | 14:17 | style(feed): тулбар — высота/охват/поиск/иконки, тип-дропдаун одна колонка, шапка (U-1,U-2,U-5,U-8,U-10,U-11)                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `33eb454e3` | 14:26 | feat(feed): строка — off-plan в адрес, перенос типа, plot-строка, формат даты (U-4,U-6,U-7,U-9)                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `333f430d0` | 14:31 | fix(feed): дата строки — локальная TZ для Today/Yesterday (U-4)                                                                                                  |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `100f860bd` | 14:38 | feat(add-property): бегунок адреса — drag мышкой/пальцем (U-0a)                                                                                                  |

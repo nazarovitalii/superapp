@@ -7,12 +7,13 @@
 
 ## ⚙️ Журнал изменений схемы (прим\* — тела функций ниже могут быть устаревшими)
 
-| Дата       | Объект                                                            | Что                                                                                                                                                                                                             | Миграция                                                            |
-| ---------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 2026-06-11 | `activate_user()`                                                 | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`.                                                                                         | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql` |
-| 2026-06-11 | `get_feed()`                                                      | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                                                                                                              | `…/2026-06-11-get-feed-add-community-name.sql`                      |
-| 2026-06-11 | `get_agent_listings()`                                            | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                                                                                                                | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`               |
-| 2026-06-16 | `update_property()`, `actualize_property()`, `archive_property()` | Новые SECURITY DEFINER RPC для действий владельца над своим объектом (на `properties` нет UPDATE-RLS). Каждая проверяет `owner_id = auth.uid()`; правят только цену+описание / `last_actualized_at` / `status`. | `…/2026-06-16-property-owner-actions.sql`                           |
+| Дата       | Объект                                                            | Что                                                                                                                                                                                                                                                               | Миграция                                                            |
+| ---------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 2026-06-18 | `get_feed()`                                                      | Сортировка по дате (`p_sort_by` default/date_desc/date_asc) — `published_at` → `COALESCE(last_actualized_at, published_at)`: лента показывала дату актуализации, а сортировалась по публикации (U-3). Патч ORDER BY через `pg_get_functiondef` (staleness-proof). | `…/applied/2026-06-18-get-feed-sort-by-actualized.sql`              |
+| 2026-06-11 | `activate_user()`                                                 | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`.                                                                                                                                           | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql` |
+| 2026-06-11 | `get_feed()`                                                      | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                                                                                                                                                                | `…/2026-06-11-get-feed-add-community-name.sql`                      |
+| 2026-06-11 | `get_agent_listings()`                                            | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                                                                                                                                                                  | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`               |
+| 2026-06-16 | `update_property()`, `actualize_property()`, `archive_property()` | Новые SECURITY DEFINER RPC для действий владельца над своим объектом (на `properties` нет UPDATE-RLS). Каждая проверяет `owner_id = auth.uid()`; правят только цену+описание / `last_actualized_at` / `status`.                                                   | `…/2026-06-16-property-owner-actions.sql`                           |
 
 > Известные **серверные баги (не чинены)**: на `properties` нет DELETE-RLS-политики
 > (удаление объекта с клиента невозможно — для «снять» используется `archive_property`);
@@ -412,11 +413,11 @@ BEGIN
         )
       )
     ORDER BY
-      CASE WHEN p_sort_by = 'default'    THEN p.published_at END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'default'    THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,  -- мигр. 2026-06-18 (U-3)
       CASE WHEN p_sort_by = 'price_asc'  THEN p.price        END ASC  NULLS LAST,
       CASE WHEN p_sort_by = 'price_desc' THEN p.price        END DESC NULLS LAST,
-      CASE WHEN p_sort_by = 'date_desc'  THEN p.published_at END DESC NULLS LAST,
-      CASE WHEN p_sort_by = 'date_asc'   THEN p.published_at END ASC  NULLS LAST
+      CASE WHEN p_sort_by = 'date_desc'  THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,  -- мигр. 2026-06-18 (U-3)
+      CASE WHEN p_sort_by = 'date_asc'   THEN COALESCE(p.last_actualized_at, p.published_at) END ASC  NULLS LAST   -- мигр. 2026-06-18 (U-3)
     LIMIT  p_limit
     OFFSET p_offset
   ) final_rows;
