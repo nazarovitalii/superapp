@@ -31,7 +31,7 @@ describe('resolveFeedAddress', () => {
     expect(result.community).toBe('Dubai');
   });
 
-  it('showPublic=true, public_location_name==null → fallback на location_name', () => {
+  it('showPublic=true, public_location_name==null → fallback на community_name, НЕ location_name (V-10)', () => {
     const p: AddrInput = {
       location_name: 'JBR Tower',
       community_name: 'JBR',
@@ -39,7 +39,10 @@ describe('resolveFeedAddress', () => {
       public_community_name: null,
     };
     const result = resolveFeedAddress(p, true);
-    expect(result.leaf).toBe('JBR Tower');
+    // location_name — приватный полный адрес, в публичном режиме показывать нельзя
+    expect(result.leaf).not.toBe('JBR Tower');
+    // При отсутствии public_location_name берём community_name как наименее точный fallback
+    expect(result.leaf).toBe('JBR');
     expect(result.community).toBeNull();
   });
 

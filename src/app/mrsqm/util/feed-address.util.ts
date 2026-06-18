@@ -12,10 +12,15 @@ export const resolveFeedAddress = (
   >,
   showPublic: boolean,
 ): { leaf: string; community: string | null } => {
+  // В публичном режиме НЕ используем location_name — это полный (приватный) адрес.
+  // Сервер (get_feed) всегда возвращает public_location_name при наличии объекта,
+  // поэтому fallback на location_name здесь был бы нарушением приватности (V-10).
   const leaf = showPublic
-    ? (p.public_location_name ?? p.location_name ?? p.community_name ?? '—')
+    ? (p.public_location_name ?? p.community_name ?? '—')
     : (p.location_name ?? p.community_name ?? '—');
 
+  // В публичном режиме community берём только из public_community_name (намеренная асимметрия):
+  // community_name может совпадать с приватным location_name или раскрывать точный адрес.
   const community = showPublic
     ? (p.public_community_name ?? null)
     : (p.community_name ?? null);
