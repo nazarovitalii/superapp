@@ -57,6 +57,47 @@ describe('ChatPageComponent', () => {
     expect(component.loadingHistory()).toBeFalse();
   });
 
+  it('sendSuggestion очищает draft и шлёт prompt', async () => {
+    await createComponent();
+    const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
+    component.sendSuggestion('Покажи 2BR квартиры в Dubai Marina до 2 млн AED');
+    expect(mockGpt.streamMessage).toHaveBeenCalledWith(
+      'Покажи 2BR квартиры в Dubai Marina до 2 млн AED',
+      jasmine.any(Object),
+    );
+    expect(component.draft()).toBe('');
+    expect(component.messages().length).toBe(2); // user + пустой ассистент
+  });
+
+  it('onMessagesScroll: у низа → pinnedToBottom=true', async () => {
+    await createComponent();
+    component.pinnedToBottom.set(false);
+    component.onMessagesScroll({
+      target: { scrollHeight: 1000, scrollTop: 900, clientHeight: 100 },
+    } as unknown as Event);
+    expect(component.pinnedToBottom()).toBeTrue();
+  });
+
+  it('onMessagesScroll: отлистано вверх → pinnedToBottom=false', async () => {
+    await createComponent();
+    component.onMessagesScroll({
+      target: { scrollHeight: 1000, scrollTop: 100, clientHeight: 100 },
+    } as unknown as Event);
+    expect(component.pinnedToBottom()).toBeFalse();
+  });
+
+  it('scrollToBottom ставит pinnedToBottom=true', async () => {
+    await createComponent();
+    component.pinnedToBottom.set(false);
+    component.scrollToBottom();
+    expect(component.pinnedToBottom()).toBeTrue();
+  });
+
+  it('suggestions — массив из 4 подсказок', async () => {
+    await createComponent();
+    expect(component.suggestions.length).toBe(4);
+  });
+
   it('send добавляет пузырь юзера и пустой ассистента, streaming=true', async () => {
     await createComponent();
     component.send('привет');

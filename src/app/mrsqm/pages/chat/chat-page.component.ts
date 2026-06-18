@@ -4,6 +4,8 @@ import {
   ChangeDetectionStrategy,
   signal,
   OnDestroy,
+  ElementRef,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,6 +28,11 @@ export interface ChatMessage {
   streaming?: boolean;
 }
 
+interface Suggestion {
+  label: string;
+  prompt: string;
+}
+
 // ---------------------------------------------------------------------------
 // Метки инструментов (из frontend-streaming-guide.md §3)
 // ---------------------------------------------------------------------------
@@ -42,6 +49,28 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 const DEFAULT_TOOL_LABEL = 'Работаю…';
+
+// Чипы-подсказки для пустого экрана (label — на чипе, prompt — что уходит в send)
+const SUGGESTIONS: Suggestion[] = [
+  {
+    label: '2BR в Dubai Marina до 2M',
+    prompt: 'Покажи 2BR квартиры в Dubai Marina до 2 млн AED',
+  },
+  {
+    label: 'Аренда виллы в Arabian Ranches',
+    prompt: 'Что есть в аренду — виллы в Arabian Ranches',
+  },
+  {
+    label: 'Off-plan с рассрочкой',
+    prompt: 'Подбери off-plan проекты с рассрочкой от застройщика',
+  },
+  { label: '1BR: JVC vs JLT', prompt: 'Сравни цены на 1BR квартиры в JVC и JLT' },
+];
+
+// Порог «близко к низу» для авто-скролла (px)
+const NEAR_BOTTOM_PX = 80;
+// Максимальная высота поля ввода (px) — синхронно с SCSS max-height
+const INPUT_MAX_HEIGHT = 160;
 
 // ---------------------------------------------------------------------------
 // Компонент
@@ -67,6 +96,10 @@ export class ChatPageComponent implements OnDestroy {
   // Текущий контроллер стрима для возможности остановки
   private _abort: AbortController | null = null;
 
+  // Ссылки на DOM — только через viewChild (без прямого доступа)
+  private readonly _messagesEl = viewChild<ElementRef<HTMLElement>>('messagesEl');
+  private readonly _inputEl = viewChild<ElementRef<HTMLTextAreaElement>>('inputEl');
+
   // ─── Состояние ────────────────────────────────────────────────────────────
 
   readonly messages = signal<ChatMessage[]>([]);
@@ -74,9 +107,12 @@ export class ChatPageComponent implements OnDestroy {
   readonly streaming = signal<boolean>(false);
   readonly loadingHistory = signal<boolean>(true);
   readonly error = signal<string | null>(null);
-
-  // Черновик сообщения в поле ввода
   readonly draft = signal<string>('');
+  // Лента «приклеена» к низу — авто-скролл следует за стримом
+  readonly pinnedToBottom = signal<boolean>(true);
+
+  // Чипы-подсказки (read-only)
+  readonly suggestions: readonly Suggestion[] = SUGGESTIONS;
 
   constructor() {
     void this._init();
@@ -95,12 +131,12 @@ export class ChatPageComponent implements OnDestroy {
     } catch (e) {
       // История не загрузилась (сеть/CORS/401/500) — показываем причину,
       // чтобы пустая лента не выглядела как «история не сохраняется».
-      // Ввод остаётся рабочим (футер виден всегда).
       this.error.set(
         'Не удалось загрузить историю чата: ' + ((e as Error)?.message ?? String(e)),
       );
     } finally {
       this.loadingHistory.set(false);
+      this._scheduleScroll();
     }
   }
 
@@ -112,7 +148,6 @@ export class ChatPageComponent implements OnDestroy {
 
     this.error.set(null);
 
-    // Добавляем пузырь пользователя и пустой пузырь ассистента
     this.messages.update((msgs) => [
       ...msgs,
       { role: 'user', text: trimmed },
@@ -120,6 +155,8 @@ export class ChatPageComponent implements OnDestroy {
     ]);
 
     this.streaming.set(true);
+    this.pinnedToBottom.set(true);
+    this._scheduleScroll();
 
     const handlers: StreamHandlers = {
       onToolStart: (tool: string) => {
@@ -134,6 +171,7 @@ export class ChatPageComponent implements OnDestroy {
           if (!last) return msgs;
           return [...msgs.slice(0, -1), { ...last, text: last.text + t }];
         });
+        this._scheduleScroll();
       },
       onDone: () => {
         this.messages.update((msgs) => {
@@ -164,7 +202,6 @@ export class ChatPageComponent implements OnDestroy {
   stop(): void {
     this._abort?.abort();
     this._abort = null;
-    // Убираем мигающий курсор с последнего пузыря ассистента
     this.messages.update((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!last || last.role !== 'assistant') return msgs;
@@ -174,19 +211,26 @@ export class ChatPageComponent implements OnDestroy {
     this.status.set(null);
   }
 
-  // ─── Обработка ввода (input → обновить сигнал draft) ─────────────────────
+  // ─── Чип-подсказка → сразу отправляем ────────────────────────────────────
+
+  sendSuggestion(prompt: string): void {
+    this.draft.set('');
+    this.send(prompt);
+  }
+
+  // ─── Ввод ─────────────────────────────────────────────────────────────────
 
   onInput(event: Event): void {
     this.draft.set((event.target as HTMLTextAreaElement).value);
+    this._autoGrow();
   }
-
-  // ─── Обработка ввода (Enter без Shift → отправить) ───────────────────────
 
   onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       const text = this.draft();
       this.draft.set('');
+      this._autoGrow();
       this.send(text);
     }
   }
@@ -194,6 +238,38 @@ export class ChatPageComponent implements OnDestroy {
   onSendClick(): void {
     const text = this.draft();
     this.draft.set('');
+    this._autoGrow();
     this.send(text);
+  }
+
+  // ─── Скролл ленты ─────────────────────────────────────────────────────────
+
+  onMessagesScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_BOTTOM_PX;
+    this.pinnedToBottom.set(nearBottom);
+  }
+
+  scrollToBottom(): void {
+    const el = this._messagesEl()?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
+    this.pinnedToBottom.set(true);
+  }
+
+  // Прокрутка вниз на следующем кадре, если лента приклеена
+  private _scheduleScroll(): void {
+    if (!this.pinnedToBottom()) return;
+    requestAnimationFrame(() => {
+      const el = this._messagesEl()?.nativeElement;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }
+
+  // Авто-рост поля ввода под содержимое
+  private _autoGrow(): void {
+    const el = this._inputEl()?.nativeElement;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, INPUT_MAX_HEIGHT) + 'px';
   }
 }
