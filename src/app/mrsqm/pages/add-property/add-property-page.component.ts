@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
+import { moveItemInArray } from '../../../util/move-item-in-array';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { MrsqmAuthService } from '../../services/auth.service';
@@ -63,6 +65,8 @@ const CHILDREN_SELECT_THRESHOLD = 10;
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    CdkDropList,
+    CdkDrag,
   ],
   templateUrl: './add-property-page.component.html',
   styleUrl: './add-property-page.component.scss',
@@ -152,6 +156,11 @@ export class AddPropertyPageComponent {
   readonly description = signal<string>('');
   readonly photos = signal<File[]>([]);
   readonly previews = signal<string[]>([]);
+  // Floor Plan: до 4 изображений планировки.
+  readonly floorPlans = signal<File[]>([]);
+  readonly floorPlanPreviews = signal<string[]>([]);
+  /** Максимальное число фото планировки. */
+  readonly MAX_FLOOR_PLANS = 4;
 
   // ─── Производные ────────────────────────────────────────────────────────
   readonly unitTypesForCategory = computed<FilterOptionId[]>(() => {
@@ -400,7 +409,7 @@ export class AddPropertyPageComponent {
     if (this.offPlanLocked() && this.handover() === 'offplan') this.handover.set('ready');
   }
 
-  // ─── Шаг 8: фото ────────────────────────────────────────────────────────
+  // ─── Шаг 8: фото галереи ────────────────────────────────────────────────
   onPhotosSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const list = input.files;
@@ -416,6 +425,59 @@ export class AddPropertyPageComponent {
     if (url) URL.revokeObjectURL(url);
     this.photos.set(this.photos().filter((_, idx) => idx !== i));
     this.previews.set(this.previews().filter((_, idx) => idx !== i));
+  }
+
+  // Перестановка фото галереи через CDK DragDrop.
+  // Оба массива (photos + previews) синхронизируются одновременно.
+  dropPhoto(event: CdkDragDrop<string[]>): void {
+    const { previousIndex, currentIndex } = event;
+    if (previousIndex === currentIndex) return;
+    this.photos.set(moveItemInArray(this.photos(), previousIndex, currentIndex));
+    this.previews.set(moveItemInArray(this.previews(), previousIndex, currentIndex));
+  }
+
+  // Сделать фото главным: перемещает элемент на позицию 0.
+  makePhotoMain(i: number): void {
+    if (i === 0) return;
+    this.photos.set(moveItemInArray(this.photos(), i, 0));
+    this.previews.set(moveItemInArray(this.previews(), i, 0));
+  }
+
+  // ─── Шаг 8: Floor Plan ──────────────────────────────────────────────────
+  onFloorPlansSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const list = input.files;
+    if (!list || !list.length) return;
+    const added = Array.from(list);
+    const current = this.floorPlans();
+    const currentPrev = this.floorPlanPreviews();
+    // Обрезаем до максимума: берём столько, сколько осталось до лимита.
+    const slots = this.MAX_FLOOR_PLANS - current.length;
+    if (slots <= 0) return;
+    const accepted = added.slice(0, slots);
+    this.floorPlans.set([...current, ...accepted]);
+    this.floorPlanPreviews.set([
+      ...currentPrev,
+      ...accepted.map((f) => URL.createObjectURL(f)),
+    ]);
+    input.value = '';
+  }
+
+  removeFloorPlan(i: number): void {
+    const url = this.floorPlanPreviews()[i];
+    if (url) URL.revokeObjectURL(url);
+    this.floorPlans.set(this.floorPlans().filter((_, idx) => idx !== i));
+    this.floorPlanPreviews.set(this.floorPlanPreviews().filter((_, idx) => idx !== i));
+  }
+
+  // Перестановка Floor Plan через CDK DragDrop.
+  dropFloorPlan(event: CdkDragDrop<string[]>): void {
+    const { previousIndex, currentIndex } = event;
+    if (previousIndex === currentIndex) return;
+    this.floorPlans.set(moveItemInArray(this.floorPlans(), previousIndex, currentIndex));
+    this.floorPlanPreviews.set(
+      moveItemInArray(this.floorPlanPreviews(), previousIndex, currentIndex),
+    );
   }
 
   // ─── Мультиселекты (views/positions/amenities) ──────────────────────────
@@ -566,9 +628,9 @@ export class AddPropertyPageComponent {
       const id = await this._service.createProperty(payload);
       // Фото грузим после создания (нужен id для пути и RLS). Сбой загрузки
       // не откатывает объект — сообщаем, но переходим в ленту.
-      if (this.photos().length) {
+      if (this.photos().length || this.floorPlans().length) {
         try {
-          await this._photoService.uploadAndAttach(id, this.photos());
+          await this._photoService.uploadAndAttach(id, this.photos(), this.floorPlans());
         } catch {
           this.error.set('Объект создан, но часть фото не загрузилась');
         }

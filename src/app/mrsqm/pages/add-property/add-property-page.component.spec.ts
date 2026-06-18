@@ -56,7 +56,7 @@ class FakePropertyCreateService {
 
 // Стаб PropertyPhotoService.
 class FakePhotoService {
-  async uploadAndAttach(_id: string, _files: File[]): Promise<void> {}
+  async uploadAndAttach(_id: string, _files: File[], _fp: File[] = []): Promise<void> {}
 }
 
 // Стаб MrsqmAuthService.
@@ -395,5 +395,139 @@ describe('AddPropertyPageComponent — Off-Plan гейтинг (FC-3)', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
     (component as any)._reconcileHandover();
     expect(component.handover()).toBe('ready');
+  });
+});
+
+// ── Вспомогательные ───────────────────────────────────────────────────────────
+// Создаём фиктивный File с заданным именем (без реального содержимого).
+const makeFile = (name: string): File => new File([], name, { type: 'image/jpeg' });
+
+// CdkDragDrop-подобный event для тестирования pure-методов.
+const makeDrop = (
+  previousIndex: number,
+  currentIndex: number,
+): import('@angular/cdk/drag-drop').CdkDragDrop<string[]> =>
+  ({ previousIndex, currentIndex }) as import('@angular/cdk/drag-drop').CdkDragDrop<
+    string[]
+  >;
+
+// ─── Фото: reorder галереи (B4) ───────────────────────────────────────────────
+describe('AddPropertyPageComponent — reorder галереи (B4)', () => {
+  let component: AddPropertyPageComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+    // Заполняем три фото с различимыми именами.
+    component.photos.set([makeFile('a.jpg'), makeFile('b.jpg'), makeFile('c.jpg')]);
+    component.previews.set(['url-a', 'url-b', 'url-c']);
+  });
+
+  it('dropPhoto: перестановка меняет оба массива синхронно', () => {
+    component.dropPhoto(makeDrop(0, 2));
+    expect(component.photos()[2].name).toBe('a.jpg');
+    expect(component.previews()[2]).toBe('url-a');
+    // Индекс 0 теперь должен содержать то, что было на 1-м месте.
+    expect(component.photos()[0].name).toBe('b.jpg');
+    expect(component.previews()[0]).toBe('url-b');
+  });
+
+  it('dropPhoto: не мутирует прежний массив (возвращает новый)', () => {
+    const prevPhotos = component.photos();
+    const prevPreviews = component.previews();
+    component.dropPhoto(makeDrop(0, 1));
+    expect(component.photos()).not.toBe(prevPhotos);
+    expect(component.previews()).not.toBe(prevPreviews);
+  });
+
+  it('dropPhoto с одинаковыми индексами: массивы не меняются', () => {
+    const prevPhotos = component.photos();
+    const prevPreviews = component.previews();
+    component.dropPhoto(makeDrop(1, 1));
+    expect(component.photos()).toBe(prevPhotos);
+    expect(component.previews()).toBe(prevPreviews);
+  });
+
+  it('makePhotoMain: ставит фото на позицию 0 в обоих массивах', () => {
+    component.makePhotoMain(2);
+    expect(component.photos()[0].name).toBe('c.jpg');
+    expect(component.previews()[0]).toBe('url-c');
+  });
+
+  it('makePhotoMain(0): ничего не меняет', () => {
+    const prevPhotos = component.photos();
+    const prevPreviews = component.previews();
+    component.makePhotoMain(0);
+    expect(component.photos()).toBe(prevPhotos);
+    expect(component.previews()).toBe(prevPreviews);
+  });
+});
+
+// ─── Floor Plan: ограничение до 4 и reorder (B4) ─────────────────────────────
+describe('AddPropertyPageComponent — Floor Plan до 4 (B4)', () => {
+  let component: AddPropertyPageComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('MAX_FLOOR_PLANS === 4', () => {
+    expect(component.MAX_FLOOR_PLANS).toBe(4);
+  });
+
+  it('dropFloorPlan: перестановка синхронна для floorPlans + floorPlanPreviews', () => {
+    component.floorPlans.set([
+      makeFile('fp1.jpg'),
+      makeFile('fp2.jpg'),
+      makeFile('fp3.jpg'),
+    ]);
+    component.floorPlanPreviews.set(['u1', 'u2', 'u3']);
+    component.dropFloorPlan(makeDrop(0, 2));
+    expect(component.floorPlans()[2].name).toBe('fp1.jpg');
+    expect(component.floorPlanPreviews()[2]).toBe('u1');
+  });
+
+  it('dropFloorPlan: не мутирует прежний массив', () => {
+    component.floorPlans.set([makeFile('fp1.jpg'), makeFile('fp2.jpg')]);
+    component.floorPlanPreviews.set(['u1', 'u2']);
+    const prev = component.floorPlans();
+    component.dropFloorPlan(makeDrop(0, 1));
+    expect(component.floorPlans()).not.toBe(prev);
+  });
+
+  it('removeFloorPlan: удаляет элемент синхронно', () => {
+    component.floorPlans.set([makeFile('fp1.jpg'), makeFile('fp2.jpg')]);
+    component.floorPlanPreviews.set(['u1', 'u2']);
+    component.removeFloorPlan(0);
+    expect(component.floorPlans().length).toBe(1);
+    expect(component.floorPlans()[0].name).toBe('fp2.jpg');
+    expect(component.floorPlanPreviews()[0]).toBe('u2');
   });
 });

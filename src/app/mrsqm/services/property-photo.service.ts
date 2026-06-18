@@ -22,9 +22,16 @@ export class PropertyPhotoService {
 
   // Нарезать и загрузить все файлы для объекта, затем записать строки в БД.
   // Порядок = порядок в массиве. Первый — order_index 0 (главное фото).
-  async uploadAndAttach(propertyId: string, files: File[]): Promise<void> {
-    if (!files.length) return;
+  // floorPlans — отдельный тип 'floor_plan' с префиксом пути fp_ (чтобы не перетереть галерею).
+  async uploadAndAttach(
+    propertyId: string,
+    files: File[],
+    floorPlans: File[] = [],
+  ): Promise<void> {
+    if (!files.length && !floorPlans.length) return;
     const rows: PropertyPhotoInsert[] = [];
+
+    // Галерея
     for (let i = 0; i < files.length; i++) {
       const full = await this._resize(files[i], FULL_MAX, FULL_Q);
       const thumb = await this._resize(files[i], THUMB_MAX, THUMB_Q);
@@ -41,6 +48,25 @@ export class PropertyPhotoService {
         file_size_kb: Math.round(full.blob.size / 1024),
       });
     }
+
+    // Floor Plan: отдельный префикс fp_ чтобы не пересекаться с галереей.
+    for (let i = 0; i < floorPlans.length; i++) {
+      const full = await this._resize(floorPlans[i], FULL_MAX, FULL_Q);
+      const thumb = await this._resize(floorPlans[i], THUMB_MAX, THUMB_Q);
+      const fullUrl = await this._upload(`${propertyId}/fp_${i}_full.webp`, full.blob);
+      const thumbUrl = await this._upload(`${propertyId}/fp_${i}_thumb.webp`, thumb.blob);
+      rows.push({
+        property_id: propertyId,
+        photo_type: 'floor_plan',
+        order_index: i,
+        full_url: fullUrl,
+        thumb_url: thumbUrl,
+        width: full.width,
+        height: full.height,
+        file_size_kb: Math.round(full.blob.size / 1024),
+      });
+    }
+
     const { error } = await this._supabase.client.from('property_photos').insert(rows);
     if (error) throw error;
   }

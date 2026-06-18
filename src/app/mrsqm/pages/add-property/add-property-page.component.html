@@ -789,6 +789,7 @@
 
           <!-- ШАГ 8: Фото -->
           @if (step() === 7) {
+            <!-- Галерея -->
             <div class="field">
               <span class="field-label">Фотографии</span>
               <label class="photo-add">
@@ -803,15 +804,33 @@
                 />
               </label>
               @if (previews().length) {
-                <div class="photo-grid">
+                <div
+                  class="photo-grid"
+                  cdkDropList
+                  cdkDropListOrientation="horizontal"
+                  (cdkDropListDropped)="dropPhoto($event)"
+                >
                   @for (src of previews(); track src; let i = $index) {
-                    <div class="photo-cell">
+                    <div
+                      class="photo-cell"
+                      cdkDrag
+                    >
                       <img
                         [src]="src"
                         alt="фото"
                       />
                       @if (i === 0) {
                         <span class="photo-main">Главное</span>
+                      }
+                      @if (i > 0) {
+                        <button
+                          type="button"
+                          class="photo-make-main"
+                          (click)="makePhotoMain(i)"
+                          title="Сделать главным"
+                        >
+                          <mat-icon>star</mat-icon>
+                        </button>
                       }
                       <button
                         type="button"
@@ -825,7 +844,58 @@
                   }
                 </div>
                 <p class="note">
-                  Первое фото — главное. Фото сжимаются в браузере (WebP) перед загрузкой.
+                  Перетащите фото для изменения порядка. Первое фото — главное. Фото
+                  сжимаются в браузере (WebP) перед загрузкой.
+                </p>
+              }
+            </div>
+
+            <!-- Floor Plan -->
+            <div class="field">
+              <span class="field-label">Floor Plan</span>
+              @if (floorPlanPreviews().length < MAX_FLOOR_PLANS) {
+                <label class="photo-add">
+                  <mat-icon>map</mat-icon>
+                  <span>Добавить планировку</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    (change)="onFloorPlansSelected($event)"
+                  />
+                </label>
+              }
+              @if (floorPlanPreviews().length) {
+                <div
+                  class="photo-grid"
+                  cdkDropList
+                  cdkDropListOrientation="horizontal"
+                  (cdkDropListDropped)="dropFloorPlan($event)"
+                >
+                  @for (src of floorPlanPreviews(); track src; let i = $index) {
+                    <div
+                      class="photo-cell"
+                      cdkDrag
+                    >
+                      <img
+                        [src]="src"
+                        alt="планировка"
+                      />
+                      <button
+                        type="button"
+                        class="photo-del"
+                        (click)="removeFloorPlan(i)"
+                        aria-label="Удалить планировку"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <p class="note">
+                  Планировок: {{ floorPlanPreviews().length }} / {{ MAX_FLOOR_PLANS }}.
+                  Перетащите для изменения порядка.
                 </p>
               }
             </div>
