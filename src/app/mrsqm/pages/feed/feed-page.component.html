@@ -53,9 +53,10 @@
         <!-- W-1: inline-ряд: при 1 адресе — чип с ×; при 2+ — только первый чип inline -->
         <div class="tb-loc-inline">
           @if (filter.locationFilters().length > 0) {
-            <!-- Первый чип всегда виден inline -->
+            <!-- Первый чип всегда виден inline. Имя в отдельном span — обрезается
+                 многоточием, а крестик (flex:0 0 auto) не клипается при 2+ адресах. -->
             <span class="tb-chip">
-              {{ filter.locationFilters()[0].name }}
+              <span class="tb-chip-label">{{ filter.locationFilters()[0].name }}</span>
               <button
                 type="button"
                 class="tb-chip-x"
@@ -226,6 +227,7 @@
       class="tb-select tb-type-select"
       [class.isActive]="hasTypeSelection()"
       [matMenuTriggerFor]="typeMenu"
+      #typeTrigger="matMenuTrigger"
       (menuOpened)="onTypeMenuOpened()"
     >
       <span>{{ typeLabel() }}</span>
@@ -307,10 +309,12 @@
             >
               Сбросить
             </button>
-            <!-- Без stopPropagation → клик закрывает меню -->
+            <!-- Обёртка .type-mega гасит всплытие, поэтому закрываем меню явно
+                 через триггер (#typeTrigger). -->
             <button
               type="button"
               class="type-done"
+              (click)="typeTrigger.closeMenu()"
             >
               Готово
             </button>

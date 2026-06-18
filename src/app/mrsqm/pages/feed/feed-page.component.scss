@@ -162,7 +162,8 @@
 .tb-loc-inline {
   display: flex;
   align-items: center;
-  gap: var(--s-quarter);
+  // отступ между чипом и полем «Ещё адрес» (было слишком тесно)
+  gap: var(--s-half);
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: nowrap;
@@ -234,6 +235,8 @@
 .tb-search-input {
   flex: 1 1 auto;
   min-width: 0;
+  // лёгкий отступ слева — текст «Ещё адрес» не липнет к чипу
+  padding-left: var(--s-quarter);
   border: none;
   background: transparent;
   color: var(--text-color);
@@ -252,11 +255,11 @@
   align-items: center;
   gap: var(--s-quarter);
   max-width: 100%;
+  min-width: 0; // чтобы чип мог сжиматься и обрезать имя, а не крестик
   font-size: 14px; // W-6: кегль = тело ленты
   font-weight: 400;
   color: var(--c-primary);
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 
   > mat-icon {
@@ -267,9 +270,18 @@
   }
 }
 
+// Имя адреса в чипе — обрезаем многоточием именно его (не крестик)
+.tb-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 .tb-chip-x {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto; // крестик не сжимается и не обрезается
   border: none;
   background: transparent;
   color: var(--text-color-muted);

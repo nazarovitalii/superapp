@@ -378,3 +378,10 @@
 | `e52b30420` | 23:09 | feat(chat): POST /chat/feedback — sendFeedback API, messageId из SSE/истории, reason-чипы для дизлайка (S-4)                                                     |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `6b0f91dc7` | 23:10 | fix(feed): фикс-ширина селектов тулбара, поиск тянется на всю ленту, дропдаун локаций 14px+запятая, тип в 2 строки, maid/агентство 14px серым                    |
+| `7b28f1f49` | 23:17 | docs: S-3/S-4 в TODO.md, commits.md актуален                                                                                                                     |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `00e2df3dd` | 23:44 | style(chat): 15px текст чата (было 16px)                                                                                                                         |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `6f7036a3b` | 23:45 | style(chat): border-radius composer → var(--task-border-radius) как в ленте                                                                                      |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
