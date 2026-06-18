@@ -18,23 +18,9 @@
         }
       </div>
 
-      <!-- Лента: лупа-поиск (переключатели и фильтры — в тулбаре самой ленты).
-           При отмеченных чекбоксах вместо неё — контекстное меню выбора. -->
+      <!-- Лента: лупа-поиск (переключатели и фильтры — в тулбаре самой ленты). -->
       @if (isFeedRoute()) {
-        @if (feedSelection.count() > 0) {
-          <div class="selection-menu">
-            <span class="selection-count">Выбрано: {{ feedSelection.count() }}</span>
-            <button
-              mat-icon-button
-              class="selection-clear"
-              (click)="feedSelection.clear()"
-              [attr.aria-label]="'Сбросить выбор'"
-              title="Сбросить выбор"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
-        } @else if (isSearchOpen()) {
+        @if (isSearchOpen()) {
           <!-- Поиск: на всю строку — по описанию, агенту (ФИО/телефон) -->
           <div class="feed-search">
             <mat-icon class="feed-search-ico">search</mat-icon>

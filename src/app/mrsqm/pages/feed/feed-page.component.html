@@ -373,6 +373,19 @@
         <mat-icon>tune</mat-icon>
       </button>
     }
+
+    <!-- 8. «Поделиться» выбранным: появляется при отмеченных чекбоксах, справа от
+         фильтра, подсвечена акцентом. Логика — позже. Место забирает поле поиска. -->
+    @if (selection.count() > 0) {
+      <button
+        type="button"
+        class="tb-icon-btn tb-share-btn"
+        [attr.aria-label]="'Поделиться выбранным'"
+        title="Поделиться"
+      >
+        <mat-icon>share</mat-icon>
+      </button>
+    }
   </div>
 
   <!-- Шапка таблицы — колонки (U-5: text-align выровнен под ячейки карточки) -->

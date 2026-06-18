@@ -47,7 +47,6 @@ import { UserProfileService } from '../../features/user-profile/user-profile.ser
 import { FocusModeService } from '../../features/focus-mode/focus-mode.service';
 import { FeedFilterService } from '../../mrsqm/services/feed-filter.service';
 import { FormsModule } from '@angular/forms';
-import { FeedSelectionService } from '../../mrsqm/services/feed-selection.service';
 
 @Component({
   selector: 'main-header',
@@ -90,7 +89,6 @@ export class MainHeaderComponent implements OnDestroy {
   private readonly _dataInitStateService = inject(DataInitStateService);
   private readonly _focusModeService = inject(FocusModeService);
   readonly feedFilter = inject(FeedFilterService);
-  readonly feedSelection = inject(FeedSelectionService);
 
   readonly isDataLoaded = toSignal(this._dataInitStateService.isAllDataLoadedInitially$, {
     initialValue: false,
