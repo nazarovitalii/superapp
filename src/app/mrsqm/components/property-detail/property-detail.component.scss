@@ -614,8 +614,8 @@
 
 .kv-row {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 4px;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -623,11 +623,14 @@
 .kv-label {
   color: var(--text-color-muted, #9e9e9e);
   flex: 0 0 auto;
+
+  &::after {
+    content: ':';
+  }
 }
 
 .kv-value {
   color: var(--text-color, inherit);
-  text-align: right;
 }
 
 // ─── Секции — карточки в стиле input-item из task-detail-panel ──────────────
