@@ -9,9 +9,10 @@
 }
 
 // Контейнер по центру — как лента задач в инбоксе.
-// Шире на 20% (800 → 960) ради тулбара и колонок Bayut-стиля.
+// 800 → 960 (Bayut-колонки) → 1056 (+10%): длинные адреса вмещаются, а лишнюю
+// ширину забирает поле поиска (селекты фиксированы), не сами селекты.
 .feed-container {
-  max-width: 960px;
+  max-width: 1056px;
   margin: 0 auto;
   width: 100%;
 }
@@ -103,8 +104,14 @@
 // стрелка справа; короткие метки добиваются до min-width → ширина постоянна.
 // Тянется при сужении только поле поиска (см. .tb-search), селекты фиксированы.
 .scope-select {
-  // «Friends Inventory · 9 999»
-  min-width: 13.75rem;
+  // «Friends Inventory - 9 999»: метка и счётчик слева вместе, стрелка — справа.
+  // −10% ширины (13.75 → 12.375rem) — освободившееся забирает поле поиска (flex:1).
+  min-width: 12.375rem;
+  justify-content: flex-start;
+
+  > mat-icon {
+    margin-left: auto;
+  }
 }
 .seg-select {
   // «All Segments»
@@ -118,7 +125,6 @@
   // «Residential» / «Apartment · 3» / «Тип объекта»
   min-width: 10rem;
 }
-.scope-select,
 .seg-select,
 .deal-select,
 .tb-type-select {
@@ -247,6 +253,15 @@
   &::placeholder {
     color: var(--text-color-muted);
   }
+}
+
+// При наличии чипа поле «Ещё адрес» прижимаем вправо — ближе к стрелке, но с
+// зазором, чтобы плейсхолдер не наезжал на введённый адрес слева.
+// Пустое поле (без чипа) остаётся слева и на всю ширину.
+.tb-loc-inline .tb-chip + .tb-search-input {
+  text-align: right;
+  padding-left: 0;
+  padding-right: var(--s-half);
 }
 
 // Выбранный адрес/агент — чип внутри поля
