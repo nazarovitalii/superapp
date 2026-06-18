@@ -5,10 +5,6 @@ import {
   effect,
   computed,
   signal,
-  viewChild,
-  ElementRef,
-  DestroyRef,
-  afterNextRender,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -82,14 +78,14 @@ export class FeedPageComponent {
   readonly selection = inject(FeedSelectionService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _owner = inject(PropertyOwnerService);
-  private readonly _destroyRef = inject(DestroyRef);
 
-  // W-1: inline-ряд чипов локаций (шаблонная ссылка #locRow)
-  private readonly _locRow = viewChild<ElementRef<HTMLElement>>('locRow');
-
-  // W-1: раскрыта ли панель локаций снизу; есть ли переполнение ряда
+  // W-1: раскрыта ли панель локаций снизу (управляется кнопкой-стрелкой)
   readonly locExpanded = signal(false);
-  readonly locOverflow = signal(false);
+
+  // W-1: количество адресов, скрытых за кнопкой-стрелкой (>= 2 локации → inline только первый чип)
+  readonly locHiddenCount = computed(() =>
+    Math.max(0, this.filter.locationFilters().length - 1),
+  );
 
   // unit_type_id/sub_type_id (uuid) → название типа. Заполняется из справочников.
   private _typeLabels: Map<string, string> | null = null;
@@ -411,31 +407,6 @@ export class FeedPageComponent {
         this.properties.set([]);
         void this._load();
       }
-    });
-
-    // W-1: effect в injection context — пересчитываем переполнение ряда локаций
-    // при изменении набора чипов или самого элемента (viewChild-сигнал).
-    effect(() => {
-      this.filter.locationFilters(); // зависимость: набор чипов
-      const el = this._locRow()?.nativeElement; // зависимость: viewChild-сигнал ряда
-      if (!el) return;
-      // Microtask: DOM обновляется после сигнала, даём ему отрисоваться.
-      queueMicrotask(() => this.locOverflow.set(el.scrollWidth > el.clientWidth));
-    });
-
-    // W-1: ResizeObserver на ряд локаций — детект переполнения при изменении размера.
-    // Подписываемся только после первого рендера, когда viewChild доступен.
-    afterNextRender(() => {
-      const el = this._locRow()?.nativeElement;
-      if (!el) return;
-
-      const ro = new ResizeObserver(() =>
-        this.locOverflow.set(el.scrollWidth > el.clientWidth),
-      );
-      ro.observe(el);
-
-      // Чистим ResizeObserver при уничтожении компонента.
-      this._destroyRef.onDestroy(() => ro.disconnect());
     });
   }
 

@@ -26,14 +26,14 @@
 }
 
 // U-11: иконко-кнопки в квадратной рамке вместо mat-icon-button
-// 40×40px, бордюр/фон/скругление как у .tb-select
+// 44×44px (1C), бордюр/фон/скругление как у .tb-select
 .tb-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: var(--task-first-line-min-height, 40px);
-  height: var(--task-first-line-min-height, 40px);
+  width: 44px;
+  height: 44px;
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
   background: var(--task-c-bg);
@@ -59,9 +59,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-quarter);
-  // U-1: высота всех контролов тулбара = 40px
-  height: var(--task-first-line-min-height, 40px);
-  padding: 0 var(--s-quarter) 0 var(--s);
+  // 1C: высота всех контролов тулбара = 44px
+  height: 44px;
+  // 1C: левый padding → var(--s2) (16px) для большего отступа до текста
+  padding: 0 var(--s-quarter) 0 var(--s2);
   // Скругление и белый фон — как строка объекта в ленте
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
@@ -120,12 +121,12 @@
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  // W-1: фикс ширины — не давит правые селекты при мультиселекте адресов
-  flex: 1 1 280px;
-  min-width: 220px;
-  max-width: 460px;
-  // U-1: высота 40px
-  height: var(--task-first-line-min-height, 40px);
+  // 1C: сужен — освобождает место для селектов с увеличенным padding
+  flex: 1 1 200px;
+  min-width: 150px;
+  max-width: 340px;
+  // 1C: высота 44px
+  height: 44px;
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
   border: 1px solid var(--extra-border-color);
@@ -136,7 +137,7 @@
   }
 }
 
-// W-1: inline-ряд чипов (не переносится, обрезается; overflow отслеживается ResizeObserver)
+// W-1: inline-ряд чипов (без переноса; при 2+ адресах виден только первый чип)
 .tb-loc-inline {
   display: flex;
   align-items: center;
@@ -147,13 +148,14 @@
   overflow: hidden;
 }
 
-// W-1: компактная кнопка-стрелка для раскрытия/сворачивания панели локаций
+// W-1: кнопка-стрелка для раскрытия/сворачивания панели локаций
+// Driver = количество (>= 2), не переполнение; показывает счётчик скрытых адресов
 .tb-loc-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   flex: 0 0 auto;
-  width: 20px;
   height: 20px;
   border: none;
   background: transparent;
@@ -172,6 +174,15 @@
     height: 20px;
     line-height: 20px;
   }
+}
+
+// W-1: счётчик скрытых адресов рядом со стрелкой («+2»)
+.tb-loc-count {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--c-primary);
+  white-space: nowrap;
 }
 
 // W-1: раскрытая панель со всеми локациями (абсолютно под полем поиска)
@@ -320,12 +331,12 @@
   white-space: nowrap;
 }
 
-// U-1: чип фильтров (активные) — высота 40px
+// 1C: чип фильтров (активные) — высота 44px
 .filter-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--s-quarter);
-  height: var(--task-first-line-min-height, 40px);
+  height: 44px;
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
   border: 1px solid var(--c-primary);
@@ -343,16 +354,26 @@
   }
 }
 
-// W-2/V-4: компактные пункты выпадающих меню тулбара (охват / сегмент / сделка / сортировка).
+// 1B: пункты выпадающих меню тулбара (охват / сегмент / сделка / сортировка).
 // Класс .tb-menu вешается на <mat-menu> → стиль scoped, не глобальный Material-override.
 // M3-токен задаёт размер через CSS-переменную; .mdc-list-item__primary-text — фолбэк.
 ::ng-deep .tb-menu {
+  // Скруглённая панель
+  border-radius: var(--card-border-radius) !important;
+
+  .mat-mdc-menu-content {
+    padding: var(--s-quarter) 0 !important;
+  }
+
   // M3-токен — основной способ задать кегль пунктов меню
   --mat-menu-item-label-text-size: 14px;
 
   .mat-mdc-menu-item {
     font-size: 14px; // фолбэк для не-M3 окружений
-    min-height: 36px; // компактная высота строки
+    min-height: 40px; // 1B: высота пункта 40px
+    // 1B: зарезервированная колонка иконки через padding — выравнивает текст
+    padding-left: 40px;
+    position: relative;
   }
 
   // Прямой таргет текста — фолбэк если токен не подтягивается
@@ -360,12 +381,25 @@
     font-size: 14px;
   }
 
-  // radio-индикатор: уменьшаем с 24px до 18px
-  .mat-mdc-menu-item .mat-icon {
+  // 1B: выбранный пункт — primary-цвет текста + лёгкий фон
+  .mat-mdc-menu-item.tb-menu-selected {
+    color: var(--c-primary);
+    background: var(--state-selected);
+
+    .mdc-list-item__primary-text {
+      color: var(--c-primary);
+    }
+  }
+
+  // 1B: иконка check у выбранного пункта
+  .mat-mdc-menu-item .tb-menu-check {
+    position: absolute;
+    left: 12px;
     font-size: 18px;
     width: 18px;
     height: 18px;
-    margin-right: var(--s-half);
+    line-height: 18px;
+    color: var(--c-primary);
   }
 }
 

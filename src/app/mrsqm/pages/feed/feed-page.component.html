@@ -21,11 +21,12 @@
       @for (o of scopeOptions; track o.value) {
         <button
           mat-menu-item
+          [class.tb-menu-selected]="filter.scope() === o.value"
           (click)="setScope(o.value)"
         >
-          <mat-icon>{{
-            filter.scope() === o.value ? 'radio_button_checked' : ''
-          }}</mat-icon>
+          @if (filter.scope() === o.value) {
+            <mat-icon class="tb-menu-check">check</mat-icon>
+          }
           <span>{{ o.label }}</span>
         </button>
       }
@@ -49,19 +50,17 @@
           </button>
         </span>
       } @else {
-        <!-- W-1: inline-ряд чипов локаций (без переноса; переполнение отслеживается) -->
-        <div
-          class="tb-loc-inline"
-          #locRow
-        >
-          @for (loc of filter.locationFilters(); track loc.id) {
-            <span class="tb-chip"
-              >{{ loc.name }}
+        <!-- W-1: inline-ряд: при 1 адресе — чип с ×; при 2+ — только первый чип inline -->
+        <div class="tb-loc-inline">
+          @if (filter.locationFilters().length > 0) {
+            <!-- Первый чип всегда виден inline -->
+            <span class="tb-chip">
+              {{ filter.locationFilters()[0].name }}
               <button
                 type="button"
                 class="tb-chip-x"
-                (click)="removeLocation(loc.id)"
-                [attr.aria-label]="'Убрать адрес ' + loc.name"
+                (click)="removeLocation(filter.locationFilters()[0].id)"
+                [attr.aria-label]="'Убрать адрес ' + filter.locationFilters()[0].name"
               >
                 <mat-icon>close</mat-icon>
               </button>
@@ -84,8 +83,8 @@
           }
         </div>
 
-        <!-- W-1: кнопка-стрелка (показывается при переполнении или когда панель открыта) -->
-        @if (locOverflow() || locExpanded()) {
+        <!-- W-1: кнопка-стрелка — driver = количество (>= 2), не переполнение -->
+        @if (filter.locationFilters().length >= 2) {
           <button
             type="button"
             class="tb-loc-toggle"
@@ -94,6 +93,9 @@
               locExpanded() ? 'Свернуть список адресов' : 'Показать все адреса'
             "
           >
+            @if (!locExpanded()) {
+              <span class="tb-loc-count">+{{ locHiddenCount() }}</span>
+            }
             <mat-icon>{{
               locExpanded() ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
             }}</mat-icon>
@@ -175,11 +177,12 @@
       @for (o of segmentOptions; track o.label) {
         <button
           mat-menu-item
+          [class.tb-menu-selected]="filter.handover() === o.value"
           (click)="setSegment(o.value)"
         >
-          <mat-icon>{{
-            filter.handover() === o.value ? 'radio_button_checked' : ''
-          }}</mat-icon>
+          @if (filter.handover() === o.value) {
+            <mat-icon class="tb-menu-check">check</mat-icon>
+          }
           <span>{{ o.label }}</span>
         </button>
       }
@@ -201,11 +204,12 @@
       @for (o of dealOptions; track o.value) {
         <button
           mat-menu-item
+          [class.tb-menu-selected]="filter.dealType() === o.value"
           (click)="setDealType(o.value)"
         >
-          <mat-icon>{{
-            filter.dealType() === o.value ? 'radio_button_checked' : ''
-          }}</mat-icon>
+          @if (filter.dealType() === o.value) {
+            <mat-icon class="tb-menu-check">check</mat-icon>
+          }
           <span>{{ o.label }}</span>
         </button>
       }
@@ -327,11 +331,12 @@
       @for (o of sortOptions; track o.value) {
         <button
           mat-menu-item
+          [class.tb-menu-selected]="filter.sortBy() === o.value"
           (click)="setSort(o.value)"
         >
-          <mat-icon>{{
-            filter.sortBy() === o.value ? 'radio_button_checked' : ''
-          }}</mat-icon>
+          @if (filter.sortBy() === o.value) {
+            <mat-icon class="tb-menu-check">check</mat-icon>
+          }
           <span>{{ o.label }}</span>
         </button>
       }
