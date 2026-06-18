@@ -197,3 +197,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `cd28688ae` | 01:11 | docs: карточка слой 2b — Project/slider/active-listings/+vastu (tabs, TODO)                                                                                      |
 | `19b1e3839` | 01:19 | docs: founder-README + переписка + резюме дня 2026-06-18 (карточка слой 1-2)                                                                                     |
+| `d763efba0` | 01:23 | chore: handoff remember.md (карточка слои 1-2b задеплоены)                                                                                                       |
