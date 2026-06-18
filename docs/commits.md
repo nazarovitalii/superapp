@@ -331,3 +331,5 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `91d2f594f` | 18:47 | style(chat): prettier-форматирование спеки — перенос длинных строк (S-3)                                                                                         |
 | `cc10292a9` | 18:49 | docs(chat): tabs/tests под редизайн таба AI Chat (S-3, ChatGPT-вид)                                                                                              |
+| `b37a7bb4d` | 18:52 | docs(feed): батч 2026-06-18e — спека + TODO (W-1…W-7 done)                                                                                                       |
+| `5c2fc3b60` | 18:56 | docs: переписка + резюме дня 2026-06-18 (батч 18e)                                                                                                               |
