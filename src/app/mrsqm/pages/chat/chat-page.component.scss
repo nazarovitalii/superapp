@@ -417,4 +417,11 @@
     color: var(--text-color-muted);
     -webkit-text-fill-color: var(--text-color-muted);
   }
+  .chat-chip {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
 }
