@@ -216,3 +216,4 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `d6372edc2` | 02:33 | docs: tabs+TODO под FC-1..FC-4 (форма-реструктуризация + карточка Вариант A)                                                                                     |
+| `3229d932d` | 02:39 | docs: переписка + резюме дня 2026-06-18 (FC-1..FC-4)                                                                                                             |
