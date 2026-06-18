@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -56,6 +58,27 @@ const STEP_ICONS = [
 // Порог «поиск vs селект» для дочерних локаций в каскаде адреса.
 const CHILDREN_SELECT_THRESHOLD = 10;
 
+/**
+ * Вычисляет индекс уровня из доли позиции указателя по ширине трека.
+ * Точки расположены в центрах сегментов: (i+0.5)/n.
+ * Зажимает результат в диапазон [minIndex, n-1].
+ *
+ * @param fraction — позиция [0..1] по ширине трека (может выходить за границы)
+ * @param n        — число уровней (длина addrPath)
+ * @param minIndex — минимально допустимый индекс (communityIndex)
+ */
+export const revealIndexFromFraction = (
+  fraction: number,
+  n: number,
+  minIndex: number,
+): number => {
+  // fraction*n даёт позицию в [0..n]; сдвигаем на -0.5, чтобы получить индекс
+  // (точки стоят в центрах сегментов: (i+0.5)/n → обратное преобразование).
+  const scaled = fraction * n;
+  const idx = Math.round(scaled - 0.5);
+  return Math.max(minIndex, Math.min(n - 1, idx));
+};
+
 @Component({
   selector: 'mrsqm-add-property-page',
   standalone: true,
@@ -77,6 +100,11 @@ export class AddPropertyPageComponent {
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _router = inject(Router);
+
+  // Ссылка на DOM-элемент бегунка (для getBoundingClientRect при drag).
+  private readonly _revealEl = viewChild<ElementRef<HTMLDivElement>>('revealEl');
+  // Флаг активного перетаскивания (true между pointerdown и pointerup/cancel).
+  readonly isDragging = signal(false);
 
   readonly steps = STEPS;
   readonly stepIcons = STEP_ICONS;
@@ -273,6 +301,43 @@ export class AddPropertyPageComponent {
   selectReveal(i: number): void {
     if (i < this.communityIndex()) return;
     this.revealIndex.set(i);
+  }
+
+  // ─── Drag-обвязка бегунка через Pointer Events (мышь + тач) ─────────────
+
+  /** Начало перетаскивания: захват указателя и немедленный пересчёт позиции. */
+  onRevealPointerDown(ev: PointerEvent): void {
+    ev.preventDefault(); // предотвратить выделение текста и скролл
+    const el = this._revealEl()?.nativeElement;
+    if (!el) return;
+    el.setPointerCapture(ev.pointerId); // move/up приходят на элемент даже за его границами
+    this.isDragging.set(true);
+    this._applyRevealPosition(ev, el);
+  }
+
+  /** Движение: пересчитываем индекс только во время активного drag. */
+  onRevealPointerMove(ev: PointerEvent): void {
+    if (!this.isDragging()) return;
+    const el = this._revealEl()?.nativeElement;
+    if (!el) return;
+    this._applyRevealPosition(ev, el);
+  }
+
+  /** Конец перетаскивания (отпускание или отмена). */
+  onRevealPointerUpOrCancel(): void {
+    this.isDragging.set(false);
+  }
+
+  /** Пересчёт индекса из координаты указателя и применение через selectReveal. */
+  private _applyRevealPosition(ev: PointerEvent, el: HTMLElement): void {
+    const rect = el.getBoundingClientRect();
+    const fraction = (ev.clientX - rect.left) / rect.width;
+    const idx = revealIndexFromFraction(
+      fraction,
+      this.addrPath().length,
+      this.communityIndex(),
+    );
+    this.selectReveal(idx);
   }
 
   private _locTimer: ReturnType<typeof setTimeout> | null = null;

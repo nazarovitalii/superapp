@@ -268,10 +268,17 @@
               @if (canSlide()) {
                 <div class="field reveal-field">
                   <span class="field-label reveal-label">Что видят коллеги</span>
-                  <!-- Кастомный трек: точки центрированы под словами-уровнями (S2/S3) -->
+                  <!-- Кастомный трек: точки центрированы под словами-уровнями (S2/S3).
+                       Drag через Pointer Events: #revealEl + (pointerdown/move/up/cancel). -->
                   <div
+                    #revealEl
                     class="reveal"
+                    [class.dragging]="isDragging()"
                     [style.--n]="addrPath().length"
+                    (pointerdown)="onRevealPointerDown($event)"
+                    (pointermove)="onRevealPointerMove($event)"
+                    (pointerup)="onRevealPointerUpOrCancel()"
+                    (pointercancel)="onRevealPointerUpOrCancel()"
                   >
                     <!-- Слова-уровни (flex, каждый занимает 1/N ширины) -->
                     <div class="reveal-ticks">
@@ -309,6 +316,12 @@
                         [attr.aria-label]="p.name"
                       ></button>
                     }
+                    <!-- Видимая ручка-бегунок: позиционируется на активном уровне -->
+                    <div
+                      class="reveal-thumb"
+                      [style.left.%]="((revealIndex() + 0.5) / addrPath().length) * 100"
+                      aria-hidden="true"
+                    ></div>
                   </div>
                   <p class="note reveal-note">
                     В ленте всем (и вам) показывается: <b>{{ revealLabel() }}</b

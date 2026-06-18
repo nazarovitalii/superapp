@@ -307,12 +307,22 @@
 }
 
 // Контейнер бегунка — позиционирование для абсолютных дочерних (S2/S3).
+// touch-action: none — запрещает браузерный скролл при тач-drag по треку.
+// cursor: grab — подсказка, что бегунок перетаскиваемый.
 .reveal {
   position: relative;
   width: 100%;
   // Нижний отступ: место для точек (они выходят за трек).
   padding-bottom: 20px;
   // CSS-переменная --n задаётся из шаблона ([style.--n]).
+  touch-action: none; // тач-drag не должен скроллить страницу
+  cursor: grab;
+  user-select: none; // не выделять текст при drag
+
+  // Во время перетаскивания: курсор grabbing
+  &.dragging {
+    cursor: grabbing;
+  }
 }
 
 // Слова-уровни: flex без переноса, каждый занимает 1/N (S3).
@@ -402,6 +412,27 @@
 
   &:disabled {
     pointer-events: none;
+  }
+}
+
+// Видимая ручка-бегунок: крупнее точки, с тенью — визуальный thumb для drag.
+// Позиционируется на активном уровне (left задаётся из шаблона).
+.reveal-thumb {
+  position: absolute;
+  top: 28px; // центр thumb совпадает с центром трека (трек top:40px, h:3px → mid=41.5px; thumb h:24px → top=41.5-12=29.5)
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 3px solid var(--bg-app, #fff);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--c-primary) 40%, transparent);
+  transform: translateX(-50%);
+  pointer-events: none; // клики проходят сквозь thumb к .reveal и к .reveal-dot
+  transition: left 0.1s ease;
+
+  // Во время drag: тень крупнее (контейнер получит .dragging)
+  .dragging & {
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--c-primary) 50%, transparent);
   }
 }
 

@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { AddPropertyPageComponent } from './add-property-page.component';
+import {
+  AddPropertyPageComponent,
+  revealIndexFromFraction,
+} from './add-property-page.component';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { MrsqmAuthService } from '../../services/auth.service';
@@ -600,6 +603,48 @@ describe('AddPropertyPageComponent — selectReveal (B5)', () => {
     component.revealIndex.set(1);
     component.selectReveal(3);
     expect(component.revealIndex()).toBe(3);
+  });
+});
+
+// ─── revealIndexFromFraction (U-0a) ──────────────────────────────────────────
+describe('revealIndexFromFraction', () => {
+  // n=4 уровня, точки в центрах сегментов: 0→1/8, 1→3/8, 2→5/8, 3→7/8.
+
+  it('fraction=0 (крайний левый) → minIndex, когда 0 < minIndex (клам слева)', () => {
+    // minIndex=1, n=4: idx=Math.round(0*4-0.5)=Math.round(-0.5)=0 → клам к 1
+    expect(revealIndexFromFraction(0, 4, 1)).toBe(1);
+  });
+
+  it('fraction=0 → 0, когда minIndex=0 (нет ограничения)', () => {
+    expect(revealIndexFromFraction(0, 4, 0)).toBe(0);
+  });
+
+  it('fraction в центре первого сегмента (1/8) → 0 (если ≥ minIndex)', () => {
+    // fraction=0.125, n=4: idx=Math.round(0.125*4-0.5)=Math.round(0)=0
+    expect(revealIndexFromFraction(0.125, 4, 0)).toBe(0);
+  });
+
+  it('fraction в центре среднего сегмента (5/8) → 2', () => {
+    // fraction=0.625, n=4: idx=Math.round(0.625*4-0.5)=Math.round(2)=2
+    expect(revealIndexFromFraction(0.625, 4, 0)).toBe(2);
+  });
+
+  it('fraction=1 (крайний правый) → n-1 (клам справа)', () => {
+    // idx=Math.round(1*4-0.5)=Math.round(3.5)=4 → клам к 3
+    expect(revealIndexFromFraction(1, 4, 0)).toBe(3);
+  });
+
+  it('fraction > 1 (за правой границей) → n-1', () => {
+    expect(revealIndexFromFraction(2, 4, 0)).toBe(3);
+  });
+
+  it('fraction < 0 (за левой границей) → minIndex', () => {
+    expect(revealIndexFromFraction(-0.5, 4, 1)).toBe(1);
+  });
+
+  it('n=2: левая половина → 0, правая → 1', () => {
+    expect(revealIndexFromFraction(0.25, 2, 0)).toBe(0);
+    expect(revealIndexFromFraction(0.75, 2, 0)).toBe(1);
   });
 });
 
