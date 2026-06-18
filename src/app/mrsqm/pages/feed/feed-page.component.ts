@@ -321,7 +321,8 @@ export class FeedPageComponent {
   }
 
   pickLocation(item: LocationSearchItem): void {
-    this.filter.locationFilter.set({ id: item.id, name: item.name });
+    // Добавляем локацию в мультиселект; дубликат/лимит игнорируется в сервисе.
+    this.filter.addLocation({ id: item.id, name: item.name });
     this.filter.agentQuery.set('');
     this.searchInput.set('');
     this.locationResults.set([]);
@@ -330,13 +331,15 @@ export class FeedPageComponent {
 
   pickAgent(name: string): void {
     this.filter.agentQuery.set(name);
-    this.filter.locationFilter.set(null);
+    // Агент и локации взаимоисключающи — сбрасываем все выбранные адреса.
+    this.filter.clearLocations();
     this.searchInput.set('');
     this.showSuggest.set(false);
   }
 
-  clearLocation(): void {
-    this.filter.locationFilter.set(null);
+  // Убираем конкретную локацию по id (мультиселект).
+  removeLocation(id: string): void {
+    this.filter.removeLocation(id);
   }
 
   clearAgent(): void {
@@ -346,14 +349,14 @@ export class FeedPageComponent {
   constructor() {
     void this._loadSaved();
     void this._loadFilterOptions();
-    // Перезагружаем при смене dealType, категории, готовности, выбранного адреса,
+    // Перезагружаем при смене dealType, категории, готовности, выбранных адресов,
     // фильтров или сортировки. Охват (scope) и агент — клиентские, перезагрузки
     // не требуют.
     effect(() => {
       this.filter.dealType();
       this.filter.category();
       this.filter.handover();
-      this.filter.locationFilter();
+      this.filter.locationFilters(); // массив локаций (мультиселект)
       this.filter.searchQuery();
       this.filter.filters();
       this.filter.sortBy();
@@ -426,7 +429,7 @@ export class FeedPageComponent {
   private async _buildParams(): Promise<FeedParams> {
     const f = this.filter.filters();
     const categoryVal = this.filter.category();
-    const loc = this.filter.locationFilter();
+    const locs = this.filter.locationFilters(); // мультиселект адресов
     const search = this.filter.searchQuery().trim();
     return {
       p_deal_type: this.filter.dealType(),
@@ -445,8 +448,8 @@ export class FeedPageComponent {
       p_furnished: f.furnished,
       p_handover: this.filter.handover(),
       p_listing_type: f.listingType !== 'all' ? f.listingType : null,
-      // Адрес из автокомплита → серверный фильтр по локации.
-      p_location_ids: loc ? [loc.id] : null,
+      // Адреса из мультиселекта → серверный фильтр по локациям.
+      p_location_ids: locs.length ? locs.map((l) => l.id) : null,
       // Поиск-лупа из хедера — свободный текст по описанию объекта.
       p_description: search.length >= 2 ? search : null,
     };

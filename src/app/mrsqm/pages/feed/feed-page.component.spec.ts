@@ -137,9 +137,52 @@ describe('FeedPageComponent', () => {
   it('выбранный адрес → p_location_ids в get_feed', async () => {
     build();
     await flush();
-    filter.locationFilter.set({ id: 'loc-1', name: 'Dubai Marina' });
+    filter.addLocation({ id: 'loc-1', name: 'Dubai Marina' });
     await flush();
     expect(fake.lastParams?.['p_location_ids']).toEqual(['loc-1']);
+  });
+
+  it('несколько адресов → p_location_ids содержит все id', async () => {
+    build();
+    await flush();
+    filter.addLocation({ id: 'loc-1', name: 'Dubai Marina' });
+    filter.addLocation({ id: 'loc-2', name: 'JBR' });
+    await flush();
+    expect(fake.lastParams?.['p_location_ids']).toEqual(['loc-1', 'loc-2']);
+  });
+
+  it('pickLocation дважды разными id → 2 в locationFilters', async () => {
+    const c = build();
+    await flush();
+    c.pickLocation({
+      id: 'l1',
+      name: 'Marina',
+    } as import('../../types/database').LocationSearchItem);
+    c.pickLocation({
+      id: 'l2',
+      name: 'JBR',
+    } as import('../../types/database').LocationSearchItem);
+    expect(filter.locationFilters().length).toBe(2);
+  });
+
+  it('pickAgent чистит все локации', async () => {
+    const c = build();
+    await flush();
+    filter.addLocation({ id: 'loc-1', name: 'Marina' });
+    filter.addLocation({ id: 'loc-2', name: 'JBR' });
+    c.pickAgent('Ivan Agent');
+    expect(filter.locationFilters()).toEqual([]);
+    expect(filter.agentQuery()).toBe('Ivan Agent');
+  });
+
+  it('removeLocation убирает нужный чип, остальные остаются', async () => {
+    const c = build();
+    await flush();
+    filter.addLocation({ id: 'loc-1', name: 'Marina' });
+    filter.addLocation({ id: 'loc-2', name: 'JBR' });
+    c.removeLocation('loc-1');
+    expect(filter.locationFilters().length).toBe(1);
+    expect(filter.locationFilters()[0].id).toBe('loc-2');
   });
 
   it('агент из автокомплита фильтрует загруженные строки на клиенте', async () => {

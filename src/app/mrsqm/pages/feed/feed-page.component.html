@@ -34,19 +34,9 @@
     <!-- 2. Автокомплит «Адрес или агент» (U-10: flex:1 1 auto — съедает свободное место) -->
     <div class="tb-search">
       <mat-icon class="tb-search-icon">place</mat-icon>
-      @if (filter.locationFilter(); as loc) {
-        <span class="tb-chip">
-          <mat-icon>place</mat-icon>{{ loc.name }}
-          <button
-            type="button"
-            class="tb-chip-x"
-            (click)="clearLocation()"
-            [attr.aria-label]="'Сбросить адрес'"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
-        </span>
-      } @else if (filter.agentQuery(); as ag) {
+
+      @if (filter.agentQuery(); as ag) {
+        <!-- Агент выбран (единичный; взаимоисключает локации) -->
         <span class="tb-chip">
           <mat-icon>person</mat-icon>{{ ag }}
           <button
@@ -59,15 +49,35 @@
           </button>
         </span>
       } @else {
-        <input
-          type="text"
-          class="tb-search-input"
-          placeholder="Адрес или агент"
-          [value]="searchInput()"
-          (input)="onSearchInput($any($event.target).value)"
-          (focus)="onSearchFocus()"
-          (blur)="onSearchBlur()"
-        />
+        <!-- Чипы выбранных локаций (мультиселект, до 5) -->
+        @for (loc of filter.locationFilters(); track loc.id) {
+          <span class="tb-chip">
+            <mat-icon>place</mat-icon>{{ loc.name }}
+            <button
+              type="button"
+              class="tb-chip-x"
+              (click)="removeLocation(loc.id)"
+              [attr.aria-label]="'Убрать адрес ' + loc.name"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </span>
+        }
+
+        <!-- Поле ввода: скрываем когда выбрано 5 локаций -->
+        @if (filter.locationFilters().length < filter.MAX_LOCATIONS) {
+          <input
+            type="text"
+            class="tb-search-input"
+            [placeholder]="
+              filter.locationFilters().length ? 'Ещё адрес' : 'Адрес или агент'
+            "
+            [value]="searchInput()"
+            (input)="onSearchInput($any($event.target).value)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
+          />
+        }
       }
 
       <!-- Выпадающие подсказки: адреса + агенты -->

@@ -60,9 +60,28 @@ export class FeedFilterService {
   readonly handover = signal<FeedHandover | null>(null);
   // Поиск-лупа из глобального хедера: свободный текст по описанию (p_description).
   readonly searchQuery = signal<string>('');
-  // Выбранный адрес из автокомплита тулбара → p_location_ids в get_feed
-  // (реальный серверный фильтр; null = адрес не выбран).
-  readonly locationFilter = signal<{ id: string; name: string } | null>(null);
+  // Выбранные адреса из автокомплита тулбара → p_location_ids в get_feed
+  // (реальный серверный фильтр; [] = адреса не выбраны; максимум MAX_LOCATIONS).
+  readonly locationFilters = signal<{ id: string; name: string }[]>([]);
+  readonly MAX_LOCATIONS = 5;
+
+  // Добавляет локацию. Дубликат по id или превышение лимита — игнорируется.
+  addLocation(loc: { id: string; name: string }): void {
+    const cur = this.locationFilters();
+    if (cur.some((l) => l.id === loc.id) || cur.length >= this.MAX_LOCATIONS) return;
+    this.locationFilters.set([...cur, loc]);
+  }
+
+  // Убирает локацию по id.
+  removeLocation(id: string): void {
+    this.locationFilters.set(this.locationFilters().filter((l) => l.id !== id));
+  }
+
+  // Сбрасывает все выбранные локации.
+  clearLocations(): void {
+    this.locationFilters.set([]);
+  }
+
   // Выбранный агент (ФИО) из автокомплита → клиентский фильтр загруженных строк
   // ленты по owner_full_name. Серверного параметра по агенту в get_feed нет (интерим).
   readonly agentQuery = signal<string>('');
