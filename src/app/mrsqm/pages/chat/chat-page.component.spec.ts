@@ -170,13 +170,17 @@ describe('ChatPageComponent', () => {
   it('клик по чипу вызывает streamMessage', async () => {
     await createComponent();
     const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
-    const firstChip = fixture.nativeElement.querySelector('.chat-chip') as HTMLButtonElement;
+    const firstChip = fixture.nativeElement.querySelector(
+      '.chat-chip',
+    ) as HTMLButtonElement;
     firstChip.click();
     expect(mockGpt.streamMessage).toHaveBeenCalled();
   });
 
   it('ассистентский месседж: маркер-бот + тело, без пузыря', async () => {
-    loadHistorySpy.and.resolveTo([{ role: 'assistant', text: 'привет', created_at: 'x' }]);
+    loadHistorySpy.and.resolveTo([
+      { role: 'assistant', text: 'привет', created_at: 'x' },
+    ]);
     await createComponent();
     const a = fixture.nativeElement.querySelector('.msg.assistant');
     expect(a.querySelector('.msg-avatar')).toBeTruthy();
