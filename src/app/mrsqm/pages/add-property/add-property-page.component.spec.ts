@@ -88,7 +88,7 @@ const activeBuildingInfo = (): BuildingInfo => ({
   project_status: 'under_construction',
 });
 
-// ── Ожидаемые константы (FC-4) ────────────────────────────────────────────────
+// ── Ожидаемые константы (FC-4, порядок после B3: Описание→Фото) ──────────────
 const EXPECTED_STEPS = [
   'Категория',
   'Адрес',
@@ -96,8 +96,8 @@ const EXPECTED_STEPS = [
   'Цена',
   'Состояние',
   'Листинг',
-  'Фото и планировка',
   'Описание',
+  'Фото',
 ] as const;
 const EXPECTED_STEP_ICONS = [
   'category',
@@ -106,8 +106,8 @@ const EXPECTED_STEP_ICONS = [
   'payments',
   'event_available',
   'verified',
-  'photo_library',
   'description',
+  'photo_library',
 ] as const;
 
 describe('AddPropertyPageComponent — структура шагов (FC-4)', () => {

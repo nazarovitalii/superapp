@@ -774,8 +774,21 @@
             </p>
           }
 
-          <!-- ШАГ 7: Фото -->
+          <!-- ШАГ 7: Описание -->
           @if (step() === 6) {
+            <div class="field">
+              <span class="field-label">Описание</span>
+              <textarea
+                rows="5"
+                [ngModel]="description()"
+                (ngModelChange)="description.set($event)"
+                placeholder="Опишите объект…"
+              ></textarea>
+            </div>
+          }
+
+          <!-- ШАГ 8: Фото -->
+          @if (step() === 7) {
             <div class="field">
               <span class="field-label">Фотографии</span>
               <label class="photo-add">
@@ -815,19 +828,6 @@
                   Первое фото — главное. Фото сжимаются в браузере (WebP) перед загрузкой.
                 </p>
               }
-            </div>
-          }
-
-          <!-- ШАГ 8: Описание -->
-          @if (step() === 7) {
-            <div class="field">
-              <span class="field-label">Описание</span>
-              <textarea
-                rows="5"
-                [ngModel]="description()"
-                (ngModelChange)="description.set($event)"
-                placeholder="Опишите объект…"
-              ></textarea>
             </div>
           }
         </div>

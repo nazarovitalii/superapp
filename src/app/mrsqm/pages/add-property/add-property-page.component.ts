@@ -28,7 +28,7 @@ import {
 import { typeFieldsFor, TypeFields } from './property-type-fields';
 
 const SQFT_TO_SQM = 0.092903;
-// 8 шагов формы (порядок согласован: Категория+Сделка → Адрес → … → Фото и планировка → Описание).
+// 8 шагов формы (порядок согласован: Категория+Сделка → Адрес → … → Описание → Фото).
 const STEPS = [
   'Категория',
   'Адрес',
@@ -36,8 +36,8 @@ const STEPS = [
   'Цена',
   'Состояние',
   'Листинг',
-  'Фото и планировка',
   'Описание',
+  'Фото',
 ] as const;
 const STEP_ICONS = [
   'category',
@@ -46,8 +46,8 @@ const STEP_ICONS = [
   'payments',
   'event_available',
   'verified',
-  'photo_library',
   'description',
+  'photo_library',
 ] as const;
 
 // Порог «поиск vs селект» для дочерних локаций в каскаде адреса.
@@ -148,7 +148,7 @@ export class AddPropertyPageComponent {
   readonly plotNumber = signal<string>('');
   readonly municipalityNumber = signal<string>('');
 
-  // ─── Шаг 7: Фото и планировка / Шаг 8: Описание ───────────────────────
+  // ─── Шаг 7: Описание / Шаг 8: Фото ────────────────────────────────────
   readonly description = signal<string>('');
   readonly photos = signal<File[]>([]);
   readonly previews = signal<string[]>([]);
@@ -400,7 +400,7 @@ export class AddPropertyPageComponent {
     if (this.offPlanLocked() && this.handover() === 'offplan') this.handover.set('ready');
   }
 
-  // ─── Шаг 7: фото ────────────────────────────────────────────────────────
+  // ─── Шаг 8: фото ────────────────────────────────────────────────────────
   onPhotosSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const list = input.files;
