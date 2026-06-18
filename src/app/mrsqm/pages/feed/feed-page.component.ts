@@ -400,25 +400,26 @@ export class FeedPageComponent {
       void this._load();
     });
 
-    // W-1: ResizeObserver на ряд локаций — детект переполнения.
+    // W-1: effect в injection context — пересчитываем переполнение ряда локаций
+    // при изменении набора чипов или самого элемента (viewChild-сигнал).
+    effect(() => {
+      this.filter.locationFilters(); // зависимость: набор чипов
+      const el = this._locRow()?.nativeElement; // зависимость: viewChild-сигнал ряда
+      if (!el) return;
+      // Microtask: DOM обновляется после сигнала, даём ему отрисоваться.
+      queueMicrotask(() => this.locOverflow.set(el.scrollWidth > el.clientWidth));
+    });
+
+    // W-1: ResizeObserver на ряд локаций — детект переполнения при изменении размера.
     // Подписываемся только после первого рендера, когда viewChild доступен.
     afterNextRender(() => {
       const el = this._locRow()?.nativeElement;
       if (!el) return;
 
-      const checkOverflow = (): void => {
-        this.locOverflow.set(el.scrollWidth > el.clientWidth);
-      };
-
-      const ro = new ResizeObserver(checkOverflow);
+      const ro = new ResizeObserver(() =>
+        this.locOverflow.set(el.scrollWidth > el.clientWidth),
+      );
       ro.observe(el);
-
-      // Пересчитываем при изменении набора локаций (DOM обновляется асинхронно).
-      effect(() => {
-        this.filter.locationFilters();
-        // Microtask: DOM обновляется после сигнала, даём ему отрисоваться.
-        void Promise.resolve().then(checkOverflow);
-      });
 
       // Чистим ResizeObserver при уничтожении компонента.
       this._destroyRef.onDestroy(() => ro.disconnect());
