@@ -259,3 +259,16 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
 | `4c47155ed` | 04:19 | feat(add-property): уточнение адреса через search_in_scope (серверный скоуп, AP-2)                                                                               |
 | `6722e5784` | 04:23 | docs: search_in_scope в database.md + AP-2 серверный скоуп (tabs/TODO)                                                                                           |
+| `340b535c7` | 04:26 | docs: переписка + резюме (AP-2 серверный скоуп search_in_scope)                                                                                                  |
+| `db00b17ad` | 04:38 | docs(chat): спека таба AI Chat (S-2) + TODO blocked-on GET /chat/history                                                                                         |
+| `8d3fca320` | 04:51 | docs(chat): S-2 разблокирован — GET /chat/history живой; уточнён фолбэк-контракт                                                                                 |
+| `934dcd011` | 04:55 | docs(chat): план реализации таба AI Chat (S-2)                                                                                                                   |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `b4f35e7a7` | 05:03 | feat(chat): gpt-stream сервис — SSE-парсер, история, фолбэк (S-2)                                                                                                |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `f79d826a8` | 05:14 | feat(chat): страница AI Chat — лента, стрим-пузыри, статус, история (S-2)                                                                                        |
+| ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                    |
+| `62d494cae` | 05:21 | fix(chat): textarea-сигнал binding + stop чистит курсор (S-2)                                                                                                    |
+| `cc4562b46` | 13:14 | feat(chat): подключить ChatPageComponent к роуту mrsqm/chat (S-2)                                                                                                |
+| `7cce2c19b` | 13:18 | docs(chat): S-2 готов — tabs/TODO/tests обновлены, S-2.1 follow-up                                                                                               |
