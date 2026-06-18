@@ -149,6 +149,31 @@ describe('PropertyCreateService', () => {
     expect(fake.rpcCalls.filter((c) => c.fn === 'get_filter_options').length).toBe(1);
   });
 
+  // AP-2: searchInScope
+  it('searchInScope вызывает RPC search_in_scope с корректными параметрами', async () => {
+    fake.rpcResult = { results: [{ id: 'l1', name: 'Golf Vista' }] };
+    const res = await svc.searchInScope('golf', 'damac-hills-id', 50);
+    expect(res.length).toBe(1);
+    expect(fake.rpcCalls[0].fn).toBe('search_in_scope');
+    expect(fake.rpcCalls[0].params).toEqual({
+      p_query: 'golf',
+      p_within_id: 'damac-hills-id',
+      p_limit: 50,
+    });
+  });
+
+  it('searchInScope возвращает [] при query < 2 символов без вызова RPC', async () => {
+    const res = await svc.searchInScope('g', 'damac-hills-id');
+    expect(res).toEqual([]);
+    expect(fake.rpcCalls.length).toBe(0);
+  });
+
+  it('searchInScope возвращает [] при пустом withinId без вызова RPC', async () => {
+    const res = await svc.searchInScope('golf', '');
+    expect(res).toEqual([]);
+    expect(fake.rpcCalls.length).toBe(0);
+  });
+
   it('createProperty вставляет payload и возвращает id', async () => {
     const id = await svc.createProperty(samplePayload());
     expect(id).toBe('new-id');

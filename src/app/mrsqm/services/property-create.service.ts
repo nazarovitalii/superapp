@@ -45,6 +45,23 @@ export class PropertyCreateService {
     return res?.results ?? [];
   }
 
+  // Поиск локаций строго в пределах поддерева узла (RPC search_in_scope, AP-2).
+  // Скоуп = последний выбранный узел цепочки; возвращает [] при коротком
+  // запросе или пустом withinId — без вызова RPC.
+  async searchInScope(
+    query: string,
+    withinId: string,
+    limit = 50,
+  ): Promise<LocationSearchItem[]> {
+    const q = query.trim();
+    if (q.length < 2 || !withinId) return [];
+    const res = await this._supabase.rpc<{
+      results?: LocationSearchItem[];
+      error?: string;
+    }>('search_in_scope', { p_query: q, p_within_id: withinId, p_limit: limit });
+    return res?.results ?? [];
+  }
+
   // Поиск девелоперов (RPC search_developers, AP-5). Возвращает [] при
   // запросе короче 2 символов. Ответ — { results: DeveloperSearchItem[] }.
   async searchDevelopers(query: string): Promise<DeveloperSearchItem[]> {

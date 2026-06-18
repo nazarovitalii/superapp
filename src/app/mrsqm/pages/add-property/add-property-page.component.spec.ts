@@ -56,6 +56,13 @@ class FakePropertyCreateService {
   async searchDevelopers(_query: string): Promise<DeveloperSearchItem[]> {
     return [];
   }
+  async searchInScope(
+    _query: string,
+    _withinId: string,
+    _limit?: number,
+  ): Promise<LocationSearchItem[]> {
+    return [];
+  }
 }
 
 // Стаб PropertyPhotoService.

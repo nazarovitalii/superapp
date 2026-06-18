@@ -322,27 +322,23 @@ export class AddPropertyPageComponent {
     }, 250);
   }
 
-  // Поиск по всем нижним уровням внутри выбранного комьюнити (debounce).
-  // Глобальный search_locations + клиентский фильтр по community_name и
-  // исключение уже выбранных узлов цепочки.
+  // Поиск по всем нижним уровням внутри последнего выбранного узла (debounce).
+  // Скоуп = последний элемент addrPath; поиск через RPC search_in_scope (AP-2).
   onChildSearchInput(val: string): void {
     this.childQuery.set(val);
     if (this._descTimer) clearTimeout(this._descTimer);
-    const comm = this._scopeCommunity();
-    if (val.trim().length < 2 || !comm) {
+    const path = this.addrPath();
+    const scope = path.length ? path[path.length - 1] : null;
+    if (val.trim().length < 2 || !scope) {
       this.descResults.set([]);
       return;
     }
     this._descTimer = setTimeout(async () => {
       this.descLoading.set(true);
       try {
-        // AP-2: 50 кандидатов до клиентского фильтра по community_name,
-        // чтобы подстрочные совпадения (напр. «Golf Vista») не обрезались.
-        const all = await this._service.searchLocations(val, 50);
+        const all = await this._service.searchInScope(val, scope.id, 50);
         const pathIds = new Set(this.addrPath().map((p) => p.id));
-        this.descResults.set(
-          all.filter((r) => r.community_name === comm.name && !pathIds.has(r.id)),
-        );
+        this.descResults.set(all.filter((r) => !pathIds.has(r.id)));
       } catch {
         this.descResults.set([]);
       } finally {
