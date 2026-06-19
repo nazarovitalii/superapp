@@ -5,7 +5,7 @@
       type="button"
       class="chat-header-btn"
       [class.spinning]="refreshing()"
-      [disabled]="loadingHistory() || refreshing()"
+      [disabled]="loadingHistory() || refreshing() || messages().length === 0"
       (click)="reloadHistory()"
       aria-label="Обновить историю"
     >
