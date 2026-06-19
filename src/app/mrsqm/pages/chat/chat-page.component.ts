@@ -126,6 +126,8 @@ export class ChatPageComponent implements OnDestroy {
   // Голосовой ввод: идёт запись / ждём расшифровку
   readonly recording = signal<boolean>(false);
   readonly transcribing = signal<boolean>(false);
+  // Обновление истории с сервера
+  readonly refreshing = signal<boolean>(false);
 
   // Чипы-подсказки (read-only)
   readonly suggestions: readonly Suggestion[] = SUGGESTIONS;
@@ -231,6 +233,33 @@ export class ChatPageComponent implements OnDestroy {
     });
     this.streaming.set(false);
     this.status.set(null);
+  }
+
+  // ─── Обновление / очистка истории ────────────────────────────────────────
+
+  async reloadHistory(): Promise<void> {
+    if (this.refreshing()) return;
+    this.refreshing.set(true);
+    try {
+      const history = await this._gpt.loadHistory();
+      this.messages.set(
+        history.map((m) => ({ role: m.role, text: m.text, messageId: m.id })),
+      );
+      this._scheduleScroll();
+    } catch {
+      // сеть/401 — молча, текущие сообщения остаются
+    } finally {
+      this.refreshing.set(false);
+    }
+  }
+
+  clearMessages(): void {
+    if (this.streaming()) this.stop();
+    this.messages.set([]);
+    this.draft.set('');
+    this.error.set(null);
+    this.feedbackReasonIdx.set(null);
+    this._autoGrow();
   }
 
   // ─── Голосовой ввод ───────────────────────────────────────────────────────

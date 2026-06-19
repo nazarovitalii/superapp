@@ -1,4 +1,28 @@
 <div class="chat">
+  <!-- Шапка: обновить / очистить переписку -->
+  <div class="chat-header">
+    <button
+      type="button"
+      class="chat-header-btn"
+      [class.spinning]="refreshing()"
+      [disabled]="loadingHistory() || refreshing()"
+      (click)="reloadHistory()"
+      aria-label="Обновить историю"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <button
+      type="button"
+      class="chat-header-btn"
+      [disabled]="loadingHistory() || messages().length === 0"
+      (click)="clearMessages()"
+      aria-label="Очистить переписку"
+    >
+      <mat-icon>delete_sweep</mat-icon>
+      <span>Очистить переписку</span>
+    </button>
+  </div>
+
   <!-- Загрузка истории -->
   @if (loadingHistory()) {
     <div class="chat-spinner">
