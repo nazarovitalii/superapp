@@ -18,7 +18,8 @@ export type PanelContentType =
   | 'PLUGIN'
   | 'SCHEDULE_DAY_PANEL'
   | 'PROPERTY'
-  | 'FILTERS';
+  | 'FILTERS'
+  | 'AI_CHAT';
 
 @Injectable({ providedIn: 'root' })
 export class PanelContentService {
@@ -29,6 +30,8 @@ export class PanelContentService {
   readonly selectedProperty = signal<PropertyFeedItem | null>(null);
   // MrSQM: открыта ли панель фильтров ленты
   readonly isFilterPanelOpen = signal(false);
+  // MrSQM: открыт ли AI-чат в правой панели
+  readonly isAiChatOpen = signal(false);
 
   openProperty(property: PropertyFeedItem): void {
     // Закрываем task-panel чтобы не конфликтовать
@@ -56,6 +59,25 @@ export class PanelContentService {
       this.closeFilterPanel();
     } else {
       this.openFilterPanel();
+    }
+  }
+
+  openAiChat(): void {
+    this._taskService.setSelectedId(null);
+    this.selectedProperty.set(null);
+    this.isFilterPanelOpen.set(false);
+    this.isAiChatOpen.set(true);
+  }
+
+  closeAiChat(): void {
+    this.isAiChatOpen.set(false);
+  }
+
+  toggleAiChat(): void {
+    if (this.isAiChatOpen()) {
+      this.closeAiChat();
+    } else {
+      this.openAiChat();
     }
   }
 
@@ -93,6 +115,7 @@ export class PanelContentService {
     if (isShowTaskViewCustomizerPanel) return 'TASK_VIEW_CUSTOMIZER_PANEL';
     if (isShowPluginPanel) return 'PLUGIN';
     if (isShowScheduleDayPanel) return 'SCHEDULE_DAY_PANEL';
+    if (this.isAiChatOpen()) return 'AI_CHAT';
     if (this.isFilterPanelOpen()) return 'FILTERS';
     if (this.selectedProperty()) return 'PROPERTY';
     if (selectedTask) return 'TASK';
@@ -118,7 +141,8 @@ export class PanelContentService {
       isShowPluginPanel ||
       isShowScheduleDayPanel ||
       this.selectedProperty() ||
-      this.isFilterPanelOpen()
+      this.isFilterPanelOpen() ||
+      this.isAiChatOpen()
     );
   });
 

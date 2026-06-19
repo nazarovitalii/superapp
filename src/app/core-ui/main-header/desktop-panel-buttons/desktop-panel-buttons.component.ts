@@ -13,6 +13,7 @@ import { LayoutService } from '../../layout/layout.service';
 import { T } from '../../../t.const';
 import { KeyboardConfig } from '../../../features/config/keyboard-config.model';
 import { GlobalConfigService } from '../../../features/config/global-config.service';
+import { PanelContentService } from '../../../features/panels/panel-content.service';
 
 @Component({
   selector: 'desktop-panel-buttons',
@@ -31,6 +32,17 @@ import { GlobalConfigService } from '../../../features/config/global-config.serv
         <mat-icon>schedule</mat-icon>
       </button>
     }
+
+    <!-- MrSQM: AI-чат в правой панели — кнопка справа от календаря, видна всегда -->
+    <button
+      class="panel-btn ai-panel-btn"
+      [class.isActive]="panelContentService.isAiChatOpen()"
+      (click)="panelContentService.toggleAiChat()"
+      mat-icon-button
+      matTooltip="AI-ассистент"
+    >
+      <mat-icon>smart_toy</mat-icon>
+    </button>
 
     @if (isIssuesPanelEnabled()) {
       <button
@@ -96,6 +108,19 @@ import { GlobalConfigService } from '../../../features/config/global-config.serv
           background-color: var(--hover-color, rgba(0, 0, 0, 0.04));
         }
 
+        /* AI-кнопка: smart_toy не вращается (rotate — только для plus-иконок),
+           активность показываем акцентным цветом. */
+        &.ai-panel-btn.isActive .mat-icon {
+          transform: none;
+          color: var(--c-primary);
+        }
+      }
+
+      .ai-panel-btn {
+        &.isActive {
+          box-shadow: none;
+        }
+
         &:disabled {
           opacity: 0.5;
           cursor: not-allowed;
@@ -113,6 +138,7 @@ import { GlobalConfigService } from '../../../features/config/global-config.serv
 export class DesktopPanelButtonsComponent {
   readonly T = T;
   readonly layoutService = inject(LayoutService);
+  readonly panelContentService = inject(PanelContentService);
   private readonly _configService = inject(GlobalConfigService);
 
   readonly kb = input<KeyboardConfig | null>();

@@ -9,6 +9,8 @@
     [@slideInFromRight]
     (closed)="panelContentService.closeFilterPanel()"
   ></mrsqm-feed-filter-panel>
+} @else if (panelContent() === 'AI_CHAT') {
+  <mrsqm-chat-page [@slideInFromRight]></mrsqm-chat-page>
 } @else if (panelContent() === 'ISSUE_PANEL') {
   @defer (prefetch on idle) {
     <issue-panel [@slideInFromRight]></issue-panel>

@@ -36,6 +36,7 @@ import { isTouchActive } from '../../util/input-intent';
 import { PanelContentService, PanelContentType } from '../panels/panel-content.service';
 import { PropertyDetailComponent } from '../../mrsqm/components/property-detail/property-detail.component';
 import { FeedFilterPanelComponent } from '../../mrsqm/components/feed-filter-panel/feed-filter-panel.component';
+import { ChatPageComponent } from '../../mrsqm/pages/chat/chat-page.component';
 
 // Keep in sync with CSS var --transition-duration-m
 const CLOSE_ANIMATION_MS = 225;
@@ -61,6 +62,7 @@ export type RightPanelContentPanelType = PanelContentType;
     ScheduleDayPanelComponent,
     PropertyDetailComponent,
     FeedFilterPanelComponent,
+    ChatPageComponent,
   ],
 })
 export class RightPanelContentComponent implements OnDestroy {
@@ -188,12 +190,14 @@ export class RightPanelContentComponent implements OnDestroy {
 
     const selectedProperty = this._panelContentService.selectedProperty();
     const isFilterPanelOpen = this._panelContentService.isFilterPanelOpen();
+    const isAiChatOpen = this._panelContentService.isAiChatOpen();
 
     return (
       !!(
         selectedTask ||
         selectedProperty ||
         isFilterPanelOpen ||
+        isAiChatOpen ||
         isShowNotes ||
         isShowAddTaskPanel ||
         isShowTaskViewCustomizerPanel ||
@@ -299,6 +303,7 @@ export class RightPanelContentComponent implements OnDestroy {
     this.taskService.setSelectedId(null);
     this._panelContentService.closeProperty();
     this._panelContentService.closeFilterPanel();
+    this._panelContentService.closeAiChat();
     this.layoutService.hideNotes();
     this.layoutService.hideAddTaskPanel();
     this.layoutService.hideTaskViewCustomizerPanel();
