@@ -10,6 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MarkdownComponent } from 'ngx-markdown';
 import {
   GptStreamService,
@@ -93,7 +94,13 @@ const INPUT_MAX_HEIGHT = 160;
   selector: 'mrsqm-chat-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, MatProgressSpinnerModule, MarkdownComponent],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MarkdownComponent,
+  ],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })
@@ -128,6 +135,8 @@ export class ChatPageComponent implements OnDestroy {
   readonly transcribing = signal<boolean>(false);
   // Обновление истории с сервера
   readonly refreshing = signal<boolean>(false);
+  // Поповер подсказок над композером
+  readonly showSuggestions = signal<boolean>(false);
 
   // Чипы-подсказки (read-only)
   readonly suggestions: readonly Suggestion[] = SUGGESTIONS;
@@ -259,7 +268,18 @@ export class ChatPageComponent implements OnDestroy {
     this.draft.set('');
     this.error.set(null);
     this.feedbackReasonIdx.set(null);
+    this.showSuggestions.set(false);
     this._autoGrow();
+  }
+
+  // ─── Поповер подсказок ────────────────────────────────────────────────────
+
+  toggleSuggestions(): void {
+    this.showSuggestions.update((v) => !v);
+  }
+
+  closeSuggestions(): void {
+    this.showSuggestions.set(false);
   }
 
   // ─── Голосовой ввод ───────────────────────────────────────────────────────
@@ -317,6 +337,7 @@ export class ChatPageComponent implements OnDestroy {
   // ─── Чип-подсказка → сразу отправляем ────────────────────────────────────
 
   sendSuggestion(prompt: string): void {
+    this.showSuggestions.set(false);
     this.draft.set('');
     this.send(prompt);
   }

@@ -1,28 +1,4 @@
 <div class="chat">
-  <!-- Шапка: обновить / очистить переписку -->
-  <div class="chat-header">
-    <button
-      type="button"
-      class="chat-header-btn"
-      [class.spinning]="refreshing()"
-      [disabled]="loadingHistory() || refreshing() || messages().length === 0"
-      (click)="reloadHistory()"
-      aria-label="Обновить историю"
-    >
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button
-      type="button"
-      class="chat-header-btn"
-      [disabled]="loadingHistory() || messages().length === 0"
-      (click)="clearMessages()"
-      aria-label="Очистить переписку"
-    >
-      <mat-icon>delete_sweep</mat-icon>
-      <span>Очистить переписку</span>
-    </button>
-  </div>
-
   <!-- Загрузка истории -->
   @if (loadingHistory()) {
     <div class="chat-spinner">
@@ -145,25 +121,38 @@
     }
   }
 
-  <!-- Низ: подсказки + композер (центрированная колонка) -->
+  <!-- Низ: композер в стиле ChatGPT (центрированная колонка) -->
   <div class="chat-footer">
     <div class="chat-footer-inner">
-      <!-- Подсказки — видны всегда, пока поле пустое и не идёт стрим -->
-      @if (!streaming() && !draft().trim()) {
-        <div class="chat-suggestions">
+      <!-- Поповер подсказок (открывается кнопкой «лампочка») -->
+      @if (showSuggestions()) {
+        <button
+          type="button"
+          class="chat-suggest-backdrop"
+          (click)="closeSuggestions()"
+          aria-label="Закрыть подсказки"
+        ></button>
+        <div
+          class="chat-suggest-pop"
+          role="menu"
+        >
+          <div class="chat-suggest-pop-title">Подсказки</div>
           @for (s of suggestions; track s.label) {
             <button
               type="button"
-              class="chat-chip"
+              class="chat-suggest-item"
+              role="menuitem"
               (click)="sendSuggestion(s.prompt)"
             >
-              {{ s.label }}
+              <mat-icon class="chat-suggest-item-icon">arrow_outward</mat-icon>
+              <span>{{ s.label }}</span>
             </button>
           }
         </div>
       }
 
       <div class="chat-composer">
+        <!-- Поле ввода — на всю ширину сверху -->
         <textarea
           #inputEl
           class="chat-input"
@@ -174,41 +163,87 @@
           rows="1"
         ></textarea>
 
-        <button
-          type="button"
-          class="chat-mic"
-          [class.recording]="recording()"
-          [disabled]="streaming() || transcribing()"
-          (click)="toggleMic()"
-          aria-label="Голосовой ввод"
-        >
-          @if (transcribing()) {
-            <mat-spinner diameter="18" />
-          } @else {
-            <mat-icon>{{ recording() ? 'stop' : 'mic' }}</mat-icon>
-          }
-        </button>
+        <!-- Нижняя строка действий -->
+        <div class="chat-actions">
+          <!-- Слева: новый чат / обновить / подсказки -->
+          <div class="chat-actions-left">
+            <button
+              type="button"
+              class="chat-tool"
+              [disabled]="loadingHistory() || messages().length === 0"
+              (click)="clearMessages()"
+              matTooltip="Новый чат"
+              matTooltipPosition="above"
+              aria-label="Новый чат"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+            <button
+              type="button"
+              class="chat-tool"
+              [class.spinning]="refreshing()"
+              [disabled]="loadingHistory() || refreshing() || messages().length === 0"
+              (click)="reloadHistory()"
+              matTooltip="Обновить историю"
+              matTooltipPosition="above"
+              aria-label="Обновить историю"
+            >
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button
+              type="button"
+              class="chat-tool"
+              [class.active]="showSuggestions()"
+              (click)="toggleSuggestions()"
+              matTooltip="Подсказки"
+              matTooltipPosition="above"
+              aria-label="Подсказки"
+            >
+              <mat-icon>lightbulb</mat-icon>
+            </button>
+          </div>
 
-        @if (!streaming()) {
-          <button
-            type="button"
-            class="chat-send"
-            [disabled]="!draft().trim()"
-            (click)="onSendClick()"
-            aria-label="Отправить"
-          >
-            <mat-icon>arrow_upward</mat-icon>
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="chat-stop"
-            (click)="stop()"
-            aria-label="Остановить"
-          >
-            <mat-icon>stop</mat-icon>
-          </button>
-        }
+          <!-- Справа: микрофон / отправить -->
+          <div class="chat-actions-right">
+            <button
+              type="button"
+              class="chat-mic"
+              [class.recording]="recording()"
+              [disabled]="streaming() || transcribing()"
+              (click)="toggleMic()"
+              matTooltip="Голосовой ввод"
+              matTooltipPosition="above"
+              aria-label="Голосовой ввод"
+            >
+              @if (transcribing()) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon>{{ recording() ? 'stop' : 'mic' }}</mat-icon>
+              }
+            </button>
+
+            @if (!streaming()) {
+              <button
+                type="button"
+                class="chat-send"
+                [disabled]="!draft().trim()"
+                (click)="onSendClick()"
+                aria-label="Отправить"
+              >
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="chat-stop"
+                (click)="stop()"
+                aria-label="Остановить"
+              >
+                <mat-icon>stop</mat-icon>
+              </button>
+            }
+          </div>
+        </div>
       </div>
     </div>
   </div>

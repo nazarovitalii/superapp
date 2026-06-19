@@ -162,27 +162,36 @@ describe('ChatPageComponent', () => {
     expect(component.draft()).toBe('');
   });
 
-  it('пустой экран: рендерит 4 чипа-подсказки', async () => {
-    await createComponent(); // loadHistory по умолчанию резолвит [] → пусто
-    const chips = fixture.nativeElement.querySelectorAll('.chat-chip');
-    expect(chips.length).toBe(4);
-  });
-
-  it('подсказки видны над композером даже при наличии истории', async () => {
-    loadHistorySpy.and.resolveTo([{ role: 'user', text: 'было', created_at: 'x' }]);
+  it('поповер подсказок скрыт по умолчанию', async () => {
     await createComponent();
-    // история есть, но поле пустое → полоска чипов всё равно показана
-    expect(fixture.nativeElement.querySelectorAll('.chat-chip').length).toBe(4);
+    expect(component.showSuggestions()).toBeFalse();
+    expect(fixture.nativeElement.querySelectorAll('.chat-suggest-item').length).toBe(0);
   });
 
-  it('клик по чипу вызывает streamMessage', async () => {
+  it('toggleSuggestions открывает поповер с 4 подсказками, повторный клик закрывает', async () => {
+    await createComponent();
+    component.toggleSuggestions();
+    fixture.detectChanges();
+    expect(component.showSuggestions()).toBeTrue();
+    expect(fixture.nativeElement.querySelectorAll('.chat-suggest-item').length).toBe(4);
+
+    component.toggleSuggestions();
+    fixture.detectChanges();
+    expect(component.showSuggestions()).toBeFalse();
+    expect(fixture.nativeElement.querySelectorAll('.chat-suggest-item').length).toBe(0);
+  });
+
+  it('клик по подсказке вызывает streamMessage и закрывает поповер', async () => {
     await createComponent();
     const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
-    const firstChip = fixture.nativeElement.querySelector(
-      '.chat-chip',
+    component.toggleSuggestions();
+    fixture.detectChanges();
+    const firstItem = fixture.nativeElement.querySelector(
+      '.chat-suggest-item',
     ) as HTMLButtonElement;
-    firstChip.click();
+    firstItem.click();
     expect(mockGpt.streamMessage).toHaveBeenCalled();
+    expect(component.showSuggestions()).toBeFalse();
   });
 
   it('ассистентский месседж: тело без аватара и без пузыря, со строкой действий', async () => {

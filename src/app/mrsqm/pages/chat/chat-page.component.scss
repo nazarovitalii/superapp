@@ -23,60 +23,6 @@
   flex: 1;
 }
 
-// ─── Шапка: обновить / очистить ───────────────────────────────────────────
-.chat-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--s-quarter);
-  padding: var(--s-quarter) var(--s);
-  border-bottom: 1px solid var(--extra-border-color);
-}
-
-.chat-header-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px var(--s-half);
-  border: none;
-  background: transparent;
-  color: var(--text-color-muted);
-  font-size: 0.8rem;
-  font-family: inherit;
-  border-radius: var(--task-border-radius);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover:not(:disabled) {
-    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
-    color: var(--text-color);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-
-  &.spinning mat-icon {
-    animation: spin 0.8s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 // ─── Лента: скролл на всю ширину (скролбар у края окна) ────────────────────
 .chat-messages {
   flex: 1;
@@ -368,49 +314,92 @@
   width: 100%;
 }
 
-// Центрированная колонка; плавает над краем окна с увеличенным нижним отступом
+// Центрированная колонка; плавает над краем окна с увеличенным нижним отступом.
+// position: relative — якорь для absolute-поповера подсказок.
 .chat-footer-inner {
+  position: relative;
   max-width: 768px;
   margin: 0 auto;
   padding: var(--s3) var(--s) 48px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--s);
 }
 
-// Полоска подсказок над композером
-.chat-suggestions {
+// ─── Поповер подсказок (над композером, ChatGPT-стиль) ─────────────────────
+// Прозрачный слой-перехватчик для закрытия по клику вне поповера
+.chat-suggest-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.chat-suggest-pop {
+  position: absolute;
+  left: var(--s);
+  right: var(--s);
+  bottom: 100%;
+  z-index: 4;
+  margin-bottom: var(--s-half);
+  padding: var(--s-half);
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-half);
-}
-
-.chat-chip {
-  padding: var(--s-quarter) var(--s);
+  flex-direction: column;
+  gap: 2px;
+  background: var(--card-bg, var(--task-c-bg));
   border: 1px solid var(--extra-border-color);
-  border-radius: 999px;
-  background: var(--task-c-bg);
-  color: var(--text-color-muted);
-  font-size: 0.85rem;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-
-  &:hover {
-    border-color: var(--c-primary);
-    color: var(--text-color);
-  }
+  border-radius: var(--task-border-radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  transform-origin: bottom center;
+  animation: suggest-pop-in 0.16s ease-out;
 }
 
-.chat-composer {
+.chat-suggest-pop-title {
+  padding: var(--s-half) var(--s) var(--s-quarter);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-color-muted);
+}
+
+.chat-suggest-item {
   display: flex;
   align-items: center;
   gap: var(--s-half);
-  padding: var(--s-half) var(--s-quarter) var(--s-half) var(--s);
+  width: 100%;
+  padding: var(--s-half) var(--s);
+  border: none;
+  background: transparent;
+  border-radius: var(--task-border-radius);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+  }
+
+  .chat-suggest-item-icon {
+    flex: 0 0 auto;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--text-color-muted);
+  }
+}
+
+// ─── Композер (column: поле сверху, строка действий снизу) ─────────────────
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-half);
+  padding: var(--s-half) var(--s);
   border: 1px solid var(--extra-border-color);
   border-radius: var(--task-border-radius);
   background: var(--task-c-bg);
@@ -426,7 +415,8 @@
 }
 
 .chat-input {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   resize: none;
   border: none;
   outline: none;
@@ -435,13 +425,71 @@
   font-family: inherit;
   font-size: 15px; // без iOS-зума на фокусе
   line-height: 1.5;
-  min-height: 24px;
+  min-height: 28px;
   max-height: 160px;
-  padding: 6px 0 6px var(--s-quarter);
+  padding: var(--s-half) var(--s-quarter) 0;
   overflow-y: auto;
 
   &::placeholder {
     color: var(--text-color-muted);
+  }
+}
+
+// Нижняя строка: слева инструменты, справа микрофон/отправить
+.chat-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-half);
+}
+
+.chat-actions-left,
+.chat-actions-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s-quarter);
+}
+
+// Кнопки-инструменты слева (новый чат / обновить / подсказки)
+.chat-tool {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+    color: var(--text-color);
+  }
+
+  &.active {
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+    color: var(--c-primary);
+  }
+
+  &.spinning mat-icon {
+    animation: spin 0.8s linear infinite;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 }
 
@@ -490,7 +538,8 @@
   }
 
   &:hover:not(:disabled) {
-    color: var(--c-primary);
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+    color: var(--text-color);
   }
 
   &.recording {
@@ -544,6 +593,23 @@
   }
 }
 
+@keyframes suggest-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes mic-pulse {
   0%,
   100% {
@@ -579,11 +645,15 @@
     color: var(--text-color-muted);
     -webkit-text-fill-color: var(--text-color-muted);
   }
-  .chat-chip,
+  .chat-suggest-item,
   .msg-reason-chip {
     transition: none;
   }
-  .chat-mic.recording {
+  .chat-suggest-pop {
+    animation: none;
+  }
+  .chat-mic.recording,
+  .chat-tool.spinning mat-icon {
     animation: none;
   }
 }
