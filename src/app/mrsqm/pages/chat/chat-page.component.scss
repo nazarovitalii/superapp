@@ -5,6 +5,27 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  // Непрозрачный фон: на табе совпадает со страницей, в правой панели
+  // (она прозрачная) перекрывает просвет; он же — база fade-градиента композера.
+  background: var(--bg);
+}
+
+// ─── Вариант в правой панели (ИИ-сайдбар) ─────────────────────────────────
+// Уже основного таба: текст на 1px мельче, больше отступ слева от края панели.
+:host(.in-panel) {
+  .msg-body,
+  .msg-bubble,
+  .chat-input {
+    font-size: 14px;
+  }
+
+  .chat-inner {
+    padding-left: var(--s2);
+  }
+
+  .chat-footer-inner {
+    padding-left: var(--s2);
+  }
 }
 
 // ─── Корневой контейнер (на всю ширину) ───────────────────────────────────
@@ -31,11 +52,12 @@
   scroll-behavior: smooth;
 }
 
-// Центрированная колонка с контентом внутри скролл-области
+// Центрированная колонка с контентом внутри скролл-области.
+// Нижний отступ — место под floating-композер (текст уходит под него с fade).
 .chat-inner {
   max-width: 768px;
   margin: 0 auto;
-  padding: var(--s2) var(--s) var(--s);
+  padding: var(--s2) var(--s) 132px;
   min-height: 100%;
   box-sizing: border-box;
   display: flex;
@@ -308,14 +330,25 @@
   }
 }
 
-// ─── Низ: подсказки + композер ────────────────────────────────────────────
+// ─── Низ: композер «летает» над лентой ────────────────────────────────────
+// Абсолютный оверлей у нижнего края; лента скроллится под ним, текст плавно
+// затухает в fade-градиенте перед композером (ChatGPT-стиль).
 .chat-footer {
-  flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
+  // Прозрачные зоны (градиент, отступы вокруг композера) пропускают скролл к ленте
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--chat-fade-bg, var(--bg)) 42%
+  );
 }
 
-// Центрированная колонка; плавает над краем окна с увеличенным нижним отступом.
-// position: relative — якорь для absolute-поповера подсказок.
+// Центрированная колонка; position: relative — якорь для absolute-поповера.
 .chat-footer-inner {
   position: relative;
   max-width: 768px;
@@ -324,6 +357,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  pointer-events: none;
 }
 
 // ─── Поповер подсказок (над композером, ChatGPT-стиль) ─────────────────────
@@ -335,6 +369,7 @@
   border: none;
   background: transparent;
   cursor: default;
+  pointer-events: auto;
 }
 
 .chat-suggest-pop {
@@ -343,6 +378,7 @@
   right: var(--s);
   bottom: 100%;
   z-index: 4;
+  pointer-events: auto;
   margin-bottom: var(--s-half);
   padding: var(--s-half);
   display: flex;
@@ -396,21 +432,24 @@
 
 // ─── Композер (column: поле сверху, строка действий снизу) ─────────────────
 .chat-composer {
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: var(--s-half);
   padding: var(--s-half) var(--s);
-  border: 1px solid var(--extra-border-color);
+  border: none;
   border-radius: 16px;
   background: var(--task-c-bg);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  // Floating: тонкий хейрлайн-контур (вместо толстого бордюра) + мягкая тень
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 6px 24px rgba(0, 0, 0, 0.14);
+  transition: box-shadow 0.15s;
 
   &:focus-within {
-    border-color: var(--c-primary);
-    box-shadow: 0 4px 28px rgba(0, 0, 0, 0.15);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      0 8px 28px rgba(0, 0, 0, 0.18);
   }
 }
 
