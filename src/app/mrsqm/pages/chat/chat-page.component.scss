@@ -286,7 +286,7 @@
 .chat-scroll-down {
   position: absolute;
   left: 50%;
-  bottom: 96px;
+  bottom: 152px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -450,6 +450,11 @@
   gap: var(--s-quarter);
 }
 
+// Микрофон чуть дальше от кнопки отправки
+.chat-actions-right {
+  gap: var(--s);
+}
+
 // Кнопки-инструменты слева (новый чат / обновить / подсказки)
 .chat-tool {
   flex: 0 0 auto;
@@ -538,7 +543,7 @@
     height: 24px;
     font-variation-settings:
       'FILL' 0,
-      'wght' 600,
+      'wght' 700,
       'GRAD' 0,
       'opsz' 24;
   }
