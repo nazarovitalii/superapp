@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatPageComponent } from './chat-page.component';
 import { GptStreamService, StreamHandlers } from '../../services/gpt-stream.service';
-import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -40,9 +39,6 @@ describe('ChatPageComponent', () => {
 
     loadHistorySpy = mockGptStreamService.loadHistory;
 
-    const mockSupabase = {
-      rpc: jasmine.createSpy('rpc').and.resolveTo(null),
-    };
     const mockPanels = {
       openProperty: jasmine.createSpy('openProperty'),
     };
@@ -51,7 +47,6 @@ describe('ChatPageComponent', () => {
       imports: [ChatPageComponent, NoopAnimationsModule, MarkdownModule.forRoot()],
       providers: [
         { provide: GptStreamService, useValue: mockGptStreamService },
-        { provide: MrsqmSupabaseService, useValue: mockSupabase },
         { provide: PanelContentService, useValue: mockPanels },
       ],
     }).compileComponents();
@@ -112,15 +107,11 @@ describe('ChatPageComponent', () => {
     expect(component.suggestions.length).toBe(4);
   });
 
-  it('клик по ссылке mrsqm://property/<uuid> грузит объект и открывает панель', async () => {
+  it('клик по ссылке mrsqm://property/<uuid> открывает объект в панели', async () => {
     await createComponent();
-    const supabase = TestBed.inject(
-      MrsqmSupabaseService,
-    ) as unknown as jasmine.SpyObj<MrsqmSupabaseService>;
     const panels = TestBed.inject(
       PanelContentService,
     ) as unknown as jasmine.SpyObj<PanelContentService>;
-    (supabase.rpc as jasmine.Spy).and.resolveTo({ id: 'abc-123' });
 
     const link = document.createElement('a');
     link.setAttribute('href', 'mrsqm://property/abc-123');
@@ -129,11 +120,8 @@ describe('ChatPageComponent', () => {
       preventDefault: jasmine.createSpy('pd'),
     } as unknown as MouseEvent;
     component.onMessageClick(event);
-    await Promise.resolve();
-    await Promise.resolve();
 
     expect(event.preventDefault).toHaveBeenCalled();
-    expect(supabase.rpc).toHaveBeenCalledWith('get_property_by_id', { p_id: 'abc-123' });
     expect(panels.openProperty).toHaveBeenCalledWith(
       jasmine.objectContaining({ id: 'abc-123' }),
     );
@@ -141,9 +129,9 @@ describe('ChatPageComponent', () => {
 
   it('клик по обычной http-ссылке не трогает панель', async () => {
     await createComponent();
-    const supabase = TestBed.inject(
-      MrsqmSupabaseService,
-    ) as unknown as jasmine.SpyObj<MrsqmSupabaseService>;
+    const panels = TestBed.inject(
+      PanelContentService,
+    ) as unknown as jasmine.SpyObj<PanelContentService>;
 
     const link = document.createElement('a');
     link.setAttribute('href', 'https://example.com');
@@ -154,7 +142,7 @@ describe('ChatPageComponent', () => {
     component.onMessageClick(event);
 
     expect(event.preventDefault).not.toHaveBeenCalled();
-    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(panels.openProperty).not.toHaveBeenCalled();
   });
 
   it('send добавляет пузырь юзера и пустой ассистента, streaming=true', async () => {
