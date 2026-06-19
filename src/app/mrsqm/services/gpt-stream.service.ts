@@ -141,6 +141,22 @@ export class GptStreamService {
   }
 
   /**
+   * «Новый чат» — ставит серверную границу сброса (POST /chat/reset).
+   * Не удаление: старые сообщения остаются в базе, но история/контекст
+   * начинаются после метки. Граница на сервере → синхронно на всех устройствах.
+   * Ошибки не пробрасываются — экран всё равно очистится локально.
+   */
+  async resetChat(): Promise<void> {
+    const token = await this._getToken();
+    if (!token) return;
+    await fetch(`${this._baseUrl}/chat/reset`, {
+      method: 'POST',
+      headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ channel: 'web' }),
+    }).catch(() => {});
+  }
+
+  /**
    * Отправляет аудио на Whisper, возвращает расшифрованный текст.
    * При любой ошибке возвращает '' — UI не блокируется.
    */

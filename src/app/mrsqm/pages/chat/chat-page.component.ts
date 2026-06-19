@@ -269,6 +269,9 @@ export class ChatPageComponent implements OnDestroy {
 
   clearMessages(): void {
     if (this.streaming()) this.stop();
+    // Серверная граница сброса (best-effort) — чтобы бот забыл старый контекст
+    // и чистый чат подтянулся на других устройствах. Экран чистим сразу.
+    void this._gpt.resetChat();
     this.messages.set([]);
     this.draft.set('');
     this.error.set(null);

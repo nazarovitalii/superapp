@@ -183,7 +183,7 @@
               type="button"
               class="chat-tool"
               [class.spinning]="refreshing()"
-              [disabled]="loadingHistory() || refreshing() || messages().length === 0"
+              [disabled]="loadingHistory() || refreshing()"
               (click)="reloadHistory()"
               matTooltip="Обновить историю"
               matTooltipPosition="above"

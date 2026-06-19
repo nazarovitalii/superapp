@@ -35,6 +35,7 @@ describe('ChatPageComponent', () => {
         }),
       loadHistory: jasmine.createSpy('loadHistory').and.resolveTo([]),
       sendFeedback: jasmine.createSpy('sendFeedback').and.resolveTo(undefined),
+      resetChat: jasmine.createSpy('resetChat').and.resolveTo(undefined),
     };
 
     loadHistorySpy = mockGptStreamService.loadHistory;
@@ -105,6 +106,15 @@ describe('ChatPageComponent', () => {
   it('suggestions — массив из 4 подсказок', async () => {
     await createComponent();
     expect(component.suggestions.length).toBe(4);
+  });
+
+  it('clearMessages (Новый чат) чистит экран и ставит серверную границу', async () => {
+    loadHistorySpy.and.resolveTo([{ role: 'user', text: 'было', created_at: 'x' }]);
+    await createComponent();
+    const mockGpt = TestBed.inject(GptStreamService) as jasmine.SpyObj<GptStreamService>;
+    component.clearMessages();
+    expect(component.messages().length).toBe(0);
+    expect(mockGpt.resetChat).toHaveBeenCalled();
   });
 
   it('клик по ссылке mrsqm://property/<uuid> открывает объект в панели', async () => {
