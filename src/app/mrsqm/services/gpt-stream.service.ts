@@ -141,6 +141,24 @@ export class GptStreamService {
   }
 
   /**
+   * Отправляет аудио на Whisper, возвращает расшифрованный текст.
+   * При любой ошибке возвращает '' — UI не блокируется.
+   */
+  async transcribe(blob: Blob): Promise<string> {
+    const token = await this._getToken();
+    if (!token) return '';
+    const base64 = await this._blobToBase64(blob);
+    const res = await fetch(`${this._baseUrl}/chat/transcribe`, {
+      method: 'POST',
+      headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ audio_base64: base64, mimetype: blob.type }),
+    }).catch(() => null);
+    if (!res?.ok) return '';
+    const data = (await res.json()) as { text?: string };
+    return data.text ?? '';
+  }
+
+  /**
    * Отправляет сообщение без стриминга, возвращает готовый текст ответа.
    */
   async sendNonStreaming(text: string): Promise<string> {
@@ -157,6 +175,19 @@ export class GptStreamService {
   }
 
   // ---- Приватные методы ----------------------------------------------------
+
+  /** Конвертирует Blob в base64-строку (без data-url-префикса). */
+  private _blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] ?? '');
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
 
   /** Возвращает access_token активной сессии или null. */
   private async _getToken(): Promise<string | null> {

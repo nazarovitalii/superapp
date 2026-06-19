@@ -150,6 +150,21 @@
           rows="1"
         ></textarea>
 
+        <button
+          type="button"
+          class="chat-mic"
+          [class.recording]="recording()"
+          [disabled]="streaming() || transcribing()"
+          (click)="toggleMic()"
+          aria-label="Голосовой ввод"
+        >
+          @if (transcribing()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <mat-icon>{{ recording() ? 'stop' : 'mic' }}</mat-icon>
+          }
+        </button>
+
         @if (!streaming()) {
           <button
             type="button"

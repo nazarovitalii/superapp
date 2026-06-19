@@ -103,6 +103,10 @@ export class ChatPageComponent implements OnDestroy {
   // Текущий контроллер стрима для возможности остановки
   private _abort: AbortController | null = null;
 
+  // MediaRecorder для голосового ввода
+  private _mediaRecorder: MediaRecorder | null = null;
+  private _audioChunks: Blob[] = [];
+
   // Ссылки на DOM — только через viewChild (без прямого доступа)
   private readonly _messagesEl = viewChild<ElementRef<HTMLElement>>('messagesEl');
   private readonly _inputEl = viewChild<ElementRef<HTMLTextAreaElement>>('inputEl');
@@ -119,6 +123,9 @@ export class ChatPageComponent implements OnDestroy {
   readonly pinnedToBottom = signal<boolean>(true);
   // Индекс сообщения, для которого открыт picker причины дизлайка (null = закрыт)
   readonly feedbackReasonIdx = signal<number | null>(null);
+  // Голосовой ввод: идёт запись / ждём расшифровку
+  readonly recording = signal<boolean>(false);
+  readonly transcribing = signal<boolean>(false);
 
   // Чипы-подсказки (read-only)
   readonly suggestions: readonly Suggestion[] = SUGGESTIONS;
@@ -130,6 +137,9 @@ export class ChatPageComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this._abort?.abort();
+    if (this._mediaRecorder?.state !== 'inactive') {
+      this._mediaRecorder?.stop();
+    }
   }
 
   // ─── Инициализация (загрузка истории) ────────────────────────────────────
@@ -221,6 +231,58 @@ export class ChatPageComponent implements OnDestroy {
     });
     this.streaming.set(false);
     this.status.set(null);
+  }
+
+  // ─── Голосовой ввод ───────────────────────────────────────────────────────
+
+  async toggleMic(): Promise<void> {
+    if (this.recording()) {
+      this._mediaRecorder?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this._audioChunks = [];
+
+      const mimeType =
+        [
+          'audio/webm;codecs=opus',
+          'audio/webm',
+          'audio/ogg;codecs=opus',
+          'audio/mp4',
+        ].find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+
+      this._mediaRecorder = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType } : undefined,
+      );
+
+      this._mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this._audioChunks.push(e.data);
+      };
+
+      this._mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        this.recording.set(false);
+        if (this._audioChunks.length === 0) return;
+
+        this.transcribing.set(true);
+        const blob = new Blob(this._audioChunks, { type: mimeType || 'audio/webm' });
+        const text = await this._gpt.transcribe(blob);
+        this.transcribing.set(false);
+
+        if (text) {
+          const current = this.draft();
+          this.draft.set(current ? current + ' ' + text : text);
+          this._autoGrow();
+        }
+      };
+
+      this._mediaRecorder.start();
+      this.recording.set(true);
+    } catch {
+      // Нет прав на микрофон — молча игнорируем
+    }
   }
 
   // ─── Чип-подсказка → сразу отправляем ────────────────────────────────────

@@ -413,6 +413,43 @@
   }
 }
 
+.chat-mic {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--c-primary);
+  }
+
+  &.recording {
+    color: var(--warn-dark, #c62828);
+    animation: mic-pulse 1.2s ease-in-out infinite;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
 .chat-send {
   background: var(--c-primary);
   color: var(--palette-primary-contrast-500, #fff);
@@ -453,6 +490,16 @@
   }
 }
 
+@keyframes mic-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 @keyframes shimmer {
   from {
     background-position: 200% 0;
@@ -481,5 +528,8 @@
   .chat-chip,
   .msg-reason-chip {
     transition: none;
+  }
+  .chat-mic.recording {
+    animation: none;
   }
 }
