@@ -114,7 +114,16 @@ export class GptStreamService {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return ((await res.json()) as { messages: ChatHistoryMessage[] }).messages;
+    const messages = ((await res.json()) as { messages: ChatHistoryMessage[] }).messages;
+    // Защита от «сообщение юзера после ответа»: бэкенд пишет пару user+assistant
+    // одним INSERT → одинаковый created_at, и сортировка сервера недетерминирована.
+    // Стабилизируем: по времени, а при равном времени — user раньше assistant.
+    return [...messages].sort((a, b) => {
+      const t = (a.created_at ?? '').localeCompare(b.created_at ?? '');
+      if (t !== 0) return t;
+      if (a.role === b.role) return 0;
+      return a.role === 'user' ? -1 : 1;
+    });
   }
 
   /**

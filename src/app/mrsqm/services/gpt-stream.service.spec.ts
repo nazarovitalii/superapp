@@ -100,6 +100,25 @@ describe('GptStreamService', () => {
     ]);
   });
 
+  // ---- loadHistory: при равном created_at user раньше assistant ----
+  it('loadHistory ставит user раньше assistant при равном created_at', async () => {
+    service = createService(supabaseWithSession);
+    // Сервер вернул пару в «сломанном» порядке (assistant первым) с одним временем
+    fetchSpy.and.resolveTo(
+      new Response(
+        JSON.stringify({
+          messages: [
+            { role: 'assistant', text: 'ответ', created_at: '2026-01-01T10:00:00Z' },
+            { role: 'user', text: 'найти 2ком', created_at: '2026-01-01T10:00:00Z' },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const result = await service.loadHistory();
+    expect(result.map((m) => m.role)).toEqual(['user', 'assistant']);
+  });
+
   // ---- loadHistory без сессии → [] ----
   it('loadHistory без сессии возвращает пустой массив', async () => {
     service = createService(supabaseNoSession);
