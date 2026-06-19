@@ -37,6 +37,8 @@ export class PanelContentService {
     // Закрываем task-panel чтобы не конфликтовать
     this._taskService.setSelectedId(null);
     this.isFilterPanelOpen.set(false);
+    // Объект приоритетнее AI-чата: клик по ссылке в чате заменяет чат карточкой
+    this.isAiChatOpen.set(false);
     this.selectedProperty.set(property);
   }
 

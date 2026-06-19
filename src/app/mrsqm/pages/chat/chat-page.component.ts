@@ -17,6 +17,9 @@ import {
   StreamHandlers,
   ChatHistoryMessage,
 } from '../../services/gpt-stream.service';
+import { MrsqmSupabaseService } from '../../services/supabase.service';
+import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { PropertyFeedItem } from '../../types/database';
 
 // ---------------------------------------------------------------------------
 // Интерфейсы
@@ -85,6 +88,8 @@ const SUGGESTIONS: Suggestion[] = [
 const NEAR_BOTTOM_PX = 80;
 // Максимальная высота поля ввода (px) — синхронно с SCSS max-height
 const INPUT_MAX_HEIGHT = 160;
+// Префикс deep-ссылок на объект в ответах ассистента: [текст](mrsqm://property/<uuid>)
+const PROPERTY_LINK_PREFIX = 'mrsqm://property/';
 
 // ---------------------------------------------------------------------------
 // Компонент
@@ -106,6 +111,8 @@ const INPUT_MAX_HEIGHT = 160;
 })
 export class ChatPageComponent implements OnDestroy {
   private readonly _gpt = inject(GptStreamService);
+  private readonly _supabase = inject(MrsqmSupabaseService);
+  private readonly _panels = inject(PanelContentService);
 
   // Текущий контроллер стрима для возможности остановки
   private _abort: AbortController | null = null;
@@ -364,6 +371,34 @@ export class ChatPageComponent implements OnDestroy {
     this.draft.set('');
     this._autoGrow();
     this.send(text);
+  }
+
+  // ─── Клик по ссылке объекта в ответе ассистента ──────────────────────────
+  // Ссылка вида [текст](mrsqm://property/<uuid>) → открываем объект в правой
+  // панели. Обычные http-ссылки (Bayut и т.п.) не трогаем — отдаём браузеру.
+  onMessageClick(event: MouseEvent): void {
+    const link = (event.target as HTMLElement).closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href') ?? '';
+    if (!href.startsWith(PROPERTY_LINK_PREFIX)) return;
+    event.preventDefault();
+    const id = href.slice(PROPERTY_LINK_PREFIX.length).replace(/\/+$/, '');
+    if (id) void this._openPropertyInPanel(id);
+  }
+
+  // Грузит объект по uuid и открывает его карточку в правой панели.
+  // Требует серверный RPC get_property_by_id (один ряд в форме get_feed.results).
+  private async _openPropertyInPanel(id: string): Promise<void> {
+    try {
+      const data = await this._supabase.rpc<PropertyFeedItem | PropertyFeedItem[]>(
+        'get_property_by_id',
+        { p_id: id },
+      );
+      const item = Array.isArray(data) ? data[0] : data;
+      if (item) this._panels.openProperty(item);
+    } catch {
+      // RPC недоступен или объект не найден — тихо игнорируем
+    }
   }
 
   // ─── Действия под ответом (копировать / оценка) ──────────────────────────
