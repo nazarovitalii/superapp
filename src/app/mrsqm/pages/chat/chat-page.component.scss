@@ -20,11 +20,11 @@
   }
 
   .chat-inner {
-    padding-left: var(--s2);
+    padding-left: calc(var(--s2) + 10px);
   }
 
   .chat-footer-inner {
-    padding-left: var(--s2);
+    padding-left: calc(var(--s2) + 10px);
   }
 }
 
