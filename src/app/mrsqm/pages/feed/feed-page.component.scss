@@ -37,7 +37,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--task-border-radius);
-  border: 1px solid var(--extra-border-color);
+  border: 2px solid var(--extra-border-color);
   background: var(--task-c-bg);
   color: inherit;
   cursor: pointer;
@@ -85,7 +85,7 @@
   padding: 0 var(--s-quarter) 0 var(--s2);
   // Скругление и белый фон — как строка объекта в ленте
   border-radius: var(--task-border-radius);
-  border: 1px solid var(--extra-border-color);
+  border: 2px solid var(--extra-border-color);
   background: var(--task-c-bg);
   color: inherit;
   // Размер текста = тело ленты (14px), без жирности — литерал, как .first-line (W-6)
@@ -163,7 +163,7 @@
   height: 44px;
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
-  border: 1px solid var(--extra-border-color);
+  border: 2px solid var(--extra-border-color);
   background: var(--task-c-bg);
 
   &:focus-within {
@@ -287,14 +287,9 @@
   }
 }
 
-// При наличии чипа поле «Ещё адрес» прижимаем вправо — ближе к стрелке, но с
-// зазором, чтобы плейсхолдер не наезжал на введённый адрес слева.
-// Пустое поле (без чипа) остаётся слева и на всю ширину.
-.tb-loc-inline .tb-chip + .tb-search-input {
-  text-align: right;
-  padding-left: 0;
-  padding-right: var(--s-half);
-}
+// Ввод адреса всегда слева-направо (курсор слева) — и для первого, и для
+// последующих адресов. Поле «Ещё адрес» идёт сразу после чипа с зазором (gap
+// у .tb-loc-inline + лёгкий padding-left), без правого выравнивания.
 
 // Выбранный адрес/агент — чип внутри поля
 .tb-chip {
@@ -376,7 +371,8 @@
   align-items: center;
   gap: var(--s-half);
   width: 100%;
-  padding: var(--s-half) var(--s);
+  // больше вертикального воздуха между результатами (было var(--s-half))
+  padding: var(--s) var(--s);
   border: none;
   background: transparent;
   color: var(--text-color);
@@ -419,7 +415,7 @@
   height: 44px;
   padding: 0 var(--s);
   border-radius: var(--task-border-radius);
-  border: 1px solid var(--c-primary);
+  border: 2px solid var(--c-primary);
   background: var(--task-c-bg);
   color: var(--c-primary);
   font-size: 14px; // W-6: кегль = тело ленты
@@ -522,8 +518,8 @@
   background: transparent;
   cursor: pointer;
   border-radius: var(--task-border-radius);
-  // U-2: единый кегль 14px, semibold для табов
-  font-size: 0.875rem;
+  // U-2: единый кегль 14px (литерал — как в тулбаре), semibold для табов
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-color-muted);
   transition:
@@ -554,8 +550,8 @@
   border: none;
   background: transparent;
   color: var(--text-color);
-  // U-2: единый кегль 14px
-  font-size: 0.875rem;
+  // U-2: единый кегль 14px (литерал — как в тулбаре)
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
   border-radius: var(--task-border-radius);
@@ -593,8 +589,8 @@
   border: 1px solid var(--extra-border-color);
   background: transparent;
   color: var(--text-color-muted);
-  // единый кегль дропдауна — 14px
-  font-size: 0.875rem;
+  // единый кегль дропдауна — 14px (литерал)
+  font-size: 14px;
   font-weight: 400;
   cursor: pointer;
   transition:
@@ -633,7 +629,7 @@
   border-radius: var(--task-border-radius);
   background: var(--bg-darker);
   color: var(--text-color);
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: filter var(--transition-duration-s) ease;
@@ -651,7 +647,7 @@
   border-radius: var(--task-border-radius);
   background: var(--c-primary);
   color: var(--palette-primary-contrast-500, #fff);
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: filter var(--transition-duration-s) ease;

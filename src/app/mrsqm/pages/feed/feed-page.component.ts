@@ -310,6 +310,12 @@ export class FeedPageComponent {
   readonly searchInput = signal<string>('');
   readonly locationResults = signal<LocationSearchItem[]>([]);
   readonly showSuggest = signal<boolean>(false);
+
+  // Подсказки локаций без уже выбранных адресов — один адрес нельзя выбрать дважды.
+  readonly visibleLocationResults = computed<LocationSearchItem[]>(() => {
+    const selected = new Set(this.filter.locationFilters().map((l) => l.id));
+    return this.locationResults().filter((l) => !selected.has(l.id));
+  });
   private _searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Совпадения по агенту (ФИО) из уже загруженных строк ленты (distinct, до 6).

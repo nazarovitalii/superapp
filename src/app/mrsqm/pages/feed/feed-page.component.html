@@ -105,11 +105,11 @@
       }
 
       <!-- Выпадающие подсказки: адреса + агенты -->
-      @if (showSuggest() && (locationResults().length || agentMatches().length)) {
+      @if (showSuggest() && (visibleLocationResults().length || agentMatches().length)) {
         <div class="tb-suggest">
-          @if (locationResults().length) {
+          @if (visibleLocationResults().length) {
             <div class="tb-suggest-group">Адреса</div>
-            @for (l of locationResults(); track l.id) {
+            @for (l of visibleLocationResults(); track l.id) {
               <button
                 type="button"
                 class="tb-suggest-item"

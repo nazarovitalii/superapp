@@ -4,7 +4,11 @@ import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { MrsqmAuthService } from '../../services/auth.service';
-import { FilterOptions, PropertyFeedItem } from '../../types/database';
+import {
+  FilterOptions,
+  LocationSearchItem,
+  PropertyFeedItem,
+} from '../../types/database';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 
@@ -433,5 +437,15 @@ describe('FeedPageComponent', () => {
     await c.toggleSaved(minimalFeedItem());
     // оптимистично добавили, затем откатили — объект не остаётся помеченным
     expect(c.savedIds().has('p1')).toBe(false);
+  });
+
+  it('visibleLocationResults: исключает уже выбранные адреса (нельзя выбрать дважды)', () => {
+    const c = build();
+    c.locationResults.set([
+      { id: 'a', name: 'Damac Hills' },
+      { id: 'b', name: 'JVC' },
+    ] as unknown as LocationSearchItem[]);
+    filter.addLocation({ id: 'a', name: 'Damac Hills' });
+    expect(c.visibleLocationResults().map((l) => l.id)).toEqual(['b']);
   });
 });
