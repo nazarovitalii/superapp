@@ -162,13 +162,28 @@
     height: 17px;
   }
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
     color: var(--text-color);
   }
 
+  // Активная оценка — цвет + ЗАЛИТАЯ иконка (Material Symbols FILL 1)
   &.active {
     color: var(--c-primary);
+
+    mat-icon {
+      font-variation-settings:
+        'FILL' 1,
+        'wght' 500,
+        'GRAD' 0,
+        'opsz' 24;
+    }
+  }
+
+  // Нет messageId (ещё не пришёл id) — оценить нельзя
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 }
 

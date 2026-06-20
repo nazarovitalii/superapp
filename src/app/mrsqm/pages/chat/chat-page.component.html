@@ -57,6 +57,7 @@
                       type="button"
                       class="msg-action"
                       [class.active]="m.feedback === 'like'"
+                      [disabled]="!m.messageId"
                       (click)="setFeedback($index, 'like')"
                       aria-label="Нравится"
                     >
@@ -68,6 +69,7 @@
                       [class.active]="
                         m.feedback === 'dislike' || feedbackReasonIdx() === $index
                       "
+                      [disabled]="!m.messageId"
                       (click)="setFeedback($index, 'dislike')"
                       aria-label="Не нравится"
                     >

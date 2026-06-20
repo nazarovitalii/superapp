@@ -189,9 +189,7 @@ export class ChatPageComponent implements OnDestroy {
   private async _init(): Promise<void> {
     try {
       const history: ChatHistoryMessage[] = await this._gpt.loadHistory();
-      this.messages.set(
-        history.map((m) => ({ role: m.role, text: m.text, messageId: m.id })),
-      );
+      this.messages.set(this._toChatMessages(history));
     } catch (e) {
       // История не загрузилась (сеть/CORS/401/500) — показываем причину,
       // чтобы пустая лента не выглядела как «история не сохраняется».
@@ -282,9 +280,7 @@ export class ChatPageComponent implements OnDestroy {
     this.refreshing.set(true);
     try {
       const history = await this._gpt.loadHistory();
-      this.messages.set(
-        history.map((m) => ({ role: m.role, text: m.text, messageId: m.id })),
-      );
+      this.messages.set(this._toChatMessages(history));
       this._scheduleScroll();
     } catch {
       // сеть/401 — молча, текущие сообщения остаются
@@ -647,6 +643,26 @@ export class ChatPageComponent implements OnDestroy {
     this.messages.update((msgs) =>
       msgs.map((m, i) => (i === index ? { ...m, ...patch } : m)),
     );
+  }
+
+  // История → сообщения экрана. Важно: messageId = id КОНКРЕТНОГО сообщения
+  // (бэкенд теперь отдаёт per-message uuid) + заполняем 👍/👎 из reaction,
+  // чтобы иконка была залита после перезагрузки и на другом устройстве.
+  private _toChatMessages(history: ChatHistoryMessage[]): ChatMessage[] {
+    return history.map((m) => ({
+      role: m.role,
+      text: m.text,
+      messageId: m.id,
+      feedback: this._reactionToFeedback(m.reaction),
+    }));
+  }
+
+  private _reactionToFeedback(
+    reaction?: 1 | -1 | 0 | null,
+  ): 'like' | 'dislike' | undefined {
+    if (reaction === 1) return 'like';
+    if (reaction === -1) return 'dislike';
+    return undefined;
   }
 
   // ─── Скролл ленты ─────────────────────────────────────────────────────────

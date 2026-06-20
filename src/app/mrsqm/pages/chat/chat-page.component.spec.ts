@@ -317,6 +317,19 @@ describe('ChatPageComponent', () => {
     expect(mockGpt.sendFeedback).toHaveBeenCalledWith('msg-1', 1);
   });
 
+  it('история с reaction заполняет feedback (👍/👎 после перезагрузки)', async () => {
+    loadHistorySpy.and.resolveTo([
+      { id: 'm1', role: 'assistant', text: 'плохо', created_at: 'x', reaction: -1 },
+      { id: 'm2', role: 'assistant', text: 'хорошо', created_at: 'y', reaction: 1 },
+      { id: 'm3', role: 'assistant', text: 'нейтр', created_at: 'z', reaction: null },
+    ]);
+    await createComponent();
+    expect(component.messages()[0].feedback).toBe('dislike');
+    expect(component.messages()[0].messageId).toBe('m1');
+    expect(component.messages()[1].feedback).toBe('like');
+    expect(component.messages()[2].feedback).toBeUndefined();
+  });
+
   it('композер: textarea + кнопка отправки внутри .chat-composer', async () => {
     await createComponent();
     const composer = fixture.nativeElement.querySelector('.chat-composer');

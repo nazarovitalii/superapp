@@ -24,6 +24,9 @@ export interface ChatHistoryMessage {
   role: 'user' | 'assistant';
   text: string;
   created_at: string;
+  // Оценка из истории (бэкенд добавил): 1 = 👍, -1 = 👎, 0/null = нет реакции
+  reaction?: 1 | -1 | 0 | null;
+  feedback_reason?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -283,7 +286,8 @@ export class GptStreamService {
         h.onToken?.(ev.data['text'] as string);
         break;
       case 'done':
-        h.onDone?.(ev.data['message_id'] as string | undefined);
+        // Терпимо к имени поля: бэкенд может прислать message_id или id
+        h.onDone?.((ev.data['message_id'] ?? ev.data['id']) as string | undefined);
         break;
       case 'error':
         h.onError?.(ev.data['message'] as string);
