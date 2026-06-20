@@ -26,12 +26,6 @@ export interface ChatHistoryMessage {
   created_at: string;
 }
 
-export interface TranscribeResult {
-  text: string;
-  // Какой провайдер расшифровал ('Groq' / 'Whisper') — бэкенд может не прислать
-  provider?: string;
-}
-
 // ---------------------------------------------------------------------------
 // parseSse — чистая функция (тестируется без сети)
 // ---------------------------------------------------------------------------
@@ -172,12 +166,12 @@ export class GptStreamService {
   }
 
   /**
-   * Отправляет аудио на распознавание, возвращает текст + имя провайдера.
-   * Пустой text = распознавание ничего не вернуло (тишина/коротко).
+   * Отправляет аудио на Whisper, возвращает расшифрованный текст
+   * (пустая строка = распознавание ничего не вернуло, тишина/коротко).
    * При сетевой/HTTP-ошибке БРОСАЕТ Error с деталью — раньше глотали молча и
    * пользователь видел просто пустое поле без причины.
    */
-  async transcribe(blob: Blob): Promise<TranscribeResult> {
+  async transcribe(blob: Blob): Promise<string> {
     const token = await this._getToken();
     if (!token) throw new Error('Нет активной сессии');
     const base64 = await this._blobToBase64(blob);
@@ -197,8 +191,8 @@ export class GptStreamService {
       }
       throw new Error(detail);
     }
-    const data = (await res.json()) as { text?: string; provider?: string };
-    return { text: data.text ?? '', provider: data.provider };
+    const data = (await res.json()) as { text?: string };
+    return data.text ?? '';
   }
 
   /**

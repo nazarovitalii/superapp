@@ -17,7 +17,6 @@ import {
   GptStreamService,
   StreamHandlers,
   ChatHistoryMessage,
-  TranscribeResult,
 } from '../../services/gpt-stream.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { PropertyFeedItem } from '../../types/database';
@@ -124,8 +123,6 @@ export class ChatPageComponent implements OnDestroy {
   private _discardRecording = false;
   // Таймер длительности записи
   private _recTimer: ReturnType<typeof setInterval> | null = null;
-  // Авто-скрытие метки провайдера расшифровки
-  private _providerTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Web Audio для живой звуковой дорожки во время записи
   private _audioCtx: AudioContext | null = null;
@@ -163,8 +160,6 @@ export class ChatPageComponent implements OnDestroy {
     const s = this.recSeconds();
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   });
-  // Метка провайдера расшифровки (Groq/Whisper) — мелькает пару секунд после распознавания
-  readonly lastProvider = signal<string | null>(null);
   // Обновление истории с сервера
   readonly refreshing = signal<boolean>(false);
   // Поповер подсказок над композером
@@ -187,7 +182,6 @@ export class ChatPageComponent implements OnDestroy {
     }
     this._stopWave();
     this._stopRecTimer();
-    if (this._providerTimer !== null) clearTimeout(this._providerTimer);
   }
 
   // ─── Инициализация (загрузка истории) ────────────────────────────────────
@@ -342,7 +336,6 @@ export class ChatPageComponent implements OnDestroy {
     this._audioChunks = [];
     this._discardRecording = false;
     this.error.set(null); // снять прошлую ошибку расшифровки при новой записи
-    this.lastProvider.set(null); // и старую метку провайдера
 
     const mimeType =
       ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(
@@ -401,9 +394,9 @@ export class ChatPageComponent implements OnDestroy {
     const blob = new Blob(this._audioChunks, { type: mimeType || 'audio/webm' });
     this._audioChunks = [];
 
-    let result: TranscribeResult;
+    let text = '';
     try {
-      result = await this._gpt.transcribe(blob);
+      text = await this._gpt.transcribe(blob);
     } catch (e) {
       // Сеть/HTTP-ошибка — показываем причину, а не молча пустое поле
       this.transcribing.set(false);
@@ -414,12 +407,9 @@ export class ChatPageComponent implements OnDestroy {
     }
     this.transcribing.set(false);
 
-    const text = result.text;
     if (text) {
       const current = this.draft();
       this.draft.set(current ? current + ' ' + text : text);
-      // Метка провайдера (Groq/Whisper) на пару секунд — для проверки
-      if (result.provider) this._showProvider(result.provider);
       // Поле ввода перерисуется только после CD (сейчас на его месте дорожка),
       // поэтому рост под текст и фокус — на следующем кадре, когда textarea в DOM.
       requestAnimationFrame(() => {
@@ -427,16 +417,9 @@ export class ChatPageComponent implements OnDestroy {
         this._inputEl()?.nativeElement.focus();
       });
     } else {
-      // Распознавание вернуло пусто — тишина / слишком короткая запись
+      // Whisper вернул пусто — тишина / слишком короткая запись
       this.error.set('Не расслышал — попробуйте записать ещё раз, чётче.');
     }
-  }
-
-  // Показать метку провайдера на 4 сек (Groq vs Whisper), затем скрыть
-  private _showProvider(name: string): void {
-    this.lastProvider.set(name);
-    if (this._providerTimer !== null) clearTimeout(this._providerTimer);
-    this._providerTimer = setTimeout(() => this.lastProvider.set(null), 4000);
   }
 
   // ─── Звуковая дорожка (Web Audio → canvas) ────────────────────────────────
