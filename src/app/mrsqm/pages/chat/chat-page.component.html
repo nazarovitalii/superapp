@@ -152,6 +152,17 @@
         </div>
       }
 
+      <!-- Метка провайдера расшифровки (Groq/Whisper) — на пару секунд после голоса -->
+      @if (lastProvider()) {
+        <div
+          class="chat-provider-tag"
+          aria-hidden="true"
+        >
+          <span class="chat-provider-dot"></span>
+          {{ lastProvider() }}
+        </div>
+      }
+
       <div
         class="chat-composer"
         [class.is-recording]="recording() || transcribing()"
