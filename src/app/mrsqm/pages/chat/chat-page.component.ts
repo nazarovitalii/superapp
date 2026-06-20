@@ -335,6 +335,7 @@ export class ChatPageComponent implements OnDestroy {
 
     this._audioChunks = [];
     this._discardRecording = false;
+    this.error.set(null); // снять прошлую ошибку расшифровки при новой записи
 
     const mimeType =
       ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(
@@ -392,7 +393,18 @@ export class ChatPageComponent implements OnDestroy {
     this.transcribing.set(true);
     const blob = new Blob(this._audioChunks, { type: mimeType || 'audio/webm' });
     this._audioChunks = [];
-    const text = await this._gpt.transcribe(blob);
+
+    let text = '';
+    try {
+      text = await this._gpt.transcribe(blob);
+    } catch (e) {
+      // Сеть/HTTP-ошибка — показываем причину, а не молча пустое поле
+      this.transcribing.set(false);
+      this.error.set(
+        'Не удалось расшифровать запись: ' + ((e as Error)?.message ?? String(e)),
+      );
+      return;
+    }
     this.transcribing.set(false);
 
     if (text) {
@@ -404,6 +416,9 @@ export class ChatPageComponent implements OnDestroy {
         this._autoGrow();
         this._inputEl()?.nativeElement.focus();
       });
+    } else {
+      // Whisper вернул пусто — тишина / слишком короткая запись
+      this.error.set('Не расслышал — попробуйте записать ещё раз, чётче.');
     }
   }
 

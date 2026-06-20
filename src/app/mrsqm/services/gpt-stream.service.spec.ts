@@ -142,4 +142,28 @@ describe('GptStreamService', () => {
     );
     await expectAsync(service.sendNonStreaming('q')).toBeResolvedTo('готовый ответ');
   });
+
+  // ---- transcribe возвращает text при 200 ----
+  it('transcribe возвращает text при 200', async () => {
+    service = createService(supabaseWithSession);
+    fetchSpy.and.resolveTo(
+      new Response(JSON.stringify({ text: 'привет' }), { status: 200 }),
+    );
+    await expectAsync(
+      service.transcribe(new Blob(['x'], { type: 'audio/webm' })),
+    ).toBeResolvedTo('привет');
+  });
+
+  // ---- transcribe бросает с текстом ошибки бэкенда при не-200 (раньше глотал) ----
+  it('transcribe бросает с текстом ошибки бэкенда при не-200', async () => {
+    service = createService(supabaseWithSession);
+    fetchSpy.and.resolveTo(
+      new Response(JSON.stringify({ error: 'Whisper 400: invalid file' }), {
+        status: 500,
+      }),
+    );
+    await expectAsync(
+      service.transcribe(new Blob(['x'], { type: 'audio/webm' })),
+    ).toBeRejectedWithError('Whisper 400: invalid file');
+  });
 });

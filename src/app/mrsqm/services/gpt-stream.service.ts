@@ -166,19 +166,31 @@ export class GptStreamService {
   }
 
   /**
-   * Отправляет аудио на Whisper, возвращает расшифрованный текст.
-   * При любой ошибке возвращает '' — UI не блокируется.
+   * Отправляет аудио на Whisper, возвращает расшифрованный текст
+   * (пустая строка = распознавание ничего не вернуло, тишина/коротко).
+   * При сетевой/HTTP-ошибке БРОСАЕТ Error с деталью — раньше глотали молча и
+   * пользователь видел просто пустое поле без причины.
    */
   async transcribe(blob: Blob): Promise<string> {
     const token = await this._getToken();
-    if (!token) return '';
+    if (!token) throw new Error('Нет активной сессии');
     const base64 = await this._blobToBase64(blob);
     const res = await fetch(`${this._baseUrl}/chat/transcribe`, {
       method: 'POST',
       headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
       body: JSON.stringify({ audio_base64: base64, mimetype: blob.type }),
-    }).catch(() => null);
-    if (!res?.ok) return '';
+    });
+    if (!res.ok) {
+      // Достаём текст ошибки бэкенда ({ error }) для понятной диагностики
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = (await res.json()) as { error?: string };
+        if (body?.error) detail = body.error;
+      } catch {
+        /* тело не JSON — оставляем HTTP-код */
+      }
+      throw new Error(detail);
+    }
     const data = (await res.json()) as { text?: string };
     return data.text ?? '';
   }
