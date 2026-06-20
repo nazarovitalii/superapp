@@ -152,99 +152,144 @@
         </div>
       }
 
-      <div class="chat-composer">
-        <!-- Поле ввода — на всю ширину сверху -->
-        <textarea
-          #inputEl
-          class="chat-input"
-          [value]="draft()"
-          (input)="onInput($event)"
-          (keydown)="onKeyDown($event)"
-          placeholder="Напишите сообщение…"
-          rows="1"
-        ></textarea>
+      <div
+        class="chat-composer"
+        [class.is-recording]="recording() || transcribing()"
+      >
+        @if (recording() || transcribing()) {
+          <!-- Режим записи/расшифровки: микрофон скрыт, отправка → галочка -->
+          <div
+            class="chat-recording"
+            role="status"
+            aria-live="polite"
+          >
+            <button
+              type="button"
+              class="chat-rec-cancel"
+              [disabled]="transcribing()"
+              (click)="cancelRecording()"
+              matTooltip="Отменить"
+              matTooltipPosition="above"
+              aria-label="Отменить запись"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
 
-        <!-- Нижняя строка действий -->
-        <div class="chat-actions">
-          <!-- Слева: новый чат / обновить / подсказки -->
-          <div class="chat-actions-left">
-            <button
-              type="button"
-              class="chat-tool"
-              [disabled]="loadingHistory() || messages().length === 0"
-              (click)="clearMessages()"
-              matTooltip="Новый чат"
-              matTooltipPosition="above"
-              aria-label="Новый чат"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-            <button
-              type="button"
-              class="chat-tool"
-              [class.spinning]="refreshing()"
-              [disabled]="loadingHistory() || refreshing()"
-              (click)="reloadHistory()"
-              matTooltip="Обновить историю"
-              matTooltipPosition="above"
-              aria-label="Обновить историю"
-            >
-              <mat-icon>refresh</mat-icon>
-            </button>
-            <button
-              type="button"
-              class="chat-tool"
-              [class.active]="showSuggestions()"
-              (click)="toggleSuggestions()"
-              matTooltip="Подсказки"
-              matTooltipPosition="above"
-              aria-label="Подсказки"
-            >
-              <mat-icon>lightbulb</mat-icon>
-            </button>
-          </div>
-
-          <!-- Справа: микрофон / отправить -->
-          <div class="chat-actions-right">
-            <button
-              type="button"
-              class="chat-mic"
-              [class.recording]="recording()"
-              [disabled]="streaming() || transcribing()"
-              (click)="toggleMic()"
-              matTooltip="Голосовой ввод"
-              matTooltipPosition="above"
-              aria-label="Голосовой ввод"
-            >
+            <div class="chat-rec-main">
               @if (transcribing()) {
                 <mat-spinner diameter="18" />
+                <span class="chat-rec-label">Расшифровка…</span>
               } @else {
-                <mat-icon>{{ recording() ? 'stop' : 'mic' }}</mat-icon>
+                <span class="chat-rec-label">Слушаю…</span>
+                <canvas
+                  #waveCanvas
+                  class="chat-rec-wave"
+                ></canvas>
+                <span class="chat-rec-time">{{ recTimeLabel() }}</span>
               }
-            </button>
+            </div>
 
-            @if (!streaming()) {
-              <button
-                type="button"
-                class="chat-send"
-                [disabled]="!draft().trim()"
-                (click)="onSendClick()"
-                aria-label="Отправить"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-            } @else {
-              <button
-                type="button"
-                class="chat-stop"
-                (click)="stop()"
-                aria-label="Остановить"
-              >
-                <mat-icon>stop</mat-icon>
-              </button>
-            }
+            <button
+              type="button"
+              class="chat-rec-confirm"
+              [disabled]="transcribing()"
+              (click)="confirmRecording()"
+              matTooltip="Готово"
+              matTooltipPosition="above"
+              aria-label="Закончить и расшифровать"
+            >
+              <mat-icon>check</mat-icon>
+            </button>
           </div>
-        </div>
+        } @else {
+          <!-- Поле ввода — на всю ширину сверху -->
+          <textarea
+            #inputEl
+            class="chat-input"
+            [value]="draft()"
+            (input)="onInput($event)"
+            (keydown)="onKeyDown($event)"
+            placeholder="Напишите сообщение…"
+            rows="1"
+          ></textarea>
+
+          <!-- Нижняя строка действий -->
+          <div class="chat-actions">
+            <!-- Слева: новый чат / обновить / подсказки -->
+            <div class="chat-actions-left">
+              <button
+                type="button"
+                class="chat-tool"
+                [disabled]="loadingHistory() || messages().length === 0"
+                (click)="clearMessages()"
+                matTooltip="Новый чат"
+                matTooltipPosition="above"
+                aria-label="Новый чат"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="chat-tool"
+                [class.spinning]="refreshing()"
+                [disabled]="loadingHistory() || refreshing()"
+                (click)="reloadHistory()"
+                matTooltip="Обновить историю"
+                matTooltipPosition="above"
+                aria-label="Обновить историю"
+              >
+                <mat-icon>refresh</mat-icon>
+              </button>
+              <button
+                type="button"
+                class="chat-tool"
+                [class.active]="showSuggestions()"
+                (click)="toggleSuggestions()"
+                matTooltip="Подсказки"
+                matTooltipPosition="above"
+                aria-label="Подсказки"
+              >
+                <mat-icon>lightbulb</mat-icon>
+              </button>
+            </div>
+
+            <!-- Справа: микрофон / отправить -->
+            <div class="chat-actions-right">
+              <button
+                type="button"
+                class="chat-mic"
+                [disabled]="streaming()"
+                (click)="startRecording()"
+                matTooltip="Голосовой ввод"
+                matTooltipPosition="above"
+                aria-label="Голосовой ввод"
+              >
+                <mat-icon>mic</mat-icon>
+              </button>
+
+              @if (!streaming()) {
+                <button
+                  type="button"
+                  class="chat-send"
+                  [disabled]="!draft().trim()"
+                  (click)="onSendClick()"
+                  aria-label="Отправить"
+                >
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="chat-stop"
+                  (click)="stop()"
+                  aria-label="Остановить"
+                >
+                  <mat-icon>stop</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+        }
       </div>
     </div>
   </div>

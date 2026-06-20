@@ -3,6 +3,7 @@ import {
   inject,
   ChangeDetectionStrategy,
   signal,
+  computed,
   OnDestroy,
   ElementRef,
   viewChild,
@@ -118,10 +119,25 @@ export class ChatPageComponent implements OnDestroy {
   // MediaRecorder для голосового ввода
   private _mediaRecorder: MediaRecorder | null = null;
   private _audioChunks: Blob[] = [];
+  // Запись отменена крестиком (✕) → расшифровку не запускаем
+  private _discardRecording = false;
+  // Таймер длительности записи
+  private _recTimer: ReturnType<typeof setInterval> | null = null;
+
+  // Web Audio для живой звуковой дорожки во время записи
+  private _audioCtx: AudioContext | null = null;
+  private _analyser: AnalyserNode | null = null;
+  private _waveBuf: Uint8Array<ArrayBuffer> | null = null;
+  private _waveData: number[] = []; // скользящий буфер амплитуд (0..1)
+  private _waveRaf: number | null = null;
+  private _waveW = 0; // кэш размеров/цвета canvas (без per-frame reflow)
+  private _waveH = 0;
+  private _waveColor = '';
 
   // Ссылки на DOM — только через viewChild (без прямого доступа)
   private readonly _messagesEl = viewChild<ElementRef<HTMLElement>>('messagesEl');
   private readonly _inputEl = viewChild<ElementRef<HTMLTextAreaElement>>('inputEl');
+  private readonly _waveCanvas = viewChild<ElementRef<HTMLCanvasElement>>('waveCanvas');
 
   // ─── Состояние ────────────────────────────────────────────────────────────
 
@@ -138,6 +154,12 @@ export class ChatPageComponent implements OnDestroy {
   // Голосовой ввод: идёт запись / ждём расшифровку
   readonly recording = signal<boolean>(false);
   readonly transcribing = signal<boolean>(false);
+  // Длительность записи (сек) → таймер mm:ss в строке «Слушаю…»
+  readonly recSeconds = signal<number>(0);
+  readonly recTimeLabel = computed<string>(() => {
+    const s = this.recSeconds();
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  });
   // Обновление истории с сервера
   readonly refreshing = signal<boolean>(false);
   // Поповер подсказок над композером
@@ -153,9 +175,13 @@ export class ChatPageComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this._abort?.abort();
-    if (this._mediaRecorder?.state !== 'inactive') {
-      this._mediaRecorder?.stop();
+    // Уничтожаемся во время записи → отбрасываем, чтобы onstop не дёрнул расшифровку
+    this._discardRecording = true;
+    if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') {
+      this._mediaRecorder.stop();
     }
+    this._stopWave();
+    this._stopRecTimer();
   }
 
   // ─── Инициализация (загрузка истории) ────────────────────────────────────
@@ -277,7 +303,7 @@ export class ChatPageComponent implements OnDestroy {
     this.error.set(null);
     this.feedbackReasonIdx.set(null);
     this.showSuggestions.set(false);
-    this._autoGrow();
+    this._collapseInput();
   }
 
   // ─── Поповер подсказок ────────────────────────────────────────────────────
@@ -290,55 +316,214 @@ export class ChatPageComponent implements OnDestroy {
     this.showSuggestions.set(false);
   }
 
-  // ─── Голосовой ввод ───────────────────────────────────────────────────────
+  // ─── Голосовой ввод (ChatGPT-стиль) ───────────────────────────────────────
+  // Микрофон стартует запись. На время записи композер превращается в строку
+  // «Слушаю…» с живой звуковой дорожкой: ✕ — отменить, ✓ — закончить и
+  // расшифровать. Затем в той же строке «Расшифровка…», после чего текст
+  // вставляется в поле ввода.
 
-  async toggleMic(): Promise<void> {
-    if (this.recording()) {
-      this._mediaRecorder?.stop();
-      return;
-    }
+  async startRecording(): Promise<void> {
+    if (this.recording() || this.transcribing() || this.streaming()) return;
+
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this._audioChunks = [];
-
-      const mimeType =
-        [
-          'audio/webm;codecs=opus',
-          'audio/webm',
-          'audio/ogg;codecs=opus',
-          'audio/mp4',
-        ].find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
-
-      this._mediaRecorder = new MediaRecorder(
-        stream,
-        mimeType ? { mimeType } : undefined,
-      );
-
-      this._mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this._audioChunks.push(e.data);
-      };
-
-      this._mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        this.recording.set(false);
-        if (this._audioChunks.length === 0) return;
-
-        this.transcribing.set(true);
-        const blob = new Blob(this._audioChunks, { type: mimeType || 'audio/webm' });
-        const text = await this._gpt.transcribe(blob);
-        this.transcribing.set(false);
-
-        if (text) {
-          const current = this.draft();
-          this.draft.set(current ? current + ' ' + text : text);
-          this._autoGrow();
-        }
-      };
-
-      this._mediaRecorder.start();
-      this.recording.set(true);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       // Нет прав на микрофон — молча игнорируем
+      return;
+    }
+
+    this._audioChunks = [];
+    this._discardRecording = false;
+
+    const mimeType =
+      ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(
+        (t) => MediaRecorder.isTypeSupported(t),
+      ) ?? '';
+
+    this._mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    this._mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) this._audioChunks.push(e.data);
+    };
+    this._mediaRecorder.onstop = () => void this._onRecordingStopped(stream, mimeType);
+    this._mediaRecorder.start();
+
+    this.recording.set(true);
+    this._startRecTimer();
+    this._setupWave(stream);
+  }
+
+  // Закончить (✓) → останавливаем рекордер, дальше расшифровка
+  confirmRecording(): void {
+    if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') {
+      this._mediaRecorder.stop();
+    }
+  }
+
+  // Отменить (✕) → останавливаем и отбрасываем запись без расшифровки
+  cancelRecording(): void {
+    this._discardRecording = true;
+    if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') {
+      this._mediaRecorder.stop();
+    } else {
+      this.recording.set(false);
+      this._stopWave();
+      this._stopRecTimer();
+    }
+  }
+
+  // Рекордер остановлен: гасим дорожку/таймер; если не отменено — расшифровываем
+  private async _onRecordingStopped(
+    stream: MediaStream,
+    mimeType: string,
+  ): Promise<void> {
+    stream.getTracks().forEach((t) => t.stop());
+    this._stopWave();
+    this._stopRecTimer();
+    this.recording.set(false);
+
+    const discard = this._discardRecording;
+    this._discardRecording = false;
+    if (discard || this._audioChunks.length === 0) {
+      this._audioChunks = [];
+      return;
+    }
+
+    this.transcribing.set(true);
+    const blob = new Blob(this._audioChunks, { type: mimeType || 'audio/webm' });
+    this._audioChunks = [];
+    const text = await this._gpt.transcribe(blob);
+    this.transcribing.set(false);
+
+    if (text) {
+      const current = this.draft();
+      this.draft.set(current ? current + ' ' + text : text);
+      // Поле ввода перерисуется только после CD (сейчас на его месте дорожка),
+      // поэтому рост под текст и фокус — на следующем кадре, когда textarea в DOM.
+      requestAnimationFrame(() => {
+        this._autoGrow();
+        this._inputEl()?.nativeElement.focus();
+      });
+    }
+  }
+
+  // ─── Звуковая дорожка (Web Audio → canvas) ────────────────────────────────
+
+  private _setupWave(stream: MediaStream): void {
+    try {
+      const Ctx =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!Ctx) return;
+      this._audioCtx = new Ctx();
+      void this._audioCtx.resume?.().catch(() => {});
+      const source = this._audioCtx.createMediaStreamSource(stream);
+      this._analyser = this._audioCtx.createAnalyser();
+      this._analyser.fftSize = 256;
+      this._analyser.smoothingTimeConstant = 0.65;
+      source.connect(this._analyser);
+      this._waveBuf = new Uint8Array(this._analyser.fftSize);
+      this._waveData = [];
+      this._waveW = 0;
+      this._waveH = 0;
+      this._waveColor = '';
+      this._startWaveLoop();
+    } catch {
+      // Web Audio недоступен — запись идёт без визуализации
+    }
+  }
+
+  private _startWaveLoop(): void {
+    const tick = (): void => {
+      this._waveRaf = requestAnimationFrame(tick);
+      const analyser = this._analyser;
+      const buf = this._waveBuf;
+      const canvas = this._waveCanvas()?.nativeElement;
+      if (!analyser || !buf || !canvas) return;
+
+      analyser.getByteTimeDomainData(buf);
+      let peak = 0;
+      for (let i = 0; i < buf.length; i++) {
+        const v = Math.abs(buf[i] - 128) / 128;
+        if (v > peak) peak = v;
+      }
+      this._waveData.push(peak);
+      if (this._waveData.length > 96) this._waveData.shift();
+
+      this._renderWave(canvas);
+    };
+    this._waveRaf = requestAnimationFrame(tick);
+  }
+
+  private _renderWave(canvas: HTMLCanvasElement): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Размеры/цвет кэшируем при первом кадре (canvas уже в DOM)
+    if (this._waveW === 0) {
+      this._waveW = canvas.clientWidth;
+      this._waveH = canvas.clientHeight;
+      this._waveColor = getComputedStyle(canvas).color || 'rgba(140,140,140,1)';
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(this._waveW * dpr);
+      canvas.height = Math.round(this._waveH * dpr);
+    }
+    if (this._waveW === 0 || this._waveH === 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, this._waveW, this._waveH);
+    ctx.fillStyle = this._waveColor;
+
+    const barW = 3;
+    const step = barW + 2; // ширина столбика + зазор
+    const count = Math.max(1, Math.floor(this._waveW / step));
+    const data = this._waveData.slice(-count);
+    const mid = this._waveH / 2;
+    const maxBarH = this._waveH - 2;
+
+    // Каждый множитель/делитель — в отдельной строке: одна операция на строку,
+    // чтобы не ловить no-mixed-operators и не плодить «лишние» скобки (их срежет prettier).
+    for (let i = 0; i < data.length; i++) {
+      const amp = Math.min(1, data[i] * 2.2);
+      const barH = Math.max(2, amp * maxBarH);
+      const halfBar = barH / 2;
+      const x = i * step;
+      const y = mid - halfBar;
+      // Тише → бледнее: эффект «свечения» дорожки по голосу
+      const fade = amp * 0.7;
+      ctx.globalAlpha = 0.3 + fade;
+      ctx.fillRect(x, y, barW, barH);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  private _stopWave(): void {
+    if (this._waveRaf !== null) {
+      cancelAnimationFrame(this._waveRaf);
+      this._waveRaf = null;
+    }
+    this._analyser = null;
+    this._waveBuf = null;
+    this._waveData = [];
+    this._waveW = 0;
+    this._waveH = 0;
+    if (this._audioCtx) {
+      void this._audioCtx.close().catch(() => {});
+      this._audioCtx = null;
+    }
+  }
+
+  private _startRecTimer(): void {
+    this.recSeconds.set(0);
+    this._recTimer = setInterval(() => this.recSeconds.update((s) => s + 1), 1000);
+  }
+
+  private _stopRecTimer(): void {
+    if (this._recTimer !== null) {
+      clearInterval(this._recTimer);
+      this._recTimer = null;
     }
   }
 
@@ -347,6 +532,7 @@ export class ChatPageComponent implements OnDestroy {
   sendSuggestion(prompt: string): void {
     this.showSuggestions.set(false);
     this.draft.set('');
+    this._collapseInput();
     this.send(prompt);
   }
 
@@ -362,7 +548,7 @@ export class ChatPageComponent implements OnDestroy {
       event.preventDefault();
       const text = this.draft();
       this.draft.set('');
-      this._autoGrow();
+      this._collapseInput();
       this.send(text);
     }
   }
@@ -370,7 +556,7 @@ export class ChatPageComponent implements OnDestroy {
   onSendClick(): void {
     const text = this.draft();
     this.draft.set('');
-    this._autoGrow();
+    this._collapseInput();
     this.send(text);
   }
 
@@ -477,5 +663,14 @@ export class ChatPageComponent implements OnDestroy {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, INPUT_MAX_HEIGHT) + 'px';
+  }
+
+  // Схлопывание поля после отправки/очистки. Намеренно НЕ через scrollHeight:
+  // на момент вызова [value]="draft()" ещё не сброшен в DOM, и scrollHeight
+  // вернул бы старую большую высоту → поле «скакало» бы вверх после отправки
+  // (особенно заметно на планшете). height:auto сразу даёт высоту в одну строку.
+  private _collapseInput(): void {
+    const el = this._inputEl()?.nativeElement;
+    if (el) el.style.height = 'auto';
   }
 }

@@ -4,7 +4,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  // На табе родитель (.route-wrapper > router-outlet + *) навешивает на хост
+  // overflow-y:auto + touch-action:pan-y → хост становится вторым скролл-слоем
+  // поверх .chat-messages. На планшете после отправки фокус/клавиатура скроллят
+  // именно его, и плавающий композер «скачет» вверх. Запираем скролл на хосте —
+  // прокручивается только .chat-messages (!important перебивает правило родителя).
+  overflow: hidden !important;
   // Непрозрачный фон: на табе совпадает со страницей, в правой панели
   // (она прозрачная) перекрывает просвет; он же — база fade-градиента композера.
   background: var(--bg);
@@ -47,8 +52,13 @@
 // ─── Лента: скролл на всю ширину (скролбар у края окна) ────────────────────
 .chat-messages {
   flex: 1;
+  // min-height:0 — чтобы flex-итем мог сжиматься и скроллился сам,
+  // не растягивая хост (иначе на планшете прокрутка «уплывала» наружу).
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  // Скролл не передаётся наружу/на body — нет «болтанки» всей верстки на тач-устройствах.
+  overscroll-behavior: contain;
   scroll-behavior: smooth;
 }
 
@@ -435,7 +445,12 @@
   pointer-events: auto;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--s-half);
+  // Общая нижняя граница высоты для обоих режимов (ввод ↔ запись) — композер
+  // не меняет высоту при переключении на дорожку, ничего не «скачет».
+  min-height: 76px;
+  box-sizing: border-box;
   padding: var(--s-half) var(--s);
   border: none;
   border-radius: 16px;
@@ -592,11 +607,6 @@
     color: var(--text-color);
   }
 
-  &.recording {
-    color: var(--warn-dark, #c62828);
-    animation: mic-pulse 1.2s ease-in-out infinite;
-  }
-
   &:disabled {
     opacity: 0.4;
     cursor: default;
@@ -619,6 +629,96 @@
   background: transparent;
   color: var(--warn-dark, #c62828);
   border: 1px solid var(--extra-border-color);
+}
+
+// ─── Режим записи (ChatGPT-стиль: «Слушаю…» + звуковая дорожка) ────────────
+.chat-recording {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  padding: 0 var(--s-quarter);
+}
+
+// Центральная зона: метка + дорожка + таймер (тянется на всю ширину строки)
+.chat-rec-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+}
+
+.chat-rec-label {
+  flex: 0 0 auto;
+  font-size: 14px;
+  color: var(--text-color-muted);
+  white-space: nowrap;
+}
+
+// Canvas-дорожка. color — серый по теме; именно его читает рендер для столбиков.
+.chat-rec-wave {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  color: var(--text-color-muted);
+}
+
+.chat-rec-time {
+  flex: 0 0 auto;
+  min-width: 34px;
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color-muted);
+}
+
+.chat-rec-cancel,
+.chat-rec-confirm {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// Отмена — нейтральная кнопка
+.chat-rec-cancel {
+  background: transparent;
+  color: var(--text-color-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--bg-lighter, rgba(0, 0, 0, 0.05));
+    color: var(--text-color);
+  }
+}
+
+// Готово (✓) — основной CTA, как кнопка отправки
+.chat-rec-confirm {
+  background: var(--text-color);
+  color: var(--card-bg, var(--task-c-bg));
+
+  &:disabled {
+    background: var(--text-color-muted);
+  }
 }
 
 // ─── Анимации ─────────────────────────────────────────────────────────────
@@ -662,16 +762,6 @@
   }
 }
 
-@keyframes mic-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
 @keyframes shimmer {
   from {
     background-position: 200% 0;
@@ -704,7 +794,6 @@
   .chat-suggest-pop {
     animation: none;
   }
-  .chat-mic.recording,
   .chat-tool.spinning mat-icon {
     animation: none;
   }
