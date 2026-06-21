@@ -3,7 +3,6 @@ import { FeedFilterPanelComponent, FloorChip } from './feed-filter-panel.compone
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { DeveloperSearchItem, FilterOptions } from '../../types/database';
-import { signal } from '@angular/core';
 
 // Минимальный мок FilterOptions для тестов этажей.
 const MOCK_OPTIONS: FilterOptions = {
@@ -121,9 +120,9 @@ describe('FeedFilterPanelComponent — developer autocomplete', () => {
   const MOCK_DEV2: DeveloperSearchItem = { id: 'd2', name: 'Damac', logo_url: null };
 
   beforeEach(async () => {
-    searchDevelopersSpy = jasmine.createSpy('searchDevelopers').and.returnValue(
-      Promise.resolve([MOCK_DEV, MOCK_DEV2]),
-    );
+    searchDevelopersSpy = jasmine
+      .createSpy('searchDevelopers')
+      .and.returnValue(Promise.resolve([MOCK_DEV, MOCK_DEV2]));
 
     await TestBed.configureTestingModule({
       imports: [FeedFilterPanelComponent],
