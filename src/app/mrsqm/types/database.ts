@@ -217,8 +217,6 @@ export interface PropertyInsert {
   developer_id: string | null;
   completion_year: number | null;
   completion_q: string | null;
-  is_distress: boolean;
-  is_negotiable: boolean;
   title_deed_number: string | null;
   title_deed_year: number | null;
   plot_number: string | null;
@@ -275,7 +273,6 @@ export interface PropertyFeedItem {
   description: string | null;
   furnished: Furnished | null;
   handover: Handover | null;
-  is_distress: boolean;
   // Предыдущая цена — если > price, в строке показываем старую зачёркнутой.
   previous_price?: number | null;
   photos: string[] | null;
@@ -349,7 +346,6 @@ export interface PropertyDetail {
   price_currency: string;
   price_period: string | null;
   price_changed_at: string | null;
-  is_negotiable: boolean | null;
   commission_included: boolean | null;
   visibility: string | null;
   status: PropertyStatus;
@@ -372,7 +368,6 @@ export interface PropertyDetail {
   furnished: Furnished | null;
   lat: number | null;
   lng: number | null;
-  is_distress: boolean;
   is_reduced: boolean | null;
   is_below_op: boolean | null;
   occupancy_status: string | null;

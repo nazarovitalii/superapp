@@ -68,7 +68,6 @@ const feedItem = (over: Partial<PropertyFeedItem> = {}): PropertyFeedItem => ({
   description: 'feed desc',
   furnished: 'furnished',
   handover: 'ready',
-  is_distress: false,
   photos: null,
   published_at: '2026-06-01T00:00:00Z',
   owner_full_name: 'Feed Owner',
@@ -93,8 +92,6 @@ const detail = (over: Partial<PropertyDetail> = {}): PropertyDetail =>
     is_maid: true,
     area_sqft: 1500,
     view_ids: ['v1'],
-    is_distress: false,
-    is_negotiable: true,
     commission_included: false,
     location_full_path: 'Dubai > Marina > Tower',
     developer_name_ref: 'Emaar',
@@ -624,13 +621,14 @@ describe('PropertyDetailComponent', () => {
     expect(comp.vm().floorsInUnit).toBe('G+1');
   });
 
-  it('бейдж «Торг» не рендерится даже при is_negotiable', async () => {
+  it('бейджи «Торг»/«Срочно» не рендерятся (поля терминированы)', async () => {
     const { comp, fixture, supa } = makeComponent();
-    supa.rpcResult = detail({ is_negotiable: true });
+    supa.rpcResult = detail();
     await comp.loadProperty();
     fixture.detectChanges();
     const chips: string =
       fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';
     expect(chips).not.toContain('Торг');
+    expect(chips).not.toContain('Срочно');
   });
 });

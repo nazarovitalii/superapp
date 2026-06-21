@@ -20,7 +20,6 @@ const minItem = (over: Partial<PropertyFeedItem> = {}): PropertyFeedItem => ({
   description: null,
   furnished: 'furnished',
   handover: 'ready',
-  is_distress: false,
   photos: null,
   published_at: '2026-06-01T00:00:00Z',
   owner_full_name: 'Test Agent',

@@ -66,8 +66,6 @@ const samplePayload = (): PropertyInsert => ({
   developer_id: null,
   completion_year: null,
   completion_q: null,
-  is_distress: false,
-  is_negotiable: false,
   title_deed_number: null,
   title_deed_year: null,
   plot_number: null,

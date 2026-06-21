@@ -168,7 +168,6 @@ export class AddPropertyPageComponent {
 
   // ─── Шаг 4: Цена ───────────────────────────────────────────────────────
   readonly price = signal<string>('');
-  readonly isNegotiable = signal(false);
   // Оригинальная цена (OP) — только для продажи. Кол-во чеков — только аренда.
   readonly originalPrice = signal<string>('');
   readonly cheques = signal<number | null>(null);
@@ -207,7 +206,6 @@ export class AddPropertyPageComponent {
     const y = new Date().getFullYear();
     return Array.from({ length: 6 }, (_, i) => String(y + i));
   });
-  readonly isDistress = signal(false);
 
   // ─── Шаг 6: Листинг ────────────────────────────────────────────────────
   readonly listingType = signal<string>('pocket');
@@ -811,8 +809,6 @@ export class AddPropertyPageComponent {
       developer_id: this.pickedDeveloperId() ?? (isOffplan ? this._developerId() : null),
       completion_year: isOffplan ? num(this.completionYear()) : null,
       completion_q: isOffplan ? this.completionQ() : null,
-      is_distress: this.isDistress(),
-      is_negotiable: this.isNegotiable(),
       title_deed_number: isOfficial ? this.titleDeedNumber().trim() || null : null,
       title_deed_year: isOfficial ? num(this.titleDeedYear()) : null,
       plot_number: isOfficial ? this.plotNumber().trim() || null : null,

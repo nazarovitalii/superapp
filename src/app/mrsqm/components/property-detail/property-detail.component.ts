@@ -134,7 +134,6 @@ export class PropertyDetailComponent implements OnDestroy {
       currency: d?.price_currency ?? f.price_currency,
       period: d?.price_period ?? f.price_period,
       dealType: d?.deal_type ?? f.deal_type,
-      isDistress: d?.is_distress ?? f.is_distress,
       isReduced: d?.is_reduced ?? false,
       isBelowOp: d?.is_below_op ?? false,
       commissionIncluded: d?.commission_included ?? false,
