@@ -933,7 +933,7 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
     component.bathrooms.set(2);
     component.areaSqft.set('1200');
     component.floorLevelId.set(null);
-    expect(typeof (component as any)._validateStep()).toBe('string'); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof (component as any)._validateStep()).toBe('string');
   });
 
   it('house без floorsInUnit → ошибка', () => {
@@ -947,7 +947,7 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
     component.bathrooms.set(2);
     component.areaSqft.set('2500');
     component.floorsInUnit.set(null);
-    expect(typeof (component as any)._validateStep()).toBe('string'); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof (component as any)._validateStep()).toBe('string');
   });
 
   it('house с floorsInUnit (id) и площадью → null', () => {
@@ -961,7 +961,7 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
     component.bathrooms.set(2);
     component.areaSqft.set('2500');
     component.floorsInUnit.set('fiu-uuid');
-    expect((component as any)._validateStep()).toBeNull(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect((component as any)._validateStep()).toBeNull();
   });
 });
 
