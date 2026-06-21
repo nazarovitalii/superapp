@@ -5,6 +5,10 @@ import {
   output,
   signal,
   computed,
+  viewChild,
+  ElementRef,
+  afterNextRender,
+  Injector,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,8 +21,10 @@ import {
   FeedHandover,
   FeedScope,
   PropertyCategory,
+  SavedFilter,
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
 import {
   FilterOptions,
   FilterOptionId,
@@ -60,6 +66,31 @@ export class FeedFilterPanelComponent {
   readonly closed = output<void>();
   readonly _filterService = inject(FeedFilterService);
   private readonly _createService = inject(PropertyCreateService);
+  readonly _savedSvc = inject(SavedFilterService);
+  private readonly _injector = inject(Injector);
+
+  // Ссылки на нативные <dialog> элементы
+  private readonly _nameDialogEl = viewChild<ElementRef<HTMLDialogElement>>('nameDialog');
+  private readonly _toastDialogEl =
+    viewChild<ElementRef<HTMLDialogElement>>('toastDialog');
+
+  // ─── Сохранённые фильтры ─────────────────────────────────────────────────────
+  readonly savedFilters = signal<SavedFilter[]>([]);
+
+  // Поле ввода названия нового фильтра
+  readonly newFilterName = signal<string>('');
+
+  // Тост
+  readonly toastMsg = signal<string | null>(null);
+  private _toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Лейбл кнопки: «Изменить» если загружен и dirty, иначе «Сохранить»
+  readonly saveButtonLabel = computed<string>(() =>
+    this._filterService.loadedFilterId() !== null &&
+    this._filterService.isDirtySinceLoad()
+      ? 'Изменить'
+      : 'Сохранить',
+  );
 
   // Константы для шаблона
   readonly completionQOptions = COMPLETION_Q_OPTIONS;
@@ -186,6 +217,7 @@ export class FeedFilterPanelComponent {
 
   constructor() {
     void this._loadOptions();
+    void this._loadSavedFilters();
   }
 
   private async _loadOptions(): Promise<void> {
@@ -194,6 +226,100 @@ export class FeedFilterPanelComponent {
     } catch {
       // справочники недоступны — покажем только цену/площадь/листинг
     }
+  }
+
+  private async _loadSavedFilters(): Promise<void> {
+    try {
+      const list = await this._savedSvc.list();
+      this.savedFilters.set(list);
+    } catch {
+      // сохранённые фильтры недоступны — не критично
+    }
+  }
+
+  // ─── Сохранённые фильтры: загрузка ───────────────────────────────────────────
+  loadSavedFilter(f: SavedFilter): void {
+    this._filterService.markLoaded(f.id, f.filters);
+  }
+
+  // ─── Сохранённые фильтры: удаление ───────────────────────────────────────────
+  async removeSavedFilter(id: string): Promise<void> {
+    try {
+      await this._savedSvc.remove(id);
+      this.savedFilters.set(this.savedFilters().filter((f) => f.id !== id));
+      if (this._filterService.loadedFilterId() === id) {
+        this._filterService.clearLoaded();
+      }
+    } catch {
+      // ошибка удаления — игнорируем тихо
+    }
+  }
+
+  // ─── Кнопка «Сохранить» / «Изменить» ─────────────────────────────────────────
+  async onSaveOrUpdate(): Promise<void> {
+    const loadedId = this._filterService.loadedFilterId();
+    if (loadedId !== null && this._filterService.isDirtySinceLoad()) {
+      // «Изменить» — обновить существующий
+      try {
+        await this._savedSvc.update(loadedId, this._filterService.snapshot());
+        this._filterService.markLoaded(loadedId, this._filterService.snapshot());
+        this.showToast('Фильтр обновлён');
+      } catch {
+        // ошибка обновления — тихо
+      }
+    } else {
+      // «Сохранить» — открыть модалку названия
+      this.newFilterName.set('');
+      afterNextRender(
+        () => {
+          this._nameDialogEl()?.nativeElement.showModal();
+        },
+        { injector: this._injector },
+      );
+    }
+  }
+
+  // ─── Модалка: отмена ─────────────────────────────────────────────────────────
+  cancelNameDialog(): void {
+    this._nameDialogEl()?.nativeElement.close();
+    this.newFilterName.set('');
+  }
+
+  // ─── Модалка: подтвердить сохранение ─────────────────────────────────────────
+  async confirmSave(): Promise<void> {
+    const name = this.newFilterName().trim();
+    if (!name) return;
+    try {
+      const sf = await this._savedSvc.save(name, this._filterService.snapshot());
+      this._filterService.markLoaded(sf.id, sf.filters);
+      this.savedFilters.set([sf, ...this.savedFilters()]);
+      this._nameDialogEl()?.nativeElement.close();
+      this.showToast(`Фильтр "${name}" сохранён`);
+      this.newFilterName.set('');
+    } catch {
+      // ошибка сохранения — тихо
+    }
+  }
+
+  // ─── Тост ─────────────────────────────────────────────────────────────────────
+  showToast(msg: string): void {
+    if (this._toastTimer !== null) {
+      clearTimeout(this._toastTimer);
+      this._toastTimer = null;
+    }
+    this._toastDialogEl()?.nativeElement.close();
+    this.toastMsg.set(msg);
+    afterNextRender(
+      () => {
+        this._toastDialogEl()?.nativeElement.show();
+      },
+      { injector: this._injector },
+    );
+    this._toastTimer = setTimeout(() => {
+      this._toastDialogEl()?.nativeElement.close();
+      this.toastMsg.set(null);
+      this._toastTimer = null;
+    }, 2800);
   }
 
   // ─── Тип недвижимости — живой (через сервис, не draft) ──────────────────

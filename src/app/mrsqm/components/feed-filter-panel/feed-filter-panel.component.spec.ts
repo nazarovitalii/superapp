@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { FeedFilterPanelComponent, FloorChip } from './feed-filter-panel.component';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
 import { DeveloperSearchItem, FilterOptions } from '../../types/database';
+import { SavedFilter } from '../../services/feed-filter.service';
 
 // Минимальный мок FilterOptions для тестов этажей.
 const MOCK_OPTIONS: FilterOptions = {
@@ -582,5 +584,148 @@ describe('FeedFilterPanelComponent — живые контролы (FE-2)', () =
   it('setLiveScope("friends") устанавливает scope("friends")', () => {
     component.setLiveScope('friends');
     expect(filterService.scope()).toBe('friends');
+  });
+});
+
+// ─── Сохранённые фильтры (FF22) ───────────────────────────────────────────────
+describe('FeedFilterPanelComponent — сохранённые фильтры (FF22)', () => {
+  let component: FeedFilterPanelComponent;
+  let filterService: FeedFilterService;
+  let fakeSavedSvc: jasmine.SpyObj<SavedFilterService>;
+
+  const MOCK_SF_1: SavedFilter = {
+    id: 'sf-1',
+    auto_name: 'Marina Sale',
+    filters: {
+      filters: { ...({ unitTypeId: null, subTypeIds: [], bedrooms: [], bathrooms: [], priceMin: null, priceMax: null, areaMin: null, areaMax: null, furnished: null, listingType: 'all', plotMin: null, plotMax: null, developerIds: [], viewIds: [], positionIds: [], amenityIds: [], floorLevelIds: [], floorsInUnitIds: [], isMaid: null, isHotelPool: null, isVastu: null, isStudy: null, isReduced: null, isBelowOp: null, pricePeriod: null, occupancyStatus: [], completionYears: [], completionQ: [], cheques: [] }) },
+      dealType: 'sale',
+      handover: null,
+      scope: 'public',
+      category: null,
+      locations: [],
+    },
+    notification_type: null,
+    created_at: '2026-01-01T00:00:00Z',
+  };
+
+  const MOCK_SF_2: SavedFilter = {
+    ...MOCK_SF_1,
+    id: 'sf-2',
+    auto_name: 'JBR Rent',
+  };
+
+  const buildWithSaved = async (listResult: SavedFilter[]): Promise<void> => {
+    fakeSavedSvc = jasmine.createSpyObj<SavedFilterService>('SavedFilterService', [
+      'list',
+      'save',
+      'update',
+      'remove',
+    ]);
+    fakeSavedSvc.list.and.returnValue(Promise.resolve(listResult));
+
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+        { provide: SavedFilterService, useValue: fakeSavedSvc },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    filterService = TestBed.inject(FeedFilterService);
+    component.options.set(MOCK_OPTIONS);
+  };
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('ngOnInit загружает список — savedFilters().length === 2', async () => {
+    await buildWithSaved([MOCK_SF_1, MOCK_SF_2]);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(component.savedFilters().length).toBe(2);
+  });
+
+  it('loadSavedFilter вызывает markLoaded с id и filters', async () => {
+    await buildWithSaved([]);
+    const spy = spyOn(filterService, 'markLoaded');
+    component.loadSavedFilter(MOCK_SF_1);
+    expect(spy).toHaveBeenCalledWith(MOCK_SF_1.id, MOCK_SF_1.filters);
+  });
+
+  it('лейбл кнопки: loaded+dirty → «Изменить»', async () => {
+    await buildWithSaved([]);
+    filterService.loadedFilterId.set('sf-1');
+    filterService.loadedSnapshotJson.set(JSON.stringify({ different: true }));
+    expect(component.saveButtonLabel()).toBe('Изменить');
+  });
+
+  it('лейбл кнопки: нет загруженного → «Сохранить»', async () => {
+    await buildWithSaved([]);
+    filterService.loadedFilterId.set(null);
+    expect(component.saveButtonLabel()).toBe('Сохранить');
+  });
+
+  it('лейбл кнопки: loaded, не dirty → «Сохранить»', async () => {
+    await buildWithSaved([]);
+    filterService.markLoaded('sf-1', MOCK_SF_1.filters);
+    expect(component.saveButtonLabel()).toBe('Сохранить');
+  });
+
+  it('confirmSave: вызывает save(name, snapshot) и добавляет фильтр в начало списка', async () => {
+    await buildWithSaved([MOCK_SF_2]);
+    await new Promise((r) => setTimeout(r, 0)); // ждём _loadSavedFilters
+
+    const newSf: SavedFilter = { ...MOCK_SF_1, id: 'sf-new', auto_name: 'Test' };
+    fakeSavedSvc.save.and.returnValue(Promise.resolve(newSf));
+
+    component.newFilterName.set('Test');
+    await component.confirmSave();
+
+    expect(fakeSavedSvc.save).toHaveBeenCalledWith('Test', filterService.snapshot());
+    expect(component.savedFilters()[0].id).toBe('sf-new');
+    expect(component.savedFilters().length).toBe(2); // sf-new + sf-2
+  });
+
+  it('confirmSave: показывает тост с именем', async () => {
+    await buildWithSaved([]);
+    const newSf: SavedFilter = { ...MOCK_SF_1, id: 'sf-x', auto_name: 'Myfilter' };
+    fakeSavedSvc.save.and.returnValue(Promise.resolve(newSf));
+
+    component.newFilterName.set('Myfilter');
+    const toastSpy = spyOn(component, 'showToast').and.callThrough();
+    await component.confirmSave();
+
+    expect(toastSpy).toHaveBeenCalledWith('Фильтр "Myfilter" сохранён');
+  });
+
+  it('removeSavedFilter: вызывает remove(id) и убирает из savedFilters', async () => {
+    await buildWithSaved([MOCK_SF_1, MOCK_SF_2]);
+    await new Promise((r) => setTimeout(r, 0));
+
+    fakeSavedSvc.remove.and.returnValue(Promise.resolve());
+    await component.removeSavedFilter('sf-1');
+
+    expect(fakeSavedSvc.remove).toHaveBeenCalledWith('sf-1');
+    expect(component.savedFilters().map((f) => f.id)).not.toContain('sf-1');
+    expect(component.savedFilters().length).toBe(1);
+  });
+
+  it('removeSavedFilter: если удалённый = loadedFilterId → clearLoaded()', async () => {
+    await buildWithSaved([MOCK_SF_1]);
+    await new Promise((r) => setTimeout(r, 0));
+
+    fakeSavedSvc.remove.and.returnValue(Promise.resolve());
+    filterService.loadedFilterId.set('sf-1');
+
+    const clearSpy = spyOn(filterService, 'clearLoaded').and.callThrough();
+    await component.removeSavedFilter('sf-1');
+
+    expect(clearSpy).toHaveBeenCalled();
   });
 });

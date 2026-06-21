@@ -21,6 +21,39 @@
 
   <div class="filter-scroll">
     <!-- ══════════════════════════════════════════════════════════════════════════
+         Сохранённые фильтры — верхний блок (над всем)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    @if (savedFilters().length) {
+      <div class="filter-group saved-filters-group">
+        <div class="filter-label"><mat-icon>bookmark</mat-icon>Сохранённые</div>
+        <div class="saved-filters-list">
+          @for (f of savedFilters(); track f.id) {
+            <div
+              class="saved-filter-item"
+              [class.is-active]="_filterService.loadedFilterId() === f.id"
+            >
+              <button
+                type="button"
+                class="saved-filter-name"
+                (click)="loadSavedFilter(f)"
+              >
+                {{ f.auto_name || 'Без названия' }}
+              </button>
+              <button
+                type="button"
+                class="saved-filter-remove"
+                [attr.aria-label]="'Удалить фильтр'"
+                (click)="removeSavedFilter(f.id)"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
          Живые контролы — зеркало тулбара (общие сигналы FeedFilterService,
          без draft/«Применить»). Меняются мгновенно и двусторонне.
          ══════════════════════════════════════════════════════════════════════════ -->
@@ -150,7 +183,9 @@
           }
           <!-- Уровень 3: подтип — появляется после выбора unit_type -->
           @if (subTypes().length) {
-            <div class="filter-label filter-label--sub"><mat-icon>category</mat-icon>Подтип</div>
+            <div class="filter-label filter-label--sub">
+              <mat-icon>category</mat-icon>Подтип
+            </div>
             <div class="chip-row">
               @for (s of subTypes(); track s.id) {
                 <button
@@ -665,8 +700,15 @@
     </div>
   </div>
 
-  <!-- Низ — кнопка применить -->
+  <!-- Низ — кнопка «Сохранить/Изменить» + «Применить» -->
   <div class="panel-footer">
+    <button
+      mat-stroked-button
+      class="save-btn"
+      (click)="onSaveOrUpdate()"
+    >
+      {{ saveButtonLabel() }}
+    </button>
     <button
       mat-flat-button
       color="primary"
@@ -677,3 +719,51 @@
     </button>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     Модалка ввода названия фильтра (top-layer <dialog> как lightbox)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<dialog
+  class="name-dialog"
+  #nameDialog
+>
+  <div class="name-dialog-content">
+    <h3 class="name-dialog-title">Сохранить фильтр</h3>
+    <input
+      class="name-dialog-input"
+      type="text"
+      placeholder="Название фильтра"
+      [ngModel]="newFilterName()"
+      (ngModelChange)="newFilterName.set($event)"
+      (keydown.enter)="confirmSave()"
+    />
+    <div class="name-dialog-actions">
+      <button
+        mat-button
+        (click)="cancelNameDialog()"
+      >
+        Отмена
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        [disabled]="!newFilterName().trim()"
+        (click)="confirmSave()"
+      >
+        Сохранить
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     Тост — top-layer <dialog> (non-modal, .show()), слева slide-in
+     ══════════════════════════════════════════════════════════════════════════ -->
+<dialog
+  class="filter-toast"
+  #toastDialog
+>
+  @if (toastMsg()) {
+    <span>{{ toastMsg() }}</span>
+  }
+</dialog>
