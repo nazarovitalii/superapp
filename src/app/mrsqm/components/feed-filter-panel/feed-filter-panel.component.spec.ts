@@ -320,6 +320,167 @@ describe('FeedFilterPanelComponent — positionChips', () => {
   });
 });
 
+// ─── FE-3: Каскад типа — живой (категория → unit_type → подтип) ──────────────
+describe('FeedFilterPanelComponent — каскад типа (FE-3)', () => {
+  let component: FeedFilterPanelComponent;
+  let filterService: FeedFilterService;
+
+  // Расширенный мок с категориями и подтипами.
+  const MOCK_OPTIONS_CASCADE: FilterOptions = {
+    ...MOCK_OPTIONS,
+    categories: [
+      { id: 'cat-res', value: 'residential', label_en: 'Residential', parent_id: null },
+      { id: 'cat-com', value: 'commercial', label_en: 'Commercial', parent_id: null },
+    ],
+    unit_types: [
+      { id: 'ut-apt', value: 'apartment', label_en: 'Apartment', parent_id: 'cat-res' },
+      { id: 'ut-off', value: 'office', label_en: 'Office', parent_id: 'cat-com' },
+    ],
+    sub_types: [
+      { id: 'st-s1', value: 'studio', label_en: 'Studio', parent_id: 'ut-apt' },
+      { id: 'st-s2', value: '1br', label_en: '1BR', parent_id: 'ut-apt' },
+    ],
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS_CASCADE) },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    filterService = TestBed.inject(FeedFilterService);
+    component.options.set(MOCK_OPTIONS_CASCADE);
+  });
+
+  it('клик категории Residential → category() === "residential"', () => {
+    filterService.selectCategoryAll('residential');
+    expect(filterService.category()).toBe('residential');
+  });
+
+  it('selectCategoryAll чистит unitTypeId и subTypeIds', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    filterService.selectCategoryAll('residential');
+    expect(filterService.filters().unitTypeId).toBeNull();
+    expect(filterService.filters().subTypeIds).toEqual([]);
+  });
+
+  it('clearType → category() = null, unitTypeId = null, subTypeIds = []', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    filterService.clearType();
+    expect(filterService.category()).toBeNull();
+    expect(filterService.filters().unitTypeId).toBeNull();
+    expect(filterService.filters().subTypeIds).toEqual([]);
+  });
+
+  it('клик unit_type → filters().unitTypeId === выбранный id', () => {
+    filterService.selectCategoryAll('residential');
+    filterService.selectUnitType('residential', 'ut-apt');
+    expect(filterService.filters().unitTypeId).toBe('ut-apt');
+  });
+
+  it('selectUnitType чистит subTypeIds', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    filterService.selectUnitType('residential', 'ut-apt');
+    // Повторный selectUnitType чистит подтипы
+    expect(filterService.filters().subTypeIds).toEqual([]);
+  });
+
+  it('toggleSubType добавляет id в filters().subTypeIds', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    expect(filterService.filters().subTypeIds).toContain('st-s1');
+  });
+
+  it('повторный toggleSubType убирает id из filters().subTypeIds', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    filterService.toggleSubType('st-s1');
+    expect(filterService.filters().subTypeIds).toEqual([]);
+  });
+
+  it('subTypes() реагирует на живой filters().unitTypeId', () => {
+    // До выбора — подтипов нет.
+    expect(component.subTypes()).toEqual([]);
+    filterService.selectUnitType('residential', 'ut-apt');
+    // После выбора apartment — подтипы Studio и 1BR.
+    expect(component.subTypes().length).toBe(2);
+    expect(component.subTypes().map((s) => s.id)).toContain('st-s1');
+  });
+
+  it('floorChips реагируют на живой filters().unitTypeId', () => {
+    // Опции с unit_type apartment и этажными справочниками.
+    const OPTS_FLOOR: FilterOptions = {
+      ...MOCK_OPTIONS_CASCADE,
+      floor_levels: [{ id: 'L1', value: 'low', label_en: 'Low' }],
+      floors_in_unit_apt: [{ id: 'A1', value: 'duplex', label_en: 'Duplex' }],
+      floors_in_unit_house: [],
+    };
+    component.options.set(OPTS_FLOOR);
+    // До выбора типа: union всех — level + units.
+    expect(component.floorChips().some((c) => c.group === 'units')).toBeTrue();
+    // Выбираем apartment (ut-apt) через сервис — floorChips только level.
+    filterService.patch({ unitTypeId: 'ut-apt' });
+    const chips = component.floorChips();
+    // apartment: floorLevel=true, floorsInUnit=false → только group level.
+    expect(chips.every((c) => c.group === 'level')).toBeTrue();
+    expect(chips.some((c) => c.group === 'units')).toBeFalse();
+  });
+
+  it('positionChips реагируют на живой filters().unitTypeId', () => {
+    const OPTS_POS: FilterOptions = {
+      ...MOCK_OPTIONS_CASCADE,
+      unit_types: [
+        {
+          id: 'ut-apt2',
+          value: 'apartment',
+          label_en: 'Apartment',
+          parent_id: 'cat-res',
+        },
+      ],
+      positions: [
+        { id: 'p-bb', value: 'back_to_back', label_en: 'Back to Back' },
+        { id: 'p-co', value: 'corner', label_en: 'Corner' },
+        { id: 'p-mi', value: 'middle', label_en: 'Middle' },
+      ],
+    };
+    component.options.set(OPTS_POS);
+    // Сначала без типа — 3 позиции.
+    expect(component.positionChips().length).toBe(3);
+    // После выбора apartment через сервис — только corner + middle.
+    filterService.patch({ unitTypeId: 'ut-apt2' });
+    expect(component.positionChips().length).toBe(2);
+    expect(component.positionChips().map((c) => c.value)).not.toContain('back_to_back');
+  });
+
+  it('apply() не затирает живой unitTypeId значением из draft', () => {
+    // Устанавливаем тип живым способом (через сервис).
+    filterService.selectUnitType('residential', 'ut-apt');
+    expect(filterService.filters().unitTypeId).toBe('ut-apt');
+    // draft().unitTypeId по-прежнему null (был инициализирован ДО выбора).
+    // apply() должен сохранить живой unitTypeId.
+    component.apply();
+    expect(filterService.filters().unitTypeId).toBe('ut-apt');
+  });
+
+  it('после apply() живой subTypeIds сохраняется', () => {
+    filterService.selectUnitType('residential', 'ut-apt');
+    filterService.toggleSubType('st-s1');
+    component.apply();
+    expect(filterService.filters().subTypeIds).toContain('st-s1');
+  });
+});
+
 // ─── Живые контролы: зеркало тулбара (FE-2) ──────────────────────────────────
 describe('FeedFilterPanelComponent — живые контролы (FE-2)', () => {
   let component: FeedFilterPanelComponent;

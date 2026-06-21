@@ -125,29 +125,60 @@
          ══════════════════════════════════════════════════════════════════════════ -->
 
     @if (options(); as opts) {
-      <!-- Тип недвижимости — каскад по категории из хедера (item 5/6) -->
-      <div class="filter-group">
-        <div class="filter-label">
-          <mat-icon>apartment</mat-icon>Тип
-          @if (category()) {
-            ({{ category() === 'residential' ? 'Residential' : 'Commercial' }})
-          }
-        </div>
-        <div class="chip-row">
-          @for (u of unitTypes(); track u.id) {
+      <!-- Тип недвижимости — иерархический каскад (живой, как мега-дропдаун тулбара) -->
+
+      <!-- Уровень 1: Категория (Residential / Commercial) -->
+      @if (opts.categories?.length) {
+        <div class="filter-group">
+          <div class="filter-label"><mat-icon>apartment</mat-icon>Категория</div>
+          <div class="chip-row">
+            <!-- Чип «Все типы» / × — сбрасывает категорию, тип и подтипы -->
             <button
               type="button"
               class="chip"
-              [class.is-selected]="draft().unitTypeId === u.id"
-              (click)="setUnitType(u.id)"
+              [class.is-selected]="!category()"
+              (click)="_filterService.clearType()"
             >
-              {{ u.label_en }}
+              @if (category()) {
+                ×
+              } @else {
+                Все типы
+              }
             </button>
-          }
+            @for (c of opts.categories; track c.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="category() === c.value"
+                (click)="_filterService.selectCategoryAll(c.value)"
+              >
+                {{ c.label_en }}
+              </button>
+            }
+          </div>
         </div>
-      </div>
+      }
 
-      <!-- Подтип — появляется после выбора типа (item 5) -->
+      <!-- Уровень 2: unit_type — показывается когда выбрана категория -->
+      @if (category()) {
+        <div class="filter-group">
+          <div class="filter-label"><mat-icon>home</mat-icon>Тип объекта</div>
+          <div class="chip-row">
+            @for (u of unitTypes(); track u.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="_filterService.filters().unitTypeId === u.id"
+                (click)="_filterService.selectUnitType(category()!, u.id)"
+              >
+                {{ u.label_en }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Уровень 3: подтип — появляется после выбора unit_type -->
       @if (subTypes().length) {
         <div class="filter-group">
           <div class="filter-label"><mat-icon>category</mat-icon>Подтип</div>
@@ -156,8 +187,8 @@
               <button
                 type="button"
                 class="chip"
-                [class.is-selected]="draft().subTypeIds.includes(s.id)"
-                (click)="toggleSubType(s.id)"
+                [class.is-selected]="_filterService.filters().subTypeIds.includes(s.id)"
+                (click)="_filterService.toggleSubType(s.id)"
               >
                 {{ s.label_en }}
               </button>

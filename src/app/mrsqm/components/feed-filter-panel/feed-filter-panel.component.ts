@@ -89,10 +89,10 @@ export class FeedFilterPanelComponent {
     return (opts.unit_types ?? []).filter((u) => !catId || u.parent_id === catId);
   });
 
-  // Подтипы выбранного типа объекта.
+  // Подтипы выбранного типа объекта (читаем живой unitTypeId из сервиса).
   readonly subTypes = computed<FilterOptionId[]>(() => {
     const opts = this.options();
-    const unitId = this.draft().unitTypeId;
+    const unitId = this._filterService.filters().unitTypeId;
     if (!opts || !unitId) return [];
     return (opts.sub_types ?? []).filter((s) => s.parent_id === unitId);
   });
@@ -102,7 +102,7 @@ export class FeedFilterPanelComponent {
   readonly floorChips = computed<FloorChip[]>(() => {
     const opts = this.options();
     if (!opts) return [];
-    const unitTypeId = this.draft().unitTypeId;
+    const unitTypeId = this._filterService.filters().unitTypeId;
     const unitTypeValue = unitTypeId
       ? ((opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null)
       : null;
@@ -141,15 +141,15 @@ export class FeedFilterPanelComponent {
   // TypeFields для выбранного типа (null → NONE). Нужны для условного показа секций.
   readonly typeFields = computed(() => {
     const opts = this.options();
-    const unitTypeId = this.draft().unitTypeId;
+    const unitTypeId = this._filterService.filters().unitTypeId;
     if (!opts || !unitTypeId) return typeFieldsFor(null);
     const unitTypeValue =
       (opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null;
     return typeFieldsFor(unitTypeValue);
   });
 
-  // Тип выбран — для шаблона.
-  readonly hasUnitType = computed(() => !!this.draft().unitTypeId);
+  // Тип выбран — для шаблона (живой сигнал из сервиса).
+  readonly hasUnitType = computed(() => !!this._filterService.filters().unitTypeId);
 
   // Список заселённости: из справочника или статика.
   readonly occupancyOptions = computed(() => {
@@ -164,7 +164,7 @@ export class FeedFilterPanelComponent {
   readonly positionChips = computed<FilterOptionId[]>(() => {
     const opts = this.options();
     if (!opts?.positions?.length) return [];
-    const unitTypeId = this.draft().unitTypeId;
+    const unitTypeId = this._filterService.filters().unitTypeId;
     const unitTypeValue = unitTypeId
       ? ((opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null)
       : null;
@@ -195,18 +195,27 @@ export class FeedFilterPanelComponent {
     }
   }
 
-  // ─── Тип недвижимости (один; повторный клик снимает; сбрасывает подтипы) ──
+  // ─── Тип недвижимости — живой (через сервис, не draft) ──────────────────
+  // Повторный клик снимает тип; category из живого сигнала.
   setUnitType(id: string): void {
-    const cur = this.draft().unitTypeId;
-    this._patch({ unitTypeId: cur === id ? null : id, subTypeIds: [] });
+    const cur = this._filterService.filters().unitTypeId;
+    if (cur === id) {
+      // Снять выбор типа — оставить категорию, но очистить тип+подтипы.
+      this._filterService.selectCategoryAll(this._filterService.category()!);
+    } else {
+      const cat = this._filterService.category();
+      if (cat) {
+        this._filterService.selectUnitType(cat, id);
+      } else {
+        // Категория не выбрана — устанавливаем residential по умолчанию.
+        this._filterService.selectUnitType('residential', id);
+      }
+    }
   }
 
-  // ─── Подтип — мультиселект ────────────────────────────────────────────────
+  // ─── Подтип — мультиселект (живой через сервис) ──────────────────────────
   toggleSubType(id: string): void {
-    const arr = this.draft().subTypeIds;
-    this._patch({
-      subTypeIds: arr.includes(id) ? arr.filter((v) => v !== id) : [...arr, id],
-    });
+    this._filterService.toggleSubType(id);
   }
 
   // ─── Мультиселекты ────────────────────────────────────────────────────────
@@ -378,6 +387,8 @@ export class FeedFilterPanelComponent {
   }
 
   reset(): void {
+    // Сбрасываем живой тип (категория + unitTypeId + subTypeIds) через сервис.
+    this._filterService.clearType();
     this.draft.set({ ...EMPTY_FILTERS });
     this.developerQuery.set('');
     this.developerResults.set([]);
@@ -385,7 +396,13 @@ export class FeedFilterPanelComponent {
   }
 
   apply(): void {
-    this._filterService.filters.set({ ...this.draft() });
+    const live = this._filterService.filters();
+    // Тип живёт в сервисе — не затираем его значением из draft.
+    this._filterService.filters.set({
+      ...this.draft(),
+      unitTypeId: live.unitTypeId,
+      subTypeIds: live.subTypeIds,
+    });
     this.closed.emit();
   }
 
