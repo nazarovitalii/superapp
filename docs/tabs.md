@@ -164,12 +164,13 @@ TODO: district через `search_locations` (API-2).
   при появлении подтянутся автоматически; project-медиа из `location_developers.media` — слой 2)
 - **Нет фото** — серый блок ~1/3 высоты с текстом «No Photo» (без иконки)
 - **Кнопка «Добавить в избранное»** — под фото (toggle `save_property`, иконка `bookmark`)
-- **Цена** — крупно; `previous_price > price` → старая зачёркнута + чип «Снижение».
-  Чипы: Продажа/Аренда · Срочно · Торг (`is_negotiable`) · Комиссия включена
+- **Цена** — крупно; `previous_price > price` → старая зачёркнута. Чипы (2026-06-21):
+  **Reduced** (`is_reduced`, sticky) · **Below OP** (`is_below_op`) · Срочно · Комиссия включена.
+  Бейдж «Торг» убран; «Снижение» заменён на «Reduced».
 - **Tech (характеристики)** — иконка `info`; формат «Поле: Значение» построчно, **левосторонне**
   (Вариант A, без правой колонки; тот же стиль у блока Project, FC-1): Deal · Type (категория+тип+подтип
   +«hotel apartment») · Bedrooms (+maid, **+vastu** при `is_vastu`) · Bathrooms · BUA (`area_sqft`) ·
-  Plot (`plot_sqft`) · Floor (`floor_level_id`) · Floors (`floors_in_unit`) · Furnished · Handover ·
+  Plot (`plot_sqft`) · Floor (`floor_level_id`) · Levels (`floors_in_unit_id`) · Furnished · Handover ·
   Completion · Occupancy (+`lease_until`) · Created · Updated. (Layout-имя — слой 4)
 - **Особенности** — views/positions/amenities (id → названия через `get_filter_options`)
 - **Локация** — полный путь `location_full_path`; ниже серым — адрес по бегунку
@@ -227,12 +228,16 @@ RPC `publish_property` **не существует**. Справочники —
    (AP-3): кастомные **круглые точки по уровням**, трек от центра первого слова до центра leaf, метка по
    центру, клик по точке ≥ комьюнити (AP-S2; `public_location_id`, минимум — комьюнити).
 3. **Параметры** — поля зависят от unit_type (`property-type-fields.ts`): **Спальни\*/Санузлы\*
-   (обязательные)**, чекбоксы `is_maid`/`is_hotel_pool`/`is_vastu` (**три строки, метки слева,
-   чекбоксы выровнены в колонку**; «Vastu Compliant»; vastu только residential apartment/house),
+   (обязательные)**, чекбоксы `is_maid`/**`is_study` («Study room», строкой под Maid, apartment/house)**/`is_hotel_pool`/`is_vastu`
+   (метки слева, чекбоксы выровнены в колонку; «Vastu Compliant»; vastu только residential apartment/house),
    **Планировка `layout_id`** (`community_layouts`, **над площадью, только `house`**, Q2), BUA `area_sqft`\*,
-   `plot_sqft`\*, `floor_level_id`, `floors_in_unit`, мультиселекты `view_ids`/`position_ids`/`amenity_ids`,
+   `plot_sqft`\*, **этаж обязателен\***: apartment — `floor_level_id` ярлык «Этажность» (Low/Mid/High Floor),
+   house — `floors_in_unit_id` ярлык «Levels» (G+0…G+3, **uuid → property_type_values** с 2026-06-21);
+   мультиселекты `view_ids`/`amenity_ids` + **«Расположение» = два взаимоисключающих набора** (`position_ids`):
+   «Тип ряда» Back-to-Back/Single-Row (**только house**) и «Расположение юнита» Middle/Corner (всем); radio внутри набора;
    `furnished`.
-4. **Цена** — price (AED)\* + торг
+4. **Цена** — price (AED)\*; **`original_price`** «What was the original price? (optional)» (только sale);
+   **`cheques`** «Количество чеков» чипы 1/2/3/4/6/12 (только rent); торг
 5. **Состояние** — handover; **Off-Plan заблокирован при `project_status='completed'`** (FC-3);
    off-plan → completion_year/q (+developer_id из leaf); ready → occupancy; occupied → `lease_until`; distress
 6. **Листинг** — listing_type, visibility. Документы (Title Deed №\*/год, plot/municipality) — только official

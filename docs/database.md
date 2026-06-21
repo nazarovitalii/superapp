@@ -7,15 +7,16 @@
 
 ## ⚙️ Журнал изменений схемы (прим\* — тела функций ниже могут быть устаревшими)
 
-| Дата       | Объект                                                            | Что                                                                                                                                                                                                                                                               | Миграция                                                            |
-| ---------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 2026-06-18 | `get_property()`                                                  | Приватность адреса (V-10/V-11): не-владельцу со скрытым адресом не отдаётся `location_full_path`, `location_name`=публичный leaf. Пост-обработка `v_result` перед RETURN (staleness-proof DO-патч).                                                               | `…/applied/2026-06-18-get-property-private-address.sql`             |
-| 2026-06-18 | `get_feed()`                                                      | Приватность адреса (V-10): `location_name`/`community_name` гейтятся (полный только владельцу/нескрытым); добавлены `public_location_name`/`public_community_name`. Точечный DO-патч (staleness-proof).                                                           | `…/applied/2026-06-18-get-feed-private-address.sql`                 |
-| 2026-06-18 | `get_feed()`                                                      | Сортировка по дате (`p_sort_by` default/date_desc/date_asc) — `published_at` → `COALESCE(last_actualized_at, published_at)`: лента показывала дату актуализации, а сортировалась по публикации (U-3). Патч ORDER BY через `pg_get_functiondef` (staleness-proof). | `…/applied/2026-06-18-get-feed-sort-by-actualized.sql`              |
-| 2026-06-11 | `activate_user()`                                                 | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`.                                                                                                                                           | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql` |
-| 2026-06-11 | `get_feed()`                                                      | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                                                                                                                                                                | `…/2026-06-11-get-feed-add-community-name.sql`                      |
-| 2026-06-11 | `get_agent_listings()`                                            | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                                                                                                                                                                  | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`               |
-| 2026-06-16 | `update_property()`, `actualize_property()`, `archive_property()` | Новые SECURITY DEFINER RPC для действий владельца над своим объектом (на `properties` нет UPDATE-RLS). Каждая проверяет `owner_id = auth.uid()`; правят только цену+описание / `last_actualized_at` / `status`.                                                   | `…/2026-06-16-property-owner-actions.sql`                           |
+| Дата       | Объект                                                             | Что                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Миграция                                                                                                |
+| ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-06-21 | `properties`, `get_property()`, триггер `trg_property_price_flags` | Раунд 1 «новые поля»: колонка `floors_in_unit_id` (uuid → property_type_values, бэкфилл из text `floors_in_unit`, старая колонка legacy); `get_property` отдаёт `floors_in_unit_id` + `is_reduced`/`is_below_op` (staleness-proof DO-патч, якорь на запятую — `\b` в Postgres = backspace). Новый триггер `set_property_price_flags()` BEFORE INSERT/UPDATE: `is_below_op` (производное), `is_reduced` (sticky). Колонки `is_study`/`original_price`/`is_below_op`/`is_reduced`/`cheques` уже существовали. | `…/applied/2026-06-21-floors-in-unit-uuid.sql`, `…/applied/2026-06-21-property-price-flags-trigger.sql` |
+| 2026-06-18 | `get_property()`                                                   | Приватность адреса (V-10/V-11): не-владельцу со скрытым адресом не отдаётся `location_full_path`, `location_name`=публичный leaf. Пост-обработка `v_result` перед RETURN (staleness-proof DO-патч).                                                                                                                                                                                                                                                                                                         | `…/applied/2026-06-18-get-property-private-address.sql`                                                 |
+| 2026-06-18 | `get_feed()`                                                       | Приватность адреса (V-10): `location_name`/`community_name` гейтятся (полный только владельцу/нескрытым); добавлены `public_location_name`/`public_community_name`. Точечный DO-патч (staleness-proof).                                                                                                                                                                                                                                                                                                     | `…/applied/2026-06-18-get-feed-private-address.sql`                                                     |
+| 2026-06-18 | `get_feed()`                                                       | Сортировка по дате (`p_sort_by` default/date_desc/date_asc) — `published_at` → `COALESCE(last_actualized_at, published_at)`: лента показывала дату актуализации, а сортировалась по публикации (U-3). Патч ORDER BY через `pg_get_functiondef` (staleness-proof).                                                                                                                                                                                                                                           | `…/applied/2026-06-18-get-feed-sort-by-actualized.sql`                                                  |
+| 2026-06-11 | `activate_user()`                                                  | Триггер на `properties` падал (`NEW.user_id`, а поле `owner_id`) → INSERT объекта невозможен. Ветка по `TG_TABLE_NAME`.                                                                                                                                                                                                                                                                                                                                                                                     | `docs/migrations/applied/2026-06-11-fix-activate-user-owner-id.sql`                                     |
+| 2026-06-11 | `get_feed()`                                                       | Добавлен `LEFT JOIN locations lc ON lc.id = l.community_id` + поле `community_name` в jsonb-вывод.                                                                                                                                                                                                                                                                                                                                                                                                          | `…/2026-06-11-get-feed-add-community-name.sql`                                                          |
+| 2026-06-11 | `get_agent_listings()`                                             | Был сломан (`>100 args` в одном `jsonb_build_object`, ошибка 54023). Разбит на два через `\|\|`.                                                                                                                                                                                                                                                                                                                                                                                                            | `…/2026-06-11-fix-get-agent-listings-jsonb-limit.sql`                                                   |
+| 2026-06-16 | `update_property()`, `actualize_property()`, `archive_property()`  | Новые SECURITY DEFINER RPC для действий владельца над своим объектом (на `properties` нет UPDATE-RLS). Каждая проверяет `owner_id = auth.uid()`; правят только цену+описание / `last_actualized_at` / `status`.                                                                                                                                                                                                                                                                                             | `…/2026-06-16-property-owner-actions.sql`                                                               |
 
 > Известные **серверные баги (не чинены)**: на `properties` нет DELETE-RLS-политики
 > (удаление объекта с клиента невозможно — для «снять» используется `archive_property`);
@@ -3137,6 +3138,7 @@ $function$
 | `properties`         | trg_properties_geom             | BEFORE | INSERT OR UPDATE           | `sync_geom()`                         |
 | `properties`         | trg_properties_updated_at       | BEFORE | UPDATE                     | `update_updated_at()`                 |
 | `properties`         | trg_property_logs               | BEFORE | UPDATE                     | `log_property_changes()`              |
+| `properties`         | trg_property_price_flags        | BEFORE | INSERT OR UPDATE           | `set_property_price_flags()`          |
 | `properties`         | trg_sync_context_listings       | AFTER  | INSERT OR DELETE OR UPDATE | `trg_sync_context_listings()`         |
 | `property_comments`  | trg_sync_context_comments       | AFTER  | INSERT OR DELETE OR UPDATE | `trg_sync_context_comments()`         |
 | `property_events`    | trg_property_stats              | AFTER  | INSERT                     | `update_property_stats()`             |
@@ -3201,7 +3203,7 @@ $function$
 #### `properties`
 
 | Колонка               | Тип                             | Ключ |
-| --------------------- | ------------------------------- | ---- |
+| --------------------- | ------------------------------- | ---- | ------------------------------------------------------------------ |
 | `id`                  | uuid                            | PK   |
 | `owner_id`            | uuid                            | FK   |
 | `unit_id`             | uuid                            | FK   |
@@ -3217,6 +3219,7 @@ $function$
 | `bedrooms`            | integer                         |      |
 | `bathrooms`           | integer                         |      |
 | `is_maid`             | boolean                         |      |
+| `is_study`            | boolean                         |      |
 | `is_hotel_pool`       | boolean                         |      |
 | `area_sqft`           | numeric                         |      |
 | `area_sqm`            | numeric                         |      |
@@ -3224,7 +3227,8 @@ $function$
 | `plot_sqm`            | numeric                         |      |
 | `floor_number`        | integer                         |      |
 | `floor_level_id`      | uuid                            | FK   |
-| `floors_in_unit`      | text                            |      |
+| `floors_in_unit`      | text                            |      | legacy (оставлен для отката, не используется фронтом с 2026-06-21) |
+| `floors_in_unit_id`   | uuid                            | FK   | → property_type_values (этажность дома G+0…G+3)                    |
 | `layout_id`           | uuid                            | FK   |
 | `view_ids`            | text[]                          |      |
 | `position_ids`        | text[]                          |      |
@@ -3234,10 +3238,14 @@ $function$
 | `lng`                 | numeric                         |      |
 | `price`               | numeric                         |      |
 | `previous_price`      | numeric                         |      |
+| `original_price`      | numeric                         |      | OP/Original Value (продажа); ниже неё → is_below_op                |
 | `price_currency`      | text                            |      |
 | `price_changed_at`    | timestamp with time zone        |      |
+| `cheques`             | integer                         |      | кол-во чеков оплаты (аренда, ОАЭ)                                  |
 | `is_negotiable`       | boolean                         |      |
 | `commission_included` | boolean                         |      |
+| `is_below_op`         | boolean                         |      | авто: original_price задан И price < original_price (триггер)      |
+| `is_reduced`          | boolean                         |      | sticky: TRUE при снижении цены, не сбрасывается (триггер)          |
 | `is_distress`         | boolean                         |      |
 | `occupancy_status`    | text                            |      |
 | `lease_until`         | date                            |      |
