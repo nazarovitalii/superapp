@@ -600,22 +600,41 @@
                 </div>
               </div>
             }
-            @if (fields().positions && options()!.positions.length) {
-              <div class="field">
-                <span class="field-label">Расположение</span>
-                <div class="chips">
-                  @for (p of options()!.positions; track p.id) {
-                    <button
-                      type="button"
-                      class="chip"
-                      [class.sel]="positionIds().includes(p.id)"
-                      (click)="toggleIn(positionIds, p.id)"
-                    >
-                      {{ p.label_en }}
-                    </button>
-                  }
+            @if (fields().positions) {
+              @if (positionRowOptions().length) {
+                <div class="field">
+                  <span class="field-label">Тип ряда</span>
+                  <div class="chips">
+                    @for (p of positionRowOptions(); track p.id) {
+                      <button
+                        type="button"
+                        class="chip"
+                        [class.sel]="positionIds().includes(p.id)"
+                        (click)="togglePosition(p.id)"
+                      >
+                        {{ p.label_en }}
+                      </button>
+                    }
+                  </div>
                 </div>
-              </div>
+              }
+              @if (positionUnitOptions().length) {
+                <div class="field">
+                  <span class="field-label">Расположение юнита</span>
+                  <div class="chips">
+                    @for (p of positionUnitOptions(); track p.id) {
+                      <button
+                        type="button"
+                        class="chip"
+                        [class.sel]="positionIds().includes(p.id)"
+                        (click)="togglePosition(p.id)"
+                      >
+                        {{ p.label_en }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
             }
             @if (fields().amenities && options()!.amenities.length) {
               <div class="field">

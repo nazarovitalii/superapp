@@ -261,6 +261,21 @@ export class AddPropertyPageComponent {
       : opts.floors_in_unit_apt;
   });
 
+  // «Расположение» = два взаимоисключающих набора. Дом — оба, апартаменты —
+  // только позиция юнита (middle/corner).
+  private readonly _ROW_POS = ['back_to_back', 'single_row'];
+  private readonly _UNIT_POS = ['middle', 'corner'];
+  readonly positionRowOptions = computed<FilterOptionId[]>(() => {
+    const opts = this.options();
+    if (!opts || this._unitTypeValue() !== 'house') return [];
+    return opts.positions.filter((p) => this._ROW_POS.includes(p.value));
+  });
+  readonly positionUnitOptions = computed<FilterOptionId[]>(() => {
+    const opts = this.options();
+    if (!opts) return [];
+    return opts.positions.filter((p) => this._UNIT_POS.includes(p.value));
+  });
+
   // Подпись выбранного адреса (последний уровень цепочки).
   readonly addrLabel = computed<string>(() => {
     const path = this.addrPath();
@@ -640,6 +655,25 @@ export class AddPropertyPageComponent {
   toggleIn(sig: ReturnType<typeof signal<string[]>>, id: string): void {
     const cur = sig();
     sig.set(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  }
+
+  // Клик по позиции: radio внутри своего набора (снять прочие того же набора),
+  // не трогая чужой набор. Повторный клик — снять.
+  togglePosition(id: string): void {
+    const opts = this.options();
+    if (!opts) return;
+    const picked = opts.positions.find((p) => p.id === id);
+    if (!picked) return;
+    const cur = this.positionIds();
+    if (cur.includes(id)) {
+      this.positionIds.set(cur.filter((x) => x !== id));
+      return;
+    }
+    const set = this._ROW_POS.includes(picked.value) ? this._ROW_POS : this._UNIT_POS;
+    const sameSetIds = opts.positions
+      .filter((p) => set.includes(p.value))
+      .map((p) => p.id);
+    this.positionIds.set([...cur.filter((x) => !sameSetIds.includes(x)), id]);
   }
 
   // Форматирование числовых полей.

@@ -964,3 +964,85 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
     expect((component as any)._validateStep()).toBeNull(); // eslint-disable-line @typescript-eslint/no-explicit-any
   });
 });
+
+// ─── Расположение: два взаимоисключающих набора ──────────────────────────────
+describe('AddPropertyPageComponent — позиции (наборы)', () => {
+  let component: AddPropertyPageComponent;
+
+  const POS = [
+    { id: 'b2b', value: 'back_to_back', label_en: 'Back to Back', parent_id: null },
+    { id: 'sr', value: 'single_row', label_en: 'Single Row', parent_id: null },
+    { id: 'mid', value: 'middle', label_en: 'Middle', parent_id: null },
+    { id: 'cor', value: 'corner', label_en: 'Corner', parent_id: null },
+  ];
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+    // Ждём, пока _loadOptions завершится, и затем подменяем options под тест.
+    await Promise.resolve();
+    component.options.set({
+      ...FAKE_OPTIONS,
+      positions: POS,
+      unit_types: [
+        { id: 'house', value: 'house', label_en: 'House', parent_id: null },
+        { id: 'apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+  });
+
+  it('house: оба набора доступны', () => {
+    component.unitTypeId.set('house');
+    expect(component.positionRowOptions().map((p) => p.value)).toEqual([
+      'back_to_back',
+      'single_row',
+    ]);
+    expect(component.positionUnitOptions().map((p) => p.value)).toEqual([
+      'middle',
+      'corner',
+    ]);
+  });
+
+  it('apartment: только middle/corner', () => {
+    component.unitTypeId.set('apt');
+    expect(component.positionRowOptions()).toEqual([]);
+    expect(component.positionUnitOptions().map((p) => p.value)).toEqual([
+      'middle',
+      'corner',
+    ]);
+  });
+
+  it('togglePosition: выбор второго из набора снимает первый', () => {
+    component.unitTypeId.set('house');
+    component.togglePosition('b2b');
+    expect(component.positionIds()).toEqual(['b2b']);
+    component.togglePosition('sr'); // тот же набор → b2b снимается
+    expect(component.positionIds()).toEqual(['sr']);
+  });
+
+  it('togglePosition: наборы независимы (можно по одному из каждого)', () => {
+    component.unitTypeId.set('house');
+    component.togglePosition('sr');
+    component.togglePosition('mid');
+    expect(component.positionIds().sort()).toEqual(['mid', 'sr']);
+  });
+
+  it('togglePosition: повторный клик снимает выбор', () => {
+    component.unitTypeId.set('house');
+    component.togglePosition('mid');
+    component.togglePosition('mid');
+    expect(component.positionIds()).toEqual([]);
+  });
+});
