@@ -7,6 +7,7 @@
 -- Отдельная функция/триггер; существующий log_property_changes НЕ трогаем
 -- (использует OLD.price напрямую → не зависит от порядка BEFORE-триггеров).
 -- ОБРАТИМО: DROP внизу.
+-- ПРИМЕНЯТЬ под ролью supabase_admin (не postgres — иначе must be owner).
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.set_property_price_flags()
