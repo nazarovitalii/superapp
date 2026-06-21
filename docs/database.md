@@ -572,7 +572,7 @@ BEGIN
         NULLIF(loc_sub.name,          ''),
         NULLIF(loc_cluster.name,      ''),
         NULLIF(loc_building.name,     ''),
-        CASE WHEN l.level = 'checkpoint' THEN l.name ELSE NULL END
+        CASE WHEN l.building_id = l.id THEN NULL ELSE l.name END
       )),
 
       -- Slider-адрес по public_location_id (мигр. 2026-06-18 2b)
@@ -583,7 +583,7 @@ BEGIN
           NULLIF(pl_sub.name,      ''),
           NULLIF(pl_cluster.name,  ''),
           NULLIF(pl_building.name, ''),
-          CASE WHEN pl.level = 'checkpoint' THEN pl.name ELSE NULL END
+          CASE WHEN pl.building_id = pl.id THEN NULL ELSE pl.name END
         )) END,
 
       -- Project из location_developers по leaf-локации (мигр. 2026-06-18 2b)
