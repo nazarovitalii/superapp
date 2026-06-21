@@ -32,11 +32,13 @@ DECLARE
 BEGIN
   def := pg_get_functiondef('public.get_property(uuid, uuid)'::regprocedure);
 
-  -- 3a) этажность: ключ и колонка
+  -- 3a) этажность: ключ и колонка.
+  -- ВАЖНО: в Postgres ARE \b = backspace, НЕ граница слова (граница — \y/\m/\M).
+  -- Поэтому якоримся на завершающую запятую значения, без \b.
   def := regexp_replace(
     def,
-    '''floors_in_unit''(\s*),(\s*)p\.floors_in_unit\b',
-    '''floors_in_unit_id''\1,\2p.floors_in_unit_id',
+    '''floors_in_unit''(\s*),(\s*)p\.floors_in_unit,',
+    '''floors_in_unit_id''\1,\2p.floors_in_unit_id,',
     'g'
   );
 
