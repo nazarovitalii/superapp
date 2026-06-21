@@ -54,7 +54,7 @@ const samplePayload = (): PropertyInsert => ({
   plot_sqm: null,
   floor_number: null,
   floor_level_id: null,
-  floors_in_unit: null,
+  floors_in_unit_id: null,
   layout_id: null,
   view_ids: null,
   position_ids: null,

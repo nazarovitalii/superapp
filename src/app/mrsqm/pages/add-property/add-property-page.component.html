@@ -550,7 +550,7 @@
 
             @if (fields().floorLevel) {
               <div class="field">
-                <span class="field-label">Уровень этажа</span>
+                <span class="field-label">Этажность<span class="req-star">*</span></span>
                 <div class="chips">
                   @for (fl of options()!.floor_levels; track fl.id) {
                     <button
@@ -567,14 +567,14 @@
             }
             @if (fields().floorsInUnit) {
               <div class="field">
-                <span class="field-label">Этажность</span>
+                <span class="field-label">Levels<span class="req-star">*</span></span>
                 <div class="chips">
                   @for (fu of floorsInUnitOptions(); track fu.id) {
                     <button
                       type="button"
                       class="chip"
-                      [class.sel]="floorsInUnit() === fu.value"
-                      (click)="floorsInUnit.set(fu.value)"
+                      [class.sel]="floorsInUnit() === fu.id"
+                      (click)="floorsInUnit.set(fu.id)"
                     >
                       {{ fu.label_en }}
                     </button>

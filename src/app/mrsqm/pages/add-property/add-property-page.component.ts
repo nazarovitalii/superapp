@@ -675,6 +675,8 @@ export class AddPropertyPageComponent {
           return 'Укажите спальни и санузлы';
         if (tf.bua && !this.areaSqft()) return 'Укажите площадь (BUA)';
         if (!tf.bua && tf.plot && !this.plotSqft()) return 'Укажите площадь участка';
+        if (tf.floorLevel && !this.floorLevelId()) return 'Укажите этажность';
+        if (tf.floorsInUnit && !this.floorsInUnit()) return 'Укажите этажность (Levels)';
         return null;
       case 3:
         if (!this.price()) return 'Укажите цену';
@@ -762,7 +764,7 @@ export class AddPropertyPageComponent {
       plot_sqm: plot ? Math.round(plot * SQFT_TO_SQM * 100) / 100 : null,
       floor_number: null,
       floor_level_id: tf.floorLevel ? this.floorLevelId() : null,
-      floors_in_unit: tf.floorsInUnit ? this.floorsInUnit() : null,
+      floors_in_unit_id: tf.floorsInUnit ? this.floorsInUnit() : null,
       layout_id: tf.layout ? this.layoutId() : null,
       view_ids: tf.views && this.viewIds().length ? this.viewIds() : null,
       position_ids: tf.positions && this.positionIds().length ? this.positionIds() : null,

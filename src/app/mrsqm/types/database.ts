@@ -205,7 +205,7 @@ export interface PropertyInsert {
   plot_sqm: number | null;
   floor_number: number | null;
   floor_level_id: string | null;
-  floors_in_unit: string | null;
+  floors_in_unit_id: string | null;
   layout_id: string | null;
   view_ids: string[] | null;
   position_ids: string[] | null;

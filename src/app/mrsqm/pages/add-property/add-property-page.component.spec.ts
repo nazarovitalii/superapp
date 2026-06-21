@@ -208,6 +208,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     component.bedrooms.set(2);
     component.bathrooms.set(2);
     component.areaSqft.set('1200');
+    component.floorLevelId.set('fl1');
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
@@ -303,6 +304,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     component.bedrooms.set(2);
     component.bathrooms.set(2);
     component.areaSqft.set('1200');
+    component.floorLevelId.set('fl1');
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
@@ -894,5 +896,71 @@ describe('AddPropertyPageComponent — yearOptions (V-6)', () => {
     for (const y of component.yearOptions()) {
       expect(typeof y).toBe('string');
     }
+  });
+});
+
+// ─── Этаж обязателен (apartment floor_level, house floors_in_unit) ───────────
+describe('AddPropertyPageComponent — обязательный этаж (шаг 2)', () => {
+  let component: AddPropertyPageComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('apartment без floorLevelId → ошибка', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt');
+    component.bedrooms.set(2);
+    component.bathrooms.set(2);
+    component.areaSqft.set('1200');
+    component.floorLevelId.set(null);
+    expect(typeof (component as any)._validateStep()).toBe('string'); // eslint-disable-line @typescript-eslint/no-explicit-any
+  });
+
+  it('house без floorsInUnit → ошибка', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [{ id: 'house', value: 'house', label_en: 'House', parent_id: null }],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('house');
+    component.bedrooms.set(3);
+    component.bathrooms.set(2);
+    component.areaSqft.set('2500');
+    component.floorsInUnit.set(null);
+    expect(typeof (component as any)._validateStep()).toBe('string'); // eslint-disable-line @typescript-eslint/no-explicit-any
+  });
+
+  it('house с floorsInUnit (id) и площадью → null', () => {
+    component.step.set(2);
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [{ id: 'house', value: 'house', label_en: 'House', parent_id: null }],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('house');
+    component.bedrooms.set(3);
+    component.bathrooms.set(2);
+    component.areaSqft.set('2500');
+    component.floorsInUnit.set('fiu-uuid');
+    expect((component as any)._validateStep()).toBeNull(); // eslint-disable-line @typescript-eslint/no-explicit-any
   });
 });
