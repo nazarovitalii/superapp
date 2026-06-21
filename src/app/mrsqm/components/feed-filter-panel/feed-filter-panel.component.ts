@@ -14,6 +14,8 @@ import {
   EMPTY_FILTERS,
   FeedFilters,
   FeedFilterService,
+  FeedHandover,
+  FeedScope,
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import {
@@ -21,6 +23,7 @@ import {
   FilterOptionId,
   ListingType,
   DeveloperSearchItem,
+  DealType,
 } from '../../types/database';
 import { typeFieldsFor } from '../../pages/add-property/property-type-fields';
 
@@ -349,6 +352,29 @@ export class FeedFilterPanelComponent {
   removeDeveloper(id: string): void {
     this._patch({ developerIds: this.draft().developerIds.filter((v) => v !== id) });
     this.pickedDevelopers.set(this.pickedDevelopers().filter((d) => d.id !== id));
+  }
+
+  // ─── Живые контролы (зеркало тулбара) — действуют напрямую на FeedFilterService,
+  //     минуя draft. Меняются мгновенно, без кнопки «Применить». ────────────────
+
+  // Удалить выбранный адрес: синхронизируется с тулбаром (общий сигнал).
+  removeLiveLocation(id: string): void {
+    this._filterService.removeLocation(id);
+  }
+
+  // Sale / Rent.
+  setLiveDealType(type: DealType): void {
+    this._filterService.set(type);
+  }
+
+  // All Segments (null) / Ready / Off-Plan.
+  setLiveSegment(value: FeedHandover | null): void {
+    this._filterService.setSegment(value);
+  }
+
+  // Охват: Public / Friends (my/favourites через панель не выбираются).
+  setLiveScope(value: FeedScope): void {
+    this._filterService.scope.set(value);
   }
 
   reset(): void {

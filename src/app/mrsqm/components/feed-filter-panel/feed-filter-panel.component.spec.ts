@@ -234,7 +234,12 @@ describe('FeedFilterPanelComponent — positionChips', () => {
     ...MOCK_OPTIONS,
     unit_types: [
       { id: 'ut-apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
-      { id: 'ut-hotel', value: 'hotel_apartment', label_en: 'Hotel Apartment', parent_id: null },
+      {
+        id: 'ut-hotel',
+        value: 'hotel_apartment',
+        label_en: 'Hotel Apartment',
+        parent_id: null,
+      },
       { id: 'ut-office', value: 'office', label_en: 'Office', parent_id: null },
       { id: 'ut-house', value: 'house', label_en: 'House', parent_id: null },
     ],
@@ -312,5 +317,109 @@ describe('FeedFilterPanelComponent — positionChips', () => {
   it('options() = null → positionChips() возвращает пустой массив', () => {
     component.options.set(null);
     expect(component.positionChips()).toEqual([]);
+  });
+});
+
+// ─── Живые контролы: зеркало тулбара (FE-2) ──────────────────────────────────
+describe('FeedFilterPanelComponent — живые контролы (FE-2)', () => {
+  let component: FeedFilterPanelComponent;
+  let filterService: FeedFilterService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    filterService = TestBed.inject(FeedFilterService);
+    component.options.set(MOCK_OPTIONS);
+  });
+
+  // ─── Адреса (×) ───────────────────────────────────────────────────────────────
+  it('removeLiveLocation вызывает removeLocation сервиса с нужным id', () => {
+    const spy = spyOn(filterService, 'removeLocation');
+    component.removeLiveLocation('loc-42');
+    expect(spy).toHaveBeenCalledWith('loc-42');
+  });
+
+  it('removeLiveLocation убирает адрес из locationFilters (общий сигнал)', () => {
+    filterService.addLocation({ id: 'loc-1', name: 'Marina' });
+    filterService.addLocation({ id: 'loc-2', name: 'JBR' });
+    component.removeLiveLocation('loc-1');
+    expect(filterService.locationFilters().map((l) => l.id)).toEqual(['loc-2']);
+  });
+
+  // ─── Sale / Rent ──────────────────────────────────────────────────────────────
+  it('setLiveDealType("sale") вызывает set("sale") сервиса', () => {
+    const spy = spyOn(filterService, 'set');
+    component.setLiveDealType('sale');
+    expect(spy).toHaveBeenCalledWith('sale');
+  });
+
+  it('setLiveDealType("rent") вызывает set("rent") сервиса', () => {
+    const spy = spyOn(filterService, 'set');
+    component.setLiveDealType('rent');
+    expect(spy).toHaveBeenCalledWith('rent');
+  });
+
+  it('после setLiveDealType("rent") dealType() === "rent"', () => {
+    component.setLiveDealType('rent');
+    expect(filterService.dealType()).toBe('rent');
+  });
+
+  it('после setLiveDealType("sale") dealType() === "sale"', () => {
+    filterService.set('rent');
+    component.setLiveDealType('sale');
+    expect(filterService.dealType()).toBe('sale');
+  });
+
+  // ─── Ready / Off-Plan / All ───────────────────────────────────────────────────
+  it('setLiveSegment("ready") вызывает setSegment("ready") сервиса', () => {
+    const spy = spyOn(filterService, 'setSegment');
+    component.setLiveSegment('ready');
+    expect(spy).toHaveBeenCalledWith('ready');
+  });
+
+  it('setLiveSegment("offplan") вызывает setSegment("offplan") сервиса', () => {
+    const spy = spyOn(filterService, 'setSegment');
+    component.setLiveSegment('offplan');
+    expect(spy).toHaveBeenCalledWith('offplan');
+  });
+
+  it('setLiveSegment(null) вызывает setSegment(null) — сброс в All', () => {
+    const spy = spyOn(filterService, 'setSegment');
+    component.setLiveSegment(null);
+    expect(spy).toHaveBeenCalledWith(null);
+  });
+
+  it('после setLiveSegment("ready") handover() === "ready"', () => {
+    component.setLiveSegment('ready');
+    expect(filterService.handover()).toBe('ready');
+  });
+
+  it('после setLiveSegment(null) handover() === null (All)', () => {
+    filterService.setSegment('offplan');
+    component.setLiveSegment(null);
+    expect(filterService.handover()).toBeNull();
+  });
+
+  // ─── Охват (scope) Public / Friends ──────────────────────────────────────────
+  it('setLiveScope("public") устанавливает scope("public")', () => {
+    filterService.scope.set('friends');
+    component.setLiveScope('public');
+    expect(filterService.scope()).toBe('public');
+  });
+
+  it('setLiveScope("friends") устанавливает scope("friends")', () => {
+    component.setLiveScope('friends');
+    expect(filterService.scope()).toBe('friends');
   });
 });

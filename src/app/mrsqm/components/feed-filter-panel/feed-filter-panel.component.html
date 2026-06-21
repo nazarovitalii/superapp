@@ -20,6 +20,110 @@
   </div>
 
   <div class="filter-scroll">
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Живые контролы — зеркало тулбара (общие сигналы FeedFilterService,
+         без draft/«Применить»). Меняются мгновенно и двусторонне.
+         ══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Адреса — чипы с × (удаление синхронизируется с тулбаром) -->
+    @if (_filterService.locationFilters().length) {
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>location_on</mat-icon>Адреса</div>
+        <div class="chip-row">
+          @for (loc of _filterService.locationFilters(); track loc.id) {
+            <button
+              type="button"
+              class="chip is-selected"
+              (click)="removeLiveLocation(loc.id)"
+            >
+              {{ loc.name }}&nbsp;<mat-icon class="chip-close">close</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Sale / Rent (живой) -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>handshake</mat-icon>Тип сделки</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.dealType() === 'sale'"
+          (click)="setLiveDealType('sale')"
+        >
+          Sale
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.dealType() === 'rent'"
+          (click)="setLiveDealType('rent')"
+        >
+          Rent
+        </button>
+      </div>
+    </div>
+
+    <!-- All / Ready / Off-Plan (живой) -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>event_available</mat-icon>Готовность</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.handover() === null"
+          (click)="setLiveSegment(null)"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.handover() === 'ready'"
+          (click)="setLiveSegment('ready')"
+        >
+          Ready
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.handover() === 'offplan'"
+          (click)="setLiveSegment('offplan')"
+        >
+          Off-Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Охват: Public / Friends (живой) -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>public</mat-icon>Охват</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.scope() === 'public'"
+          (click)="setLiveScope('public')"
+        >
+          Public
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.scope() === 'friends'"
+          (click)="setLiveScope('friends')"
+        >
+          Friends
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Конец живых контролов; ниже — draft-секции с кнопкой «Применить»
+         ══════════════════════════════════════════════════════════════════════════ -->
+
     @if (options(); as opts) {
       <!-- Тип недвижимости — каскад по категории из хедера (item 5/6) -->
       <div class="filter-group">
