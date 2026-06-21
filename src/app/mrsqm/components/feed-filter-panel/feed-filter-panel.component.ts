@@ -16,6 +16,7 @@ import {
   FeedFilterService,
   FeedHandover,
   FeedScope,
+  PropertyCategory,
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import {
@@ -196,6 +197,11 @@ export class FeedFilterPanelComponent {
   }
 
   // ─── Тип недвижимости — живой (через сервис, не draft) ──────────────────
+  // Выбор категории из шаблона: value справочника — string, сужаем к PropertyCategory.
+  selectCategory(value: string): void {
+    this._filterService.selectCategoryAll(value as PropertyCategory);
+  }
+
   // Повторный клик снимает тип; category из живого сигнала.
   setUnitType(id: string): void {
     const cur = this._filterService.filters().unitTypeId;

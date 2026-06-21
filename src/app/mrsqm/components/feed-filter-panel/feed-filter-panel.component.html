@@ -150,7 +150,7 @@
                 type="button"
                 class="chip"
                 [class.is-selected]="category() === c.value"
-                (click)="_filterService.selectCategoryAll(c.value)"
+                (click)="selectCategory(c.value)"
               >
                 {{ c.label_en }}
               </button>
