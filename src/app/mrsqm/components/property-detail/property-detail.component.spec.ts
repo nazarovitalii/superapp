@@ -611,6 +611,19 @@ describe('PropertyDetailComponent', () => {
     expect(comp.vm().isBelowOp).toBe(false);
   });
 
+  it('floors_in_unit_id резолвится в label (Levels) по floors_in_unit_house', async () => {
+    const { comp, supa, create } = makeComponent();
+    supa.rpcResult = detail({ floors_in_unit_id: 'fiu2' });
+    create.options = {
+      floors_in_unit_house: [
+        { id: 'fiu1', value: 'G+0', label_en: 'G+0' },
+        { id: 'fiu2', value: 'G+1', label_en: 'G+1' },
+      ],
+    };
+    await comp.loadProperty();
+    expect(comp.vm().floorsInUnit).toBe('G+1');
+  });
+
   it('бейдж «Торг» не рендерится даже при is_negotiable', async () => {
     const { comp, fixture, supa } = makeComponent();
     supa.rpcResult = detail({ is_negotiable: true });
