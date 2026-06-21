@@ -33,6 +33,26 @@ export interface FeedFilters {
   areaMax: number | null; // p_area_sqft_max
   furnished: string | null; // p_furnished: furnished | unfurnished
   listingType: ListingType | 'all'; // p_listing_type
+  // ─── новые фильтры (v2) ──────────────────────────────────────────────────────
+  plotMin: number | null; // p_plot_sqft_min
+  plotMax: number | null; // p_plot_sqft_max
+  developerIds: string[]; // p_developer_ids (мультиселект застройщиков)
+  viewIds: string[]; // p_view_ids (мультиселект видов)
+  positionIds: string[]; // p_position_ids (мультиселект позиций)
+  amenityIds: string[]; // p_amenity_ids (мультиселект удобств)
+  floorLevelIds: string[]; // p_floor_level_ids (мультиселект уровней этажа)
+  floorsInUnitIds: string[]; // p_floors_in_unit_ids (мультиселект числа этажей в квартире)
+  isMaid: boolean | null; // p_is_maid
+  isHotelPool: boolean | null; // p_is_hotel_pool
+  isVastu: boolean | null; // p_is_vastu
+  isStudy: boolean | null; // p_is_study
+  isReduced: boolean | null; // p_is_reduced
+  isBelowOp: boolean | null; // p_is_below_op
+  pricePeriod: string | null; // p_price_period (аренда: yearly|monthly)
+  occupancyStatus: string | null; // p_occupancy_status
+  completionYears: number[]; // p_completion_year (off-plan)
+  completionQ: string[]; // p_completion_q (off-plan)
+  cheques: number[]; // p_cheques (аренда)
 }
 
 export const EMPTY_FILTERS: FeedFilters = {
@@ -46,6 +66,26 @@ export const EMPTY_FILTERS: FeedFilters = {
   areaMax: null,
   furnished: null,
   listingType: 'all',
+  // ─── новые фильтры (v2) ──────────────────────────────────────────────────────
+  plotMin: null,
+  plotMax: null,
+  developerIds: [],
+  viewIds: [],
+  positionIds: [],
+  amenityIds: [],
+  floorLevelIds: [],
+  floorsInUnitIds: [],
+  isMaid: null,
+  isHotelPool: null,
+  isVastu: null,
+  isStudy: null,
+  isReduced: null,
+  isBelowOp: null,
+  pricePeriod: null,
+  occupancyStatus: null,
+  completionYears: [],
+  completionQ: [],
+  cheques: [],
 };
 
 @Injectable({ providedIn: 'root' })
@@ -90,6 +130,7 @@ export class FeedFilterService {
   readonly activeFilterCount = computed(() => {
     const f = this.filters();
     let n = 0;
+    // Существующие фильтры
     if (f.unitTypeId) n++;
     if (f.subTypeIds.length) n++;
     if (f.bedrooms.length) n++;
@@ -98,6 +139,25 @@ export class FeedFilterService {
     if (f.areaMin !== null || f.areaMax !== null) n++;
     if (f.furnished) n++;
     if (f.listingType !== 'all') n++;
+    // Новые фильтры (v2)
+    if (f.plotMin !== null || f.plotMax !== null) n++; // одна группа для обоих
+    if (f.developerIds.length) n++;
+    if (f.viewIds.length) n++;
+    if (f.positionIds.length) n++;
+    if (f.amenityIds.length) n++;
+    if (f.floorLevelIds.length) n++;
+    if (f.floorsInUnitIds.length) n++;
+    if (f.isMaid !== null) n++;
+    if (f.isHotelPool !== null) n++;
+    if (f.isVastu !== null) n++;
+    if (f.isStudy !== null) n++;
+    if (f.isReduced !== null) n++;
+    if (f.isBelowOp !== null) n++;
+    if (f.pricePeriod !== null) n++;
+    if (f.occupancyStatus !== null) n++;
+    if (f.completionYears.length) n++;
+    if (f.completionQ.length) n++;
+    if (f.cheques.length) n++;
     return n;
   });
 

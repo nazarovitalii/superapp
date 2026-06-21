@@ -113,6 +113,26 @@ describe('FeedPageComponent', () => {
       areaMax: 2000,
       furnished: 'furnished',
       listingType: 'pocket',
+      // новые поля v2 — используем defaults из EMPTY_FILTERS
+      plotMin: null,
+      plotMax: null,
+      developerIds: [],
+      viewIds: [],
+      positionIds: [],
+      amenityIds: [],
+      floorLevelIds: [],
+      floorsInUnitIds: [],
+      isMaid: null,
+      isHotelPool: null,
+      isVastu: null,
+      isStudy: null,
+      isReduced: null,
+      isBelowOp: null,
+      pricePeriod: null,
+      occupancyStatus: null,
+      completionYears: [],
+      completionQ: [],
+      cheques: [],
     });
     await flush();
     expect(fake.lastParams?.['p_deal_type']).toBe('rent');

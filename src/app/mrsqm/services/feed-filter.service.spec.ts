@@ -74,3 +74,152 @@ describe('FeedFilterService — методы локаций', () => {
     expect(service.locationFilters()).toEqual([]);
   });
 });
+
+describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
+  let service: FeedFilterService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [FeedFilterService] });
+    service = TestBed.inject(FeedFilterService);
+  });
+
+  // ─── EMPTY_FILTERS ────────────────────────────────────────────────────────────
+
+  it('EMPTY_FILTERS содержит все новые поля с правильными значениями', () => {
+    const f = service.filters();
+    // Проверяем существующие поля
+    expect(f.unitTypeId).toBe(null);
+    expect(f.subTypeIds).toEqual([]);
+    expect(f.bedrooms).toEqual([]);
+    expect(f.bathrooms).toEqual([]);
+    expect(f.priceMin).toBe(null);
+    expect(f.priceMax).toBe(null);
+    expect(f.areaMin).toBe(null);
+    expect(f.areaMax).toBe(null);
+    expect(f.furnished).toBe(null);
+    expect(f.listingType).toBe('all');
+    // Проверяем новые числовые поля
+    expect(f.plotMin).toBe(null);
+    expect(f.plotMax).toBe(null);
+    // Проверяем новые массивы
+    expect(f.developerIds).toEqual([]);
+    expect(f.viewIds).toEqual([]);
+    expect(f.positionIds).toEqual([]);
+    expect(f.amenityIds).toEqual([]);
+    expect(f.floorLevelIds).toEqual([]);
+    expect(f.floorsInUnitIds).toEqual([]);
+    expect(f.completionYears).toEqual([]);
+    expect(f.completionQ).toEqual([]);
+    expect(f.cheques).toEqual([]);
+    // Проверяем новые булевы/строковые поля
+    expect(f.isMaid).toBe(null);
+    expect(f.isHotelPool).toBe(null);
+    expect(f.isVastu).toBe(null);
+    expect(f.isStudy).toBe(null);
+    expect(f.isReduced).toBe(null);
+    expect(f.isBelowOp).toBe(null);
+    expect(f.pricePeriod).toBe(null);
+    expect(f.occupancyStatus).toBe(null);
+  });
+
+  // ─── activeFilterCount ────────────────────────────────────────────────────────
+
+  it('activeFilterCount() возвращает 0 для EMPTY_FILTERS', () => {
+    service.reset();
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  it('activeFilterCount() считает +1 за непустой массив (viewIds)', () => {
+    service.patch({ viewIds: ['view-1'] });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() считает plotMin/plotMax как одну группу', () => {
+    service.patch({ plotMin: 100, plotMax: 200 });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() считает plotMin и plotMax отдельно при одном значении', () => {
+    service.patch({ plotMin: 100 });
+    expect(service.activeFilterCount()).toBe(1);
+    service.patch({ plotMax: 200 });
+    expect(service.activeFilterCount()).toBe(1); // всё еще 1 — пара считается как 1
+  });
+
+  it('activeFilterCount() считает +1 за не-null булево поле (isStudy)', () => {
+    service.patch({ isStudy: true });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() считает +1 за не-null строковое поле (pricePeriod)', () => {
+    service.patch({ pricePeriod: 'yearly' });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() складывает новые группы: isStudy + cheques = 2', () => {
+    service.patch({ isStudy: true, cheques: [2] });
+    expect(service.activeFilterCount()).toBe(2);
+  });
+
+  it('activeFilterCount() складывает существующие и новые: price + viewIds = 2', () => {
+    service.patch({ priceMin: 100, priceMax: 200, viewIds: ['x'] });
+    expect(service.activeFilterCount()).toBe(2);
+  });
+
+  it('activeFilterCount() считает несколько новых массивов отдельно', () => {
+    service.patch({
+      developerIds: ['dev-1'],
+      amenityIds: ['am-1'],
+      completionYears: [2025],
+    });
+    expect(service.activeFilterCount()).toBe(3);
+  });
+
+  it('activeFilterCount() считает все новые булевы отдельно', () => {
+    service.patch({
+      isMaid: true,
+      isHotelPool: false, // false тоже не null!
+      isVastu: true,
+    });
+    expect(service.activeFilterCount()).toBe(3);
+  });
+
+  it('activeFilterCount() не считает false как активный фильтр… если false не отличается от null', () => {
+    // По контракту: boolean | null — false это активное значение, true = активное значение.
+    // null = не установлено. Если пользователь выбрал false (например, "NO maid"), это активный фильтр.
+    service.patch({ isMaid: false });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() при реcете обнуляется', () => {
+    service.patch({
+      viewIds: ['x'],
+      isStudy: true,
+      plotMin: 100,
+    });
+    expect(service.activeFilterCount()).toBeGreaterThan(0);
+    service.reset();
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  it('activeFilterCount() игнорирует пустые массивы', () => {
+    service.patch({
+      viewIds: [],
+      developerIds: [],
+      cheques: [],
+    });
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  it('activeFilterCount() игнорирует null значения', () => {
+    service.patch({
+      isMaid: null,
+      isStudy: null,
+      pricePeriod: null,
+      occupancyStatus: null,
+      plotMin: null,
+      plotMax: null,
+    });
+    expect(service.activeFilterCount()).toBe(0);
+  });
+});
