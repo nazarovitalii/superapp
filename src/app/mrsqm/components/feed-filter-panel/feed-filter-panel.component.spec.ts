@@ -184,3 +184,133 @@ describe('FeedFilterPanelComponent — developer autocomplete', () => {
     expect(component.draft().developerIds).toEqual([]);
   });
 });
+
+// ─── toggleOccupancy — мультиселект ──────────────────────────────────────────
+describe('FeedFilterPanelComponent — toggleOccupancy', () => {
+  let component: FeedFilterPanelComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    component.options.set(MOCK_OPTIONS);
+  });
+
+  it('toggleOccupancy добавляет значение в массив', () => {
+    component.toggleOccupancy('vacant');
+    expect(component.draft().occupancyStatus).toEqual(['vacant']);
+  });
+
+  it('toggleOccupancy добавляет два разных значения', () => {
+    component.toggleOccupancy('vacant');
+    component.toggleOccupancy('occupied');
+    expect(component.draft().occupancyStatus).toEqual(['vacant', 'occupied']);
+  });
+
+  it('повторный toggleOccupancy убирает значение', () => {
+    component.toggleOccupancy('vacant');
+    component.toggleOccupancy('occupied');
+    component.toggleOccupancy('vacant');
+    expect(component.draft().occupancyStatus).toEqual(['occupied']);
+  });
+});
+
+// ─── positionChips — карта позиций по типу ───────────────────────────────────
+describe('FeedFilterPanelComponent — positionChips', () => {
+  let component: FeedFilterPanelComponent;
+
+  // Мок с полными позициями для тестов positionChips.
+  const MOCK_OPTIONS_POS: FilterOptions = {
+    ...MOCK_OPTIONS,
+    unit_types: [
+      { id: 'ut-apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      { id: 'ut-hotel', value: 'hotel_apartment', label_en: 'Hotel Apartment', parent_id: null },
+      { id: 'ut-office', value: 'office', label_en: 'Office', parent_id: null },
+      { id: 'ut-house', value: 'house', label_en: 'House', parent_id: null },
+    ],
+    positions: [
+      { id: 'pos-bb', value: 'back_to_back', label_en: 'Back to Back' },
+      { id: 'pos-sr', value: 'single_row', label_en: 'Single Row' },
+      { id: 'pos-co', value: 'corner', label_en: 'Corner' },
+      { id: 'pos-mi', value: 'middle', label_en: 'Middle' },
+    ],
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS_POS) },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    component.options.set(MOCK_OPTIONS_POS);
+  });
+
+  it('тип не выбран → positionChips содержит все 4 позиции', () => {
+    const chips = component.positionChips();
+    expect(chips.length).toBe(4);
+    const values = chips.map((c) => c.value);
+    expect(values).toContain('back_to_back');
+    expect(values).toContain('single_row');
+    expect(values).toContain('corner');
+    expect(values).toContain('middle');
+  });
+
+  it('apartment → positionChips НЕ содержит back_to_back и single_row', () => {
+    component.setUnitType('ut-apt');
+    const chips = component.positionChips();
+    const values = chips.map((c) => c.value);
+    expect(values).not.toContain('back_to_back');
+    expect(values).not.toContain('single_row');
+    expect(values).toContain('corner');
+    expect(values).toContain('middle');
+  });
+
+  it('hotel_apartment → positionChips НЕ содержит back_to_back и single_row', () => {
+    component.setUnitType('ut-hotel');
+    const chips = component.positionChips();
+    const values = chips.map((c) => c.value);
+    expect(values).not.toContain('back_to_back');
+    expect(values).not.toContain('single_row');
+  });
+
+  it('office → positionChips только corner + middle', () => {
+    component.setUnitType('ut-office');
+    const chips = component.positionChips();
+    expect(chips.length).toBe(2);
+    const values = chips.map((c) => c.value);
+    expect(values).toContain('corner');
+    expect(values).toContain('middle');
+  });
+
+  it('house → positionChips содержит все 4 позиции', () => {
+    component.setUnitType('ut-house');
+    const chips = component.positionChips();
+    expect(chips.length).toBe(4);
+    const values = chips.map((c) => c.value);
+    expect(values).toContain('back_to_back');
+    expect(values).toContain('single_row');
+  });
+
+  it('options() = null → positionChips() возвращает пустой массив', () => {
+    component.options.set(null);
+    expect(component.positionChips()).toEqual([]);
+  });
+});

@@ -543,7 +543,7 @@ export class FeedPageComponent {
       p_is_below_op: f.isBelowOp,
       p_plot_sqft_min: f.plotMin,
       p_plot_sqft_max: f.plotMax,
-      p_occupancy_status: f.occupancyStatus,
+      p_occupancy_status: f.occupancyStatus.length ? f.occupancyStatus : null,
       // Контекст: только аренда.
       p_price_period: this.filter.dealType() === 'rent' ? f.pricePeriod : null,
       p_cheques: this.filter.dealType() === 'rent' && f.cheques.length ? f.cheques : null,

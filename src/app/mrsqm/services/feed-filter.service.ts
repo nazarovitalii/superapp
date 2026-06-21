@@ -49,7 +49,7 @@ export interface FeedFilters {
   isReduced: boolean | null; // p_is_reduced
   isBelowOp: boolean | null; // p_is_below_op
   pricePeriod: string | null; // p_price_period (аренда: yearly|monthly)
-  occupancyStatus: string | null; // p_occupancy_status
+  occupancyStatus: string[]; // p_occupancy_status (мультиселект заселённости)
   completionYears: number[]; // p_completion_year (off-plan)
   completionQ: string[]; // p_completion_q (off-plan)
   cheques: number[]; // p_cheques (аренда)
@@ -82,7 +82,7 @@ export const EMPTY_FILTERS: FeedFilters = {
   isReduced: null,
   isBelowOp: null,
   pricePeriod: null,
-  occupancyStatus: null,
+  occupancyStatus: [],
   completionYears: [],
   completionQ: [],
   cheques: [],
@@ -154,7 +154,7 @@ export class FeedFilterService {
     if (f.isReduced !== null) n++;
     if (f.isBelowOp !== null) n++;
     if (f.pricePeriod !== null) n++;
-    if (f.occupancyStatus !== null) n++;
+    if (f.occupancyStatus.length) n++;
     if (f.completionYears.length) n++;
     if (f.completionQ.length) n++;
     if (f.cheques.length) n++;

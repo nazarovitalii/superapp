@@ -129,7 +129,7 @@ describe('FeedPageComponent', () => {
       isReduced: null,
       isBelowOp: null,
       pricePeriod: null,
-      occupancyStatus: null,
+      occupancyStatus: [],
       completionYears: [],
       completionQ: [],
       cheques: [],
@@ -529,5 +529,23 @@ describe('FeedPageComponent', () => {
     filter.filters.update((f) => ({ ...f, isStudy: true }));
     await flush();
     expect(fake.lastParams?.['p_is_study']).toBe(true);
+  });
+
+  // ─── occupancyStatus мультиселект ────────────────────────────────────────────
+
+  it('occupancyStatus=[] → p_occupancy_status null', async () => {
+    build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, occupancyStatus: [] }));
+    await flush();
+    expect(fake.lastParams?.['p_occupancy_status']).toBeNull();
+  });
+
+  it("occupancyStatus=['vacant','occupied'] → p_occupancy_status=['vacant','occupied']", async () => {
+    build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, occupancyStatus: ['vacant', 'occupied'] }));
+    await flush();
+    expect(fake.lastParams?.['p_occupancy_status']).toEqual(['vacant', 'occupied']);
   });
 });

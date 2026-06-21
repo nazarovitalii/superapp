@@ -119,7 +119,7 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
     expect(f.isReduced).toBe(null);
     expect(f.isBelowOp).toBe(null);
     expect(f.pricePeriod).toBe(null);
-    expect(f.occupancyStatus).toBe(null);
+    expect(f.occupancyStatus).toEqual([]);
   });
 
   // ─── activeFilterCount ────────────────────────────────────────────────────────
@@ -216,10 +216,22 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
       isMaid: null,
       isStudy: null,
       pricePeriod: null,
-      occupancyStatus: null,
+      occupancyStatus: [],
       plotMin: null,
       plotMax: null,
     });
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  // ─── occupancyStatus — мультиселект ──────────────────────────────────────────
+
+  it('activeFilterCount() считает непустой occupancyStatus как +1', () => {
+    service.patch({ occupancyStatus: ['vacant'] });
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() не считает пустой occupancyStatus', () => {
+    service.patch({ occupancyStatus: [] });
     expect(service.activeFilterCount()).toBe(0);
   });
 });

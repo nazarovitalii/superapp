@@ -155,6 +155,25 @@ export class FeedFilterPanelComponent {
     return STATIC_OCCUPANCY;
   });
 
+  // Карта позиций, допустимых для типа объекта.
+  // apartment / hotel_apartment / office → только corner + middle;
+  // остальные типы (или тип не выбран) → все 4 позиции.
+  readonly positionChips = computed<FilterOptionId[]>(() => {
+    const opts = this.options();
+    if (!opts?.positions?.length) return [];
+    const unitTypeId = this.draft().unitTypeId;
+    const unitTypeValue = unitTypeId
+      ? ((opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null)
+      : null;
+    // Типы с ограниченным набором позиций (только углы + середина, без villa-позиций).
+    const APARTMENT_LIKE = new Set(['apartment', 'hotel_apartment', 'office']);
+    const allowed =
+      unitTypeValue && APARTMENT_LIKE.has(unitTypeValue)
+        ? new Set(['corner', 'middle'])
+        : new Set(['back_to_back', 'single_row', 'corner', 'middle']);
+    return opts.positions.filter((p) => allowed.has(p.value));
+  });
+
   // Годы для off-plan: текущий + 5 вперёд.
   readonly completionYearOptions = computed<number[]>(() => {
     const base = new Date().getFullYear();
@@ -275,10 +294,10 @@ export class FeedFilterPanelComponent {
     this._patch({ [field]: cur === true ? null : true });
   }
 
-  // ─── Заселённость ─────────────────────────────────────────────────────────
-  setOccupancy(value: string): void {
+  // ─── Заселённость — мультиселект (как bedrooms/views) ────────────────────
+  toggleOccupancy(value: string): void {
     this._patch({
-      occupancyStatus: this.draft().occupancyStatus === value ? null : value,
+      occupancyStatus: this._toggleStrArray(this.draft().occupancyStatus, value),
     });
   }
 

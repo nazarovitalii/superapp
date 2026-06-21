@@ -136,13 +136,13 @@
         }
       }
 
-      <!-- Расположение — показываем когда: тип не выбран, или tf.positions = true -->
+      <!-- Расположение — карта позиций по типу (apartment/office: только corner+middle) -->
       @if (!hasUnitType() || typeFields().positions) {
-        @if (opts.positions?.length) {
+        @if (positionChips().length) {
           <div class="filter-group">
             <div class="filter-label"><mat-icon>place</mat-icon>Расположение</div>
             <div class="chip-row">
-              @for (p of opts.positions; track p.id) {
+              @for (p of positionChips(); track p.id) {
                 <button
                   type="button"
                   class="chip"
@@ -371,7 +371,7 @@
       </div>
     </div>
 
-    <!-- Заселённость — всегда -->
+    <!-- Заселённость — мультиселект (как bedrooms/views) -->
     <div class="filter-group">
       <div class="filter-label"><mat-icon>person</mat-icon>Заселённость</div>
       <div class="chip-row">
@@ -379,8 +379,8 @@
           <button
             type="button"
             class="chip"
-            [class.is-selected]="draft().occupancyStatus === o.value"
-            (click)="setOccupancy(o.value)"
+            [class.is-selected]="draft().occupancyStatus.includes(o.value)"
+            (click)="toggleOccupancy(o.value)"
           >
             {{ o.label_en }}
           </button>
