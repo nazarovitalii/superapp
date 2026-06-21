@@ -9,6 +9,7 @@
 
 | Дата       | Объект                                                             | Что                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Миграция                                                                                                |
 | ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-06-21 | `get_feed()` | Раунд 2 «Фильтры v2»: смена сигнатуры (полный DROP+CREATE). Убран `p_is_distress`; `p_floor_level_id uuid`→`p_floor_level_ids uuid[]`; `p_floors_in_unit text[]`→`p_floors_in_unit_ids uuid[]` (фикс: фильтр шёл по мёртвой text-колонке, теперь по `floors_in_unit_id`); +`p_cheques int[]`/`p_is_study`/`p_is_reduced`/`p_is_below_op`/`p_is_vastu`. Из jsonb-вывода убраны `is_distress`/`is_negotiable` (терминированы), `floors_in_unit`→`floors_in_unit_id`. | `…/applied/2026-06-21-get-feed-filters-v2.sql` |
 | 2026-06-21 | `properties`, `get_property()`, триггер `trg_property_price_flags` | Раунд 1 «новые поля»: колонка `floors_in_unit_id` (uuid → property_type_values, бэкфилл из text `floors_in_unit`, старая колонка legacy); `get_property` отдаёт `floors_in_unit_id` + `is_reduced`/`is_below_op` (staleness-proof DO-патч, якорь на запятую — `\b` в Postgres = backspace). Новый триггер `set_property_price_flags()` BEFORE INSERT/UPDATE: `is_below_op` (производное), `is_reduced` (sticky). Колонки `is_study`/`original_price`/`is_below_op`/`is_reduced`/`cheques` уже существовали. | `…/applied/2026-06-21-floors-in-unit-uuid.sql`, `…/applied/2026-06-21-property-price-flags-trigger.sql` |
 | 2026-06-18 | `get_property()`                                                   | Приватность адреса (V-10/V-11): не-владельцу со скрытым адресом не отдаётся `location_full_path`, `location_name`=публичный leaf. Пост-обработка `v_result` перед RETURN (staleness-proof DO-патч).                                                                                                                                                                                                                                                                                                         | `…/applied/2026-06-18-get-property-private-address.sql`                                                 |
 | 2026-06-18 | `get_feed()`                                                       | Приватность адреса (V-10): `location_name`/`community_name` гейтятся (полный только владельцу/нескрытым); добавлены `public_location_name`/`public_community_name`. Точечный DO-патч (staleness-proof).                                                                                                                                                                                                                                                                                                     | `…/applied/2026-06-18-get-feed-private-address.sql`                                                     |
@@ -63,12 +64,12 @@ country → city → community → sub_community → cluster → building → ch
 
 **Возвращает:** `jsonb`
 
-**Параметры:** `p_deal_type text`, `p_user_id uuid DEFAULT NULL::uuid`, `p_city_id uuid DEFAULT NULL::uuid`, `p_category_id uuid DEFAULT NULL::uuid`, `p_unit_type_id uuid DEFAULT NULL::uuid`, `p_sub_type_ids uuid[] DEFAULT NULL::uuid[]`, `p_location_ids uuid[] DEFAULT NULL::uuid[]`, `p_developer_ids uuid[] DEFAULT NULL::uuid[]`, `p_developer_name text DEFAULT NULL::text`, `p_bedrooms integer[] DEFAULT NULL::integer[]`, `p_bathrooms integer[] DEFAULT NULL::integer[]`, `p_is_maid boolean DEFAULT NULL::boolean`, `p_is_hotel_pool boolean DEFAULT NULL::boolean`, `p_furnished text DEFAULT NULL::text`, `p_floor_level_id uuid DEFAULT NULL::uuid`, `p_floors_in_unit text[] DEFAULT NULL::text[]`, `p_area_sqft_min numeric DEFAULT NULL::numeric`, `p_area_sqft_max numeric DEFAULT NULL::numeric`, `p_plot_sqft_min numeric DEFAULT NULL::numeric`, `p_plot_sqft_max numeric DEFAULT NULL::numeric`, `p_price_min numeric DEFAULT NULL::numeric`, `p_price_max numeric DEFAULT NULL::numeric`, `p_price_currency text DEFAULT 'AED'::text`, `p_price_period text DEFAULT NULL::text`, `p_view_ids text[] DEFAULT NULL::text[]`, `p_position_ids text[] DEFAULT NULL::text[]`, `p_amenity_ids text[] DEFAULT NULL::text[]`, `p_listing_type text DEFAULT NULL::text`, `p_is_distress boolean DEFAULT NULL::boolean`, `p_occupancy_status text DEFAULT NULL::text`, `p_handover text DEFAULT NULL::text`, `p_completion_year integer[] DEFAULT NULL::integer[]`, `p_completion_q text[] DEFAULT NULL::text[]`, `p_description text DEFAULT NULL::text`, `p_lat numeric DEFAULT NULL::numeric`, `p_lng numeric DEFAULT NULL::numeric`, `p_exclude_location_ids uuid[] DEFAULT NULL::uuid[]`, `p_sort_by text DEFAULT 'default'::text`, `p_limit integer DEFAULT 20`, `p_offset integer DEFAULT 0`
+**Параметры:** `p_deal_type text`, `p_user_id uuid DEFAULT NULL::uuid`, `p_city_id uuid DEFAULT NULL::uuid`, `p_category_id uuid DEFAULT NULL::uuid`, `p_unit_type_id uuid DEFAULT NULL::uuid`, `p_sub_type_ids uuid[] DEFAULT NULL::uuid[]`, `p_location_ids uuid[] DEFAULT NULL::uuid[]`, `p_developer_ids uuid[] DEFAULT NULL::uuid[]`, `p_developer_name text DEFAULT NULL::text`, `p_bedrooms integer[] DEFAULT NULL::integer[]`, `p_bathrooms integer[] DEFAULT NULL::integer[]`, `p_is_maid boolean DEFAULT NULL::boolean`, `p_is_hotel_pool boolean DEFAULT NULL::boolean`, `p_furnished text DEFAULT NULL::text`, `p_floor_level_ids uuid[] DEFAULT NULL::uuid[]`, `p_floors_in_unit_ids uuid[] DEFAULT NULL::uuid[]`, `p_area_sqft_min numeric DEFAULT NULL::numeric`, `p_area_sqft_max numeric DEFAULT NULL::numeric`, `p_plot_sqft_min numeric DEFAULT NULL::numeric`, `p_plot_sqft_max numeric DEFAULT NULL::numeric`, `p_price_min numeric DEFAULT NULL::numeric`, `p_price_max numeric DEFAULT NULL::numeric`, `p_price_currency text DEFAULT 'AED'::text`, `p_price_period text DEFAULT NULL::text`, `p_view_ids text[] DEFAULT NULL::text[]`, `p_position_ids text[] DEFAULT NULL::text[]`, `p_amenity_ids text[] DEFAULT NULL::text[]`, `p_listing_type text DEFAULT NULL::text`, `p_occupancy_status text DEFAULT NULL::text`, `p_handover text DEFAULT NULL::text`, `p_completion_year integer[] DEFAULT NULL::integer[]`, `p_completion_q text[] DEFAULT NULL::text[]`, `p_description text DEFAULT NULL::text`, `p_lat numeric DEFAULT NULL::numeric`, `p_lng numeric DEFAULT NULL::numeric`, `p_exclude_location_ids uuid[] DEFAULT NULL::uuid[]`, `p_sort_by text DEFAULT 'default'::text`, `p_limit integer DEFAULT 20`, `p_offset integer DEFAULT 0`, `p_cheques integer[] DEFAULT NULL::integer[]`, `p_is_study boolean DEFAULT NULL::boolean`, `p_is_reduced boolean DEFAULT NULL::boolean`, `p_is_below_op boolean DEFAULT NULL::boolean`, `p_is_vastu boolean DEFAULT NULL::boolean`
 
 <details><summary>Исходник функции</summary>
 
 ```sql
-CREATE OR REPLACE FUNCTION public.get_feed(p_deal_type text, p_user_id uuid DEFAULT NULL::uuid, p_city_id uuid DEFAULT NULL::uuid, p_category_id uuid DEFAULT NULL::uuid, p_unit_type_id uuid DEFAULT NULL::uuid, p_sub_type_ids uuid[] DEFAULT NULL::uuid[], p_location_ids uuid[] DEFAULT NULL::uuid[], p_developer_ids uuid[] DEFAULT NULL::uuid[], p_developer_name text DEFAULT NULL::text, p_bedrooms integer[] DEFAULT NULL::integer[], p_bathrooms integer[] DEFAULT NULL::integer[], p_is_maid boolean DEFAULT NULL::boolean, p_is_hotel_pool boolean DEFAULT NULL::boolean, p_furnished text DEFAULT NULL::text, p_floor_level_id uuid DEFAULT NULL::uuid, p_floors_in_unit text[] DEFAULT NULL::text[], p_area_sqft_min numeric DEFAULT NULL::numeric, p_area_sqft_max numeric DEFAULT NULL::numeric, p_plot_sqft_min numeric DEFAULT NULL::numeric, p_plot_sqft_max numeric DEFAULT NULL::numeric, p_price_min numeric DEFAULT NULL::numeric, p_price_max numeric DEFAULT NULL::numeric, p_price_currency text DEFAULT 'AED'::text, p_price_period text DEFAULT NULL::text, p_view_ids text[] DEFAULT NULL::text[], p_position_ids text[] DEFAULT NULL::text[], p_amenity_ids text[] DEFAULT NULL::text[], p_listing_type text DEFAULT NULL::text, p_is_distress boolean DEFAULT NULL::boolean, p_occupancy_status text DEFAULT NULL::text, p_handover text DEFAULT NULL::text, p_completion_year integer[] DEFAULT NULL::integer[], p_completion_q text[] DEFAULT NULL::text[], p_description text DEFAULT NULL::text, p_lat numeric DEFAULT NULL::numeric, p_lng numeric DEFAULT NULL::numeric, p_exclude_location_ids uuid[] DEFAULT NULL::uuid[], p_sort_by text DEFAULT 'default'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0)
+CREATE OR REPLACE FUNCTION public.get_feed(p_deal_type text, p_user_id uuid DEFAULT NULL::uuid, p_city_id uuid DEFAULT NULL::uuid, p_category_id uuid DEFAULT NULL::uuid, p_unit_type_id uuid DEFAULT NULL::uuid, p_sub_type_ids uuid[] DEFAULT NULL::uuid[], p_location_ids uuid[] DEFAULT NULL::uuid[], p_developer_ids uuid[] DEFAULT NULL::uuid[], p_developer_name text DEFAULT NULL::text, p_bedrooms integer[] DEFAULT NULL::integer[], p_bathrooms integer[] DEFAULT NULL::integer[], p_is_maid boolean DEFAULT NULL::boolean, p_is_hotel_pool boolean DEFAULT NULL::boolean, p_furnished text DEFAULT NULL::text, p_floor_level_ids uuid[] DEFAULT NULL::uuid[], p_floors_in_unit_ids uuid[] DEFAULT NULL::uuid[], p_area_sqft_min numeric DEFAULT NULL::numeric, p_area_sqft_max numeric DEFAULT NULL::numeric, p_plot_sqft_min numeric DEFAULT NULL::numeric, p_plot_sqft_max numeric DEFAULT NULL::numeric, p_price_min numeric DEFAULT NULL::numeric, p_price_max numeric DEFAULT NULL::numeric, p_price_currency text DEFAULT 'AED'::text, p_price_period text DEFAULT NULL::text, p_view_ids text[] DEFAULT NULL::text[], p_position_ids text[] DEFAULT NULL::text[], p_amenity_ids text[] DEFAULT NULL::text[], p_listing_type text DEFAULT NULL::text, p_occupancy_status text DEFAULT NULL::text, p_handover text DEFAULT NULL::text, p_completion_year integer[] DEFAULT NULL::integer[], p_completion_q text[] DEFAULT NULL::text[], p_description text DEFAULT NULL::text, p_lat numeric DEFAULT NULL::numeric, p_lng numeric DEFAULT NULL::numeric, p_exclude_location_ids uuid[] DEFAULT NULL::uuid[], p_sort_by text DEFAULT 'default'::text, p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_cheques integer[] DEFAULT NULL::integer[], p_is_study boolean DEFAULT NULL::boolean, p_is_reduced boolean DEFAULT NULL::boolean, p_is_below_op boolean DEFAULT NULL::boolean, p_is_vastu boolean DEFAULT NULL::boolean)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -86,77 +87,58 @@ DECLARE
   v_nearby_info            jsonb;
 BEGIN
 
-  -- ================================================================
   -- ШАГ 1: Валидация
-  -- ================================================================
   IF p_deal_type IS NULL THEN
     RAISE EXCEPTION 'deal_type is required';
   END IF;
-
   IF p_deal_type NOT IN ('sale', 'rent') THEN
     RAISE EXCEPTION 'deal_type must be sale or rent';
   END IF;
 
-  -- ================================================================
   -- ШАГ 2: Определить city_id
-  -- Приоритет: 1) p_city_id параметр 2) user_identities.city_id
-  -- ================================================================
   IF p_city_id IS NOT NULL THEN
     v_city_id := p_city_id;
   ELSE
-    -- Берём из user_context (кэш) — быстрее чем JOIN через user_identities
     SELECT city_id INTO v_city_id
     FROM user_context
     WHERE user_id = v_current_user_id;
   END IF;
-
   IF v_city_id IS NULL THEN
     RAISE EXCEPTION 'city_id could not be determined: user has no city set';
   END IF;
 
-  -- ================================================================
-  -- ШАГ 3: Получить сеть юзера (для флага is_network)
-  -- ================================================================
+  -- ШАГ 3: Сеть юзера
   SELECT array_cat(
     COALESCE(friend_ids,    ARRAY[]::uuid[]),
     COALESCE(colleague_ids, ARRAY[]::uuid[])
   ) INTO v_network_ids
   FROM user_network
   WHERE user_id = v_current_user_id;
-
   IF v_network_ids IS NULL THEN
     v_network_ids := ARRAY[]::uuid[];
   END IF;
 
-  -- ================================================================
-  -- ШАГ 4: Радиус гео поиска из ai_configs
-  -- ================================================================
+  -- ШАГ 4: Радиус гео из ai_configs
   SELECT value::numeric INTO v_radius_km
   FROM ai_configs
   WHERE key = 'nearby_radius_km';
-
   IF v_radius_km IS NULL THEN
     v_radius_km := 2;
   END IF;
 
-  -- ================================================================
-  -- ШАГ 5: Поиск девелопера (если передан)
-  -- ================================================================
+  -- ШАГ 5: Поиск девелопера
   IF p_developer_name IS NOT NULL THEN
     SELECT array_agg(id) INTO v_developer_ids
     FROM developers
     WHERE name ILIKE '%' || p_developer_name || '%'
       AND is_active = true;
   END IF;
-
   IF p_developer_ids IS NOT NULL AND cardinality(p_developer_ids) > 0 THEN
     v_developer_ids := array_cat(
       COALESCE(v_developer_ids, ARRAY[]::uuid[]),
       p_developer_ids
     );
   END IF;
-
-  -- Получить локации девелопера
   IF v_developer_ids IS NOT NULL AND cardinality(v_developer_ids) > 0 THEN
     SELECT array_agg(DISTINCT loc_id) INTO v_developer_location_ids
     FROM (
@@ -170,9 +152,7 @@ BEGIN
     ) base_locs;
   END IF;
 
-  -- ================================================================
   -- ШАГ 7: Основной COUNT
-  -- ================================================================
   SELECT COUNT(*) INTO v_count_total
   FROM properties p
   WHERE
@@ -210,8 +190,8 @@ BEGIN
     AND (p_is_maid          IS NULL OR p.is_maid          = p_is_maid)
     AND (p_is_hotel_pool    IS NULL OR p.is_hotel_pool    = p_is_hotel_pool)
     AND (p_furnished        IS NULL OR p.furnished        = p_furnished)
-    AND (p_floor_level_id   IS NULL OR p.floor_level_id   = p_floor_level_id)
-    AND (p_floors_in_unit   IS NULL OR p.floors_in_unit   = ANY(p_floors_in_unit))
+    AND (p_floor_level_ids  IS NULL OR p.floor_level_id   = ANY(p_floor_level_ids))
+    AND (p_floors_in_unit_ids IS NULL OR p.floors_in_unit_id = ANY(p_floors_in_unit_ids))
     AND (p_area_sqft_min    IS NULL OR p.area_sqft        >= p_area_sqft_min)
     AND (p_area_sqft_max    IS NULL OR p.area_sqft        <= p_area_sqft_max)
     AND (p_plot_sqft_min    IS NULL OR p.plot_sqft        >= p_plot_sqft_min)
@@ -224,7 +204,11 @@ BEGIN
     AND (p_position_ids     IS NULL OR p.position_ids     @> p_position_ids)
     AND (p_amenity_ids      IS NULL OR p.amenity_ids      @> p_amenity_ids)
     AND (p_listing_type     IS NULL OR p.listing_type     = p_listing_type)
-    AND (p_is_distress      IS NULL OR p.is_distress      = p_is_distress)
+    AND (p_cheques          IS NULL OR p.cheques          = ANY(p_cheques))
+    AND (p_is_study         IS NULL OR p.is_study         = p_is_study)
+    AND (p_is_reduced       IS NULL OR p.is_reduced       = p_is_reduced)
+    AND (p_is_below_op      IS NULL OR p.is_below_op      = p_is_below_op)
+    AND (p_is_vastu         IS NULL OR p.is_vastu         = p_is_vastu)
     AND (p_occupancy_status IS NULL OR p.occupancy_status = p_occupancy_status)
     AND (p_handover         IS NULL OR p.handover         = p_handover)
     AND (p_completion_year  IS NULL OR p.completion_year  = ANY(p_completion_year))
@@ -249,9 +233,7 @@ BEGIN
         )
       );
 
-  -- ================================================================
   -- ШАГ 8: Основной SELECT с пагинацией
-  -- ================================================================
   SELECT jsonb_agg(row_data) INTO v_results
   FROM (
     SELECT (
@@ -278,7 +260,7 @@ BEGIN
         'plot_sqm',            p.plot_sqm,
         'floor_number',        p.floor_number,
         'floor_level_id',      p.floor_level_id,
-        'floors_in_unit',      p.floors_in_unit,
+        'floors_in_unit_id',   p.floors_in_unit_id,        -- было 'floors_in_unit', p.floors_in_unit
         'layout_id',           p.layout_id,
         'view_ids',            p.view_ids,
         'position_ids',        p.position_ids,
@@ -290,9 +272,9 @@ BEGIN
         'previous_price',      p.previous_price,
         'price_currency',      p.price_currency,
         'price_changed_at',    p.price_changed_at,
-        'is_negotiable',       p.is_negotiable,
+        -- 'is_negotiable' УДАЛЁН (терминирован)
         'commission_included', p.commission_included,
-        'is_distress',         p.is_distress,
+        -- 'is_distress' УДАЛЁН (терминирован)
         'occupancy_status',    p.occupancy_status,
         'lease_until',         p.lease_until,
         'description',         p.description,
@@ -320,26 +302,22 @@ BEGIN
         'comments_count',      p.comments_count,
         'created_at',          p.created_at,
         'updated_at',          p.updated_at,
-        -- JOIN поля
         'location_name',       l.name,
         'location_level',      l.level,
-        'community_name',      lc.name,           -- мигр. 2026-06-11
+        'community_name',      lc.name,
         'developer_name_ref',  d.name,
         'developer_logo_url',  d.logo_url,
-        -- Агент (владелец) — скалярные подзапросы, мигр. 2026-06-17
         'owner_full_name',     (SELECT full_name   FROM users           WHERE id      = p.owner_id),
         'owner_agency_name',   (SELECT agency_name FROM user_identities WHERE user_id = p.owner_id LIMIT 1),
         'owner_photo_url',     (SELECT photo_url   FROM user_settings   WHERE user_id = p.owner_id LIMIT 1),
-        'has_photos',          EXISTS (SELECT 1 FROM property_photos WHERE property_id = p.id),  -- мигр. 2026-06-17
-        -- Бейдж владельца
+        'has_photos',          EXISTS (SELECT 1 FROM property_photos WHERE property_id = p.id),
         'owner_badge_level',   ab.badge_level,
-        -- Флаг сети
         'is_network',          (p.owner_id = ANY(v_network_ids))
       )
     ) AS row_data
     FROM properties p
     LEFT JOIN locations l   ON l.id  = p.location_id
-    LEFT JOIN locations lc  ON lc.id = l.community_id  -- мигр. 2026-06-11
+    LEFT JOIN locations lc  ON lc.id = l.community_id
     LEFT JOIN developers d  ON d.id  = p.developer_id
     LEFT JOIN agent_badge ab ON ab.user_id = p.owner_id
     WHERE
@@ -377,8 +355,8 @@ BEGIN
       AND (p_is_maid          IS NULL OR p.is_maid          = p_is_maid)
       AND (p_is_hotel_pool    IS NULL OR p.is_hotel_pool    = p_is_hotel_pool)
       AND (p_furnished        IS NULL OR p.furnished        = p_furnished)
-      AND (p_floor_level_id   IS NULL OR p.floor_level_id   = p_floor_level_id)
-      AND (p_floors_in_unit   IS NULL OR p.floors_in_unit   = ANY(p_floors_in_unit))
+      AND (p_floor_level_ids  IS NULL OR p.floor_level_id   = ANY(p_floor_level_ids))
+      AND (p_floors_in_unit_ids IS NULL OR p.floors_in_unit_id = ANY(p_floors_in_unit_ids))
       AND (p_area_sqft_min    IS NULL OR p.area_sqft        >= p_area_sqft_min)
       AND (p_area_sqft_max    IS NULL OR p.area_sqft        <= p_area_sqft_max)
       AND (p_plot_sqft_min    IS NULL OR p.plot_sqft        >= p_plot_sqft_min)
@@ -391,7 +369,11 @@ BEGIN
       AND (p_position_ids     IS NULL OR p.position_ids     @> p_position_ids)
       AND (p_amenity_ids      IS NULL OR p.amenity_ids      @> p_amenity_ids)
       AND (p_listing_type     IS NULL OR p.listing_type     = p_listing_type)
-      AND (p_is_distress      IS NULL OR p.is_distress      = p_is_distress)
+      AND (p_cheques          IS NULL OR p.cheques          = ANY(p_cheques))
+      AND (p_is_study         IS NULL OR p.is_study         = p_is_study)
+      AND (p_is_reduced       IS NULL OR p.is_reduced       = p_is_reduced)
+      AND (p_is_below_op      IS NULL OR p.is_below_op      = p_is_below_op)
+      AND (p_is_vastu         IS NULL OR p.is_vastu         = p_is_vastu)
       AND (p_occupancy_status IS NULL OR p.occupancy_status = p_occupancy_status)
       AND (p_handover         IS NULL OR p.handover         = p_handover)
       AND (p_completion_year  IS NULL OR p.completion_year  = ANY(p_completion_year))
@@ -416,18 +398,16 @@ BEGIN
         )
       )
     ORDER BY
-      CASE WHEN p_sort_by = 'default'    THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,  -- мигр. 2026-06-18 (U-3)
+      CASE WHEN p_sort_by = 'default'    THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,
       CASE WHEN p_sort_by = 'price_asc'  THEN p.price        END ASC  NULLS LAST,
       CASE WHEN p_sort_by = 'price_desc' THEN p.price        END DESC NULLS LAST,
-      CASE WHEN p_sort_by = 'date_desc'  THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,  -- мигр. 2026-06-18 (U-3)
-      CASE WHEN p_sort_by = 'date_asc'   THEN COALESCE(p.last_actualized_at, p.published_at) END ASC  NULLS LAST   -- мигр. 2026-06-18 (U-3)
+      CASE WHEN p_sort_by = 'date_desc'  THEN COALESCE(p.last_actualized_at, p.published_at) END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'date_asc'   THEN COALESCE(p.last_actualized_at, p.published_at) END ASC  NULLS LAST
     LIMIT  p_limit
     OFFSET p_offset
   ) final_rows;
 
-  -- ================================================================
   -- ШАГ 9: Вернуть результат
-  -- ================================================================
   RETURN jsonb_build_object(
     'results',       COALESCE(v_results, '[]'::jsonb),
     'count_total',   v_count_total,
@@ -436,7 +416,7 @@ BEGIN
   );
 
 END;
-$function$
+$function$;
 ```
 
 </details>

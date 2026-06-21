@@ -50,4 +50,20 @@ Subagent-Driven (2 задачи + 1 fix reduced-motion).
 
 ---
 
+### T-GF1: Миграция `get_feed` v2 — новая сигнатура (Фильтры ленты v2)
+
+**Дата:** 2026-06-21 · **Где:** прод Supabase (self-hosted), применено под `supabase_admin`
+в одной транзакции (`--single-transaction -v ON_ERROR_STOP=1`).
+**Что проверяли:** полный DROP+CREATE `get_feed` (смена сигнатуры) применился без потери функции;
+новые параметры присутствуют; старый `p_is_distress` удалён; функция исполняется.
+**Ожидали:** `DROP FUNCTION`+`CREATE FUNCTION`; в сигнатуре `p_floor_level_ids uuid[]`,
+`p_floors_in_unit_ids uuid[]`, `p_cheques int[]`, `p_is_study`, `p_is_reduced`, `p_is_below_op`,
+`p_is_vastu`; `p_is_distress` отсутствует; вызов `get_feed('sale', p_city_id=>…)` возвращает jsonb.
+**Получили:** ✅ `DROP FUNCTION`+`CREATE FUNCTION`; `pg_get_function_arguments` подтвердил
+7 новых/изменённых параметров и отсутствие `p_is_distress`; smoke-вызов вернул
+`{count_total, limit}` без ошибок. Текущий прод-фронт не затронут (эти параметры не передаёт).
+**Вывод:** ✅ миграция корректна. ⏳ Фильтрация по новым полям из UI — после Track 2 (панель).
+
+---
+
 _Других тестов пока нет._
