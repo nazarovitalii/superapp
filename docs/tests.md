@@ -66,4 +66,14 @@ Subagent-Driven (2 задачи + 1 fix reduced-motion).
 
 ---
 
+### T-GF2: Миграция `get_feed` — заселённость мультиселект (`p_occupancy_status` → text[])
+
+**Дата:** 2026-06-21 · **Где:** прод Supabase, под `supabase_admin`, в транзакции.
+**Что:** DROP+CREATE `get_feed` — `p_occupancy_status text` → `text[]` (тело `= ANY(...)`).
+**Получили:** ✅ `DROP`+`CREATE`; `pg_get_function_arguments` → `p_occupancy_status text[]`;
+smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул jsonb без ошибок.
+**Вывод:** ✅ заселённость-мультиселект работает на сервере (соответствует UI-мультиселекту панели).
+
+---
+
 _Других тестов пока нет._
