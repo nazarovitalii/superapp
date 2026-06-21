@@ -528,6 +528,34 @@ export class FeedPageComponent {
       p_location_ids: locs.length ? locs.map((l) => l.id) : null,
       // Поиск-лупа из хедера — свободный текст по описанию объекта.
       p_description: search.length >= 2 ? search : null,
+      // Новые фильтры v2: разработчики, виды, позиции, удобства, этажность.
+      p_developer_ids: f.developerIds.length ? f.developerIds : null,
+      p_view_ids: f.viewIds.length ? f.viewIds : null,
+      p_position_ids: f.positionIds.length ? f.positionIds : null,
+      p_amenity_ids: f.amenityIds.length ? f.amenityIds : null,
+      p_floor_level_ids: f.floorLevelIds.length ? f.floorLevelIds : null,
+      p_floors_in_unit_ids: f.floorsInUnitIds.length ? f.floorsInUnitIds : null,
+      p_is_maid: f.isMaid,
+      p_is_hotel_pool: f.isHotelPool,
+      p_is_vastu: f.isVastu,
+      p_is_study: f.isStudy,
+      p_is_reduced: f.isReduced,
+      p_is_below_op: f.isBelowOp,
+      p_plot_sqft_min: f.plotMin,
+      p_plot_sqft_max: f.plotMax,
+      p_occupancy_status: f.occupancyStatus,
+      // Контекст: только аренда.
+      p_price_period: this.filter.dealType() === 'rent' ? f.pricePeriod : null,
+      p_cheques: this.filter.dealType() === 'rent' && f.cheques.length ? f.cheques : null,
+      // Контекст: только off-plan.
+      p_completion_year:
+        this.filter.handover() === 'offplan' && f.completionYears.length
+          ? f.completionYears
+          : null,
+      p_completion_q:
+        this.filter.handover() === 'offplan' && f.completionQ.length
+          ? f.completionQ
+          : null,
     };
   }
 

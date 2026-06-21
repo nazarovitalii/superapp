@@ -468,4 +468,66 @@ describe('FeedPageComponent', () => {
     filter.addLocation({ id: 'a', name: 'Damac Hills' });
     expect(c.visibleLocationResults().map((l) => l.id)).toEqual(['b']);
   });
+
+  // ─── Task-4: buildParams — контекст rent/off-plan ────────────────────────────
+
+  it('cheques: dealType=sale → p_cheques null', async () => {
+    build();
+    await flush();
+    filter.dealType.set('sale');
+    filter.filters.update((f) => ({ ...f, cheques: [2] }));
+    await flush();
+    expect(fake.lastParams?.['p_cheques']).toBeNull();
+  });
+
+  it('cheques: dealType=rent + cheques=[2] → p_cheques=[2]', async () => {
+    build();
+    await flush();
+    filter.dealType.set('rent');
+    filter.filters.update((f) => ({ ...f, cheques: [2] }));
+    await flush();
+    expect(fake.lastParams?.['p_cheques']).toEqual([2]);
+  });
+
+  it('completionYears: handover≠offplan → p_completion_year null', async () => {
+    build();
+    await flush();
+    filter.handover.set('ready');
+    filter.filters.update((f) => ({ ...f, completionYears: [2027] }));
+    await flush();
+    expect(fake.lastParams?.['p_completion_year']).toBeNull();
+  });
+
+  it('completionYears: handover=offplan + completionYears=[2027] → p_completion_year=[2027]', async () => {
+    build();
+    await flush();
+    filter.handover.set('offplan');
+    filter.filters.update((f) => ({ ...f, completionYears: [2027] }));
+    await flush();
+    expect(fake.lastParams?.['p_completion_year']).toEqual([2027]);
+  });
+
+  it('floorLevelIds=[a] → p_floor_level_ids=[a]', async () => {
+    build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, floorLevelIds: ['a'] }));
+    await flush();
+    expect(fake.lastParams?.['p_floor_level_ids']).toEqual(['a']);
+  });
+
+  it('floorsInUnitIds=[b] → p_floors_in_unit_ids=[b]', async () => {
+    build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, floorsInUnitIds: ['b'] }));
+    await flush();
+    expect(fake.lastParams?.['p_floors_in_unit_ids']).toEqual(['b']);
+  });
+
+  it('isStudy=true → p_is_study=true', async () => {
+    build();
+    await flush();
+    filter.filters.update((f) => ({ ...f, isStudy: true }));
+    await flush();
+    expect(fake.lastParams?.['p_is_study']).toBe(true);
+  });
 });
