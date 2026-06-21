@@ -223,6 +223,56 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
     expect(service.activeFilterCount()).toBe(0);
   });
 
+  // ─── Живые контролы: локации, handover, scope, category ─────────────────────
+
+  it('activeFilterCount() +2 за две добавленные локации', () => {
+    service.addLocation({ id: 'loc-1', name: 'Dubai Marina' });
+    service.addLocation({ id: 'loc-2', name: 'JBR' });
+    expect(service.activeFilterCount()).toBe(2);
+  });
+
+  it('activeFilterCount() +1 за выбранный handover (ready)', () => {
+    service.setHandover('ready');
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() +1 за scope !== "public" (friends)', () => {
+    service.scope.set('friends');
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() +1 за выбранную категорию (без типа)', () => {
+    service.setCategory('residential');
+    expect(service.activeFilterCount()).toBe(1);
+  });
+
+  it('activeFilterCount() суммирует: 2 локации + handover + scope = 4', () => {
+    service.addLocation({ id: 'loc-1', name: 'Dubai Marina' });
+    service.addLocation({ id: 'loc-2', name: 'JBR' });
+    service.setHandover('ready');
+    service.scope.set('friends');
+    expect(service.activeFilterCount()).toBe(4);
+  });
+
+  it('activeFilterCount() не считает dealType (у него всегда есть значение)', () => {
+    service.set('rent');
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  it('activeFilterCount() обнуляется после clearLocations + reset + сброса scope/handover', () => {
+    service.addLocation({ id: 'loc-1', name: 'A' });
+    service.setHandover('offplan');
+    service.scope.set('friends');
+    service.patch({ viewIds: ['x'] });
+    // Сбрасываем всё
+    service.clearLocations();
+    service.setHandover('ready');
+    service.setHandover('ready'); // повторный → null
+    service.scope.set('public');
+    service.reset();
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
   // ─── occupancyStatus — мультиселект ──────────────────────────────────────────
 
   it('activeFilterCount() считает непустой occupancyStatus как +1', () => {

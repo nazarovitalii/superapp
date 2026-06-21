@@ -130,8 +130,15 @@ export class FeedFilterService {
   readonly activeFilterCount = computed(() => {
     const f = this.filters();
     let n = 0;
-    // Существующие фильтры
-    if (f.unitTypeId) n++;
+    // Живые контролы (не draft): каждая выбранная локация = +1
+    n += this.locationFilters().length;
+    // Тип/категория = 1 (единый каскадный блок)
+    if (f.unitTypeId || this.category()) n++;
+    // Готовность (Ready/Off-Plan выбрана)
+    if (this.handover()) n++;
+    // Охват не дефолтный
+    if (this.scope() !== 'public') n++;
+    // Draft-фильтры
     if (f.subTypeIds.length) n++;
     if (f.bedrooms.length) n++;
     if (f.bathrooms.length) n++;

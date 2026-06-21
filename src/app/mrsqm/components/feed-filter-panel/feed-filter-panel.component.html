@@ -97,40 +97,16 @@
       </div>
     </div>
 
-    <!-- Охват: Public / Friends (живой) -->
-    <div class="filter-group">
-      <div class="filter-label"><mat-icon>public</mat-icon>Охват</div>
-      <div class="chip-row">
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="_filterService.scope() === 'public'"
-          (click)="setLiveScope('public')"
-        >
-          Public
-        </button>
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="_filterService.scope() === 'friends'"
-          (click)="setLiveScope('friends')"
-        >
-          Friends
-        </button>
-      </div>
-    </div>
-
     <!-- ══════════════════════════════════════════════════════════════════════════
          Конец живых контролов; ниже — draft-секции с кнопкой «Применить»
          ══════════════════════════════════════════════════════════════════════════ -->
 
     @if (options(); as opts) {
-      <!-- Тип недвижимости — иерархический каскад (живой, как мега-дропдаун тулбара) -->
-
-      <!-- Уровень 1: Категория (Residential / Commercial) -->
+      <!-- Тип объекта — прогрессивный блок: Категория → Тип → Подтип -->
       @if (opts.categories?.length) {
         <div class="filter-group">
-          <div class="filter-label"><mat-icon>apartment</mat-icon>Категория</div>
+          <div class="filter-label"><mat-icon>apartment</mat-icon>Тип объекта</div>
+          <!-- Уровень 1: Residential / Commercial -->
           <div class="chip-row">
             <!-- Чип «Все типы» / × — сбрасывает категорию, тип и подтипы -->
             <button
@@ -156,44 +132,38 @@
               </button>
             }
           </div>
-        </div>
-      }
-
-      <!-- Уровень 2: unit_type — показывается когда выбрана категория -->
-      @if (category()) {
-        <div class="filter-group">
-          <div class="filter-label"><mat-icon>home</mat-icon>Тип объекта</div>
-          <div class="chip-row">
-            @for (u of unitTypes(); track u.id) {
-              <button
-                type="button"
-                class="chip"
-                [class.is-selected]="_filterService.filters().unitTypeId === u.id"
-                (click)="_filterService.selectUnitType(category()!, u.id)"
-              >
-                {{ u.label_en }}
-              </button>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- Уровень 3: подтип — появляется после выбора unit_type -->
-      @if (subTypes().length) {
-        <div class="filter-group">
-          <div class="filter-label"><mat-icon>category</mat-icon>Подтип</div>
-          <div class="chip-row">
-            @for (s of subTypes(); track s.id) {
-              <button
-                type="button"
-                class="chip"
-                [class.is-selected]="_filterService.filters().subTypeIds.includes(s.id)"
-                (click)="_filterService.toggleSubType(s.id)"
-              >
-                {{ s.label_en }}
-              </button>
-            }
-          </div>
+          <!-- Уровень 2: unit_type — появляется когда выбрана категория -->
+          @if (category()) {
+            <div class="filter-label filter-label--sub"><mat-icon>home</mat-icon>Тип</div>
+            <div class="chip-row">
+              @for (u of unitTypes(); track u.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.is-selected]="_filterService.filters().unitTypeId === u.id"
+                  (click)="_filterService.selectUnitType(category()!, u.id)"
+                >
+                  {{ u.label_en }}
+                </button>
+              }
+            </div>
+          }
+          <!-- Уровень 3: подтип — появляется после выбора unit_type -->
+          @if (subTypes().length) {
+            <div class="filter-label filter-label--sub"><mat-icon>category</mat-icon>Подтип</div>
+            <div class="chip-row">
+              @for (s of subTypes(); track s.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.is-selected]="_filterService.filters().subTypeIds.includes(s.id)"
+                  (click)="_filterService.toggleSubType(s.id)"
+                >
+                  {{ s.label_en }}
+                </button>
+              }
+            </div>
+          }
         </div>
       }
 
@@ -523,37 +493,6 @@
       </div>
     </div>
 
-    <!-- Листинг — чипы, как остальные группы -->
-    <div class="filter-group">
-      <div class="filter-label"><mat-icon>sell</mat-icon>Листинг</div>
-      <div class="chip-row">
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="draft().listingType === 'all'"
-          (click)="setListingType('all')"
-        >
-          Все
-        </button>
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="draft().listingType === 'official'"
-          (click)="setListingType('official')"
-        >
-          Official
-        </button>
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="draft().listingType === 'pocket'"
-          (click)="setListingType('pocket')"
-        >
-          Pocket
-        </button>
-      </div>
-    </div>
-
     <!-- Off-plan: год и квартал сдачи -->
     @if (_filterService.handover() === 'offplan') {
       <div class="filter-group">
@@ -630,6 +569,29 @@
       </div>
     }
 
+    <!-- Охват: Public / Friends (живой) — над Застройщиком и Листингом -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>public</mat-icon>Охват</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.scope() === 'public'"
+          (click)="setLiveScope('public')"
+        >
+          Public
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="_filterService.scope() === 'friends'"
+          (click)="setLiveScope('friends')"
+        >
+          Friends
+        </button>
+      </div>
+    </div>
+
     <!-- Застройщик — автокомплит мультиселект -->
     <div class="filter-group">
       <div class="filter-label"><mat-icon>business</mat-icon>Застройщик</div>
@@ -669,6 +631,37 @@
           }
         </div>
       }
+    </div>
+
+    <!-- Листинг — чипы, как остальные группы -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>sell</mat-icon>Листинг</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'all'"
+          (click)="setListingType('all')"
+        >
+          Все
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'official'"
+          (click)="setListingType('official')"
+        >
+          Official
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().listingType === 'pocket'"
+          (click)="setListingType('pocket')"
+        >
+          Pocket
+        </button>
+      </div>
     </div>
   </div>
 

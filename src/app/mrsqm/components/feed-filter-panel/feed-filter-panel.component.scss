@@ -90,6 +90,15 @@
   }
 }
 
+// Подзаголовок внутри объединённого блока (уровень 2+) — визуально тише основного
+.filter-label--sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-color-muted);
+  min-height: 20px;
+  padding-top: calc(var(--s-half) / 2);
+}
+
 // ─── Чипы (один стиль для всех групп, включая Листинг) ──────────────────────
 .chip-row {
   display: flex;
