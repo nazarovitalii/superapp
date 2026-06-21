@@ -455,3 +455,7 @@ export interface DeveloperSearchItem {
   name: string;
   logo_url: string | null;
 }
+
+// ─── Сохранённый фильтр ленты (таблица saved_filters, RPC get_saved_filters) ──
+// SavedFilter и SavedFilterPayload экспортируются из feed-filter.service.ts,
+// чтобы иметь доступ к типам фильтров без циклического импорта.

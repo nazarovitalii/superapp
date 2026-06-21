@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { FeedFilterService } from './feed-filter.service';
+import { FeedFilterService, SavedFilterPayload } from './feed-filter.service';
 
 describe('FeedFilterService — методы локаций', () => {
   let service: FeedFilterService;
@@ -283,5 +283,158 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
   it('activeFilterCount() не считает пустой occupancyStatus', () => {
     service.patch({ occupancyStatus: [] });
     expect(service.activeFilterCount()).toBe(0);
+  });
+});
+
+describe('FeedFilterService — snapshot / applySnapshot / dirty-трекинг', () => {
+  let service: FeedFilterService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [FeedFilterService] });
+    service = TestBed.inject(FeedFilterService);
+  });
+
+  // ─── snapshot ───────────────────────────────────────────────────────────────
+
+  it('snapshot() собирает начальное состояние по умолчанию', () => {
+    const snap = service.snapshot();
+    expect(snap.dealType).toBe('sale');
+    expect(snap.handover).toBeNull();
+    expect(snap.scope).toBe('public');
+    expect(snap.category).toBeNull();
+    expect(snap.locations).toEqual([]);
+  });
+
+  it('snapshot() отражает изменения в сигналах', () => {
+    service.dealType.set('rent');
+    service.setHandover('ready');
+    service.scope.set('friends');
+    service.setCategory('commercial');
+    service.addLocation({ id: 'loc-1', name: 'Marina' });
+    const snap = service.snapshot();
+    expect(snap.dealType).toBe('rent');
+    expect(snap.handover).toBe('ready');
+    expect(snap.scope).toBe('friends');
+    expect(snap.category).toBe('commercial');
+    expect(snap.locations.length).toBe(1);
+  });
+
+  // ─── applySnapshot round-trip ───────────────────────────────────────────────
+
+  it('applySnapshot восстанавливает всё состояние из снапшота', () => {
+    // Меняем состояние
+    service.dealType.set('rent');
+    service.setHandover('offplan');
+    service.scope.set('my');
+    service.setCategory('commercial');
+    service.addLocation({ id: 'loc-1', name: 'Marina' });
+    service.patch({ priceMin: 500000 });
+
+    const snap = service.snapshot();
+
+    // Сброс к дефолту перед восстановлением
+    service.dealType.set('sale');
+    service.clearLoaded();
+    service.reset();
+    service.clearLocations();
+    service.scope.set('public');
+    service.category.set(null);
+    service.handover.set(null);
+
+    // Восстанавливаем
+    service.applySnapshot(snap);
+
+    expect(service.dealType()).toBe('rent');
+    expect(service.handover()).toBe('offplan');
+    expect(service.scope()).toBe('my');
+    expect(service.category()).toBe('commercial');
+    expect(service.locationFilters().length).toBe(1);
+    expect(service.filters().priceMin).toBe(500000);
+  });
+
+  it('snapshot→applySnapshot round-trip сохраняет все поля FeedFilters', () => {
+    service.patch({
+      bedrooms: [2, 3],
+      priceMin: 100000,
+      developerIds: ['dev-1'],
+      isStudy: true,
+    });
+    service.addLocation({ id: 'loc-2', name: 'JBR' });
+
+    const snap = service.snapshot();
+    service.reset();
+    service.clearLocations();
+    service.applySnapshot(snap);
+
+    const f = service.filters();
+    expect(f.bedrooms).toEqual([2, 3]);
+    expect(f.priceMin).toBe(100000);
+    expect(f.developerIds).toEqual(['dev-1']);
+    expect(f.isStudy).toBe(true);
+    expect(service.locationFilters()[0].id).toBe('loc-2');
+  });
+
+  // ─── markLoaded / isDirtySinceLoad ─────────────────────────────────────────
+
+  it('isDirtySinceLoad() === false до загрузки фильтра', () => {
+    expect(service.isDirtySinceLoad()).toBe(false);
+  });
+
+  it('после markLoaded isDirtySinceLoad() === false', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('filter-1', payload);
+    expect(service.isDirtySinceLoad()).toBe(false);
+  });
+
+  it('isDirtySinceLoad() === true после изменения поля', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('filter-1', payload);
+    // Меняем что-то после загрузки
+    service.patch({ priceMin: 999000 });
+    expect(service.isDirtySinceLoad()).toBe(true);
+  });
+
+  it('isDirtySinceLoad() === true после добавления локации', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('filter-1', payload);
+    service.addLocation({ id: 'loc-99', name: 'Palm' });
+    expect(service.isDirtySinceLoad()).toBe(true);
+  });
+
+  it('isDirtySinceLoad() === true после смены dealType', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('filter-1', payload);
+    service.dealType.set('rent');
+    expect(service.isDirtySinceLoad()).toBe(true);
+  });
+
+  it('clearLoaded() обнуляет loadedFilterId и isDirtySinceLoad()', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('filter-1', payload);
+    service.patch({ priceMax: 2000000 });
+
+    service.clearLoaded();
+
+    expect(service.loadedFilterId()).toBeNull();
+    expect(service.loadedSnapshotJson()).toBeNull();
+    expect(service.isDirtySinceLoad()).toBe(false);
+  });
+
+  it('markLoaded восстанавливает состояние и применяет снапшот', () => {
+    const payload: SavedFilterPayload = {
+      filters: { ...service.filters(), priceMin: 750000 },
+      dealType: 'sale',
+      handover: 'ready',
+      scope: 'public',
+      category: 'residential',
+      locations: [{ id: 'loc-10', name: 'DIFC' }],
+    };
+    service.markLoaded('filter-42', payload);
+    expect(service.loadedFilterId()).toBe('filter-42');
+    expect(service.filters().priceMin).toBe(750000);
+    expect(service.handover()).toBe('ready');
+    expect(service.category()).toBe('residential');
+    expect(service.locationFilters()[0].id).toBe('loc-10');
+    expect(service.isDirtySinceLoad()).toBe(false);
   });
 });

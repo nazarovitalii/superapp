@@ -55,6 +55,26 @@ export interface FeedFilters {
   cheques: number[]; // p_cheques (аренда)
 }
 
+// Полное состояние поиска — сохраняется в saved_filters.filters (jsonb).
+// Содержит все сигналы ленты, нужные для полного восстановления.
+export interface SavedFilterPayload {
+  filters: FeedFilters;
+  dealType: DealType;
+  handover: FeedHandover | null;
+  scope: FeedScope;
+  category: PropertyCategory | null;
+  locations: { id: string; name: string }[];
+}
+
+// Строка таблицы saved_filters, возвращаемая RPC get_saved_filters / save_filter.
+export interface SavedFilter {
+  id: string;
+  auto_name: string | null;
+  filters: SavedFilterPayload;
+  notification_type: string | null;
+  created_at: string;
+}
+
 export const EMPTY_FILTERS: FeedFilters = {
   unitTypeId: null,
   subTypeIds: [],
@@ -120,6 +140,55 @@ export class FeedFilterService {
   // Сбрасывает все выбранные локации.
   clearLocations(): void {
     this.locationFilters.set([]);
+  }
+
+  // ─── Snapshot / dirty-трекинг сохранённых фильтров ──────────────────────────
+
+  // Id сейчас загруженного сохранённого фильтра; null = ни один не загружен.
+  readonly loadedFilterId = signal<string | null>(null);
+  // JSON-снапшот на момент загрузки фильтра — для dirty-сравнения.
+  readonly loadedSnapshotJson = signal<string | null>(null);
+
+  // true, если пользователь изменил что-либо после загрузки сохранённого фильтра.
+  readonly isDirtySinceLoad = computed(
+    () =>
+      this.loadedFilterId() !== null &&
+      JSON.stringify(this.snapshot()) !== this.loadedSnapshotJson(),
+  );
+
+  // Собирает снапшот текущего состояния ленты.
+  snapshot(): SavedFilterPayload {
+    return {
+      filters: this.filters(),
+      dealType: this.dealType(),
+      handover: this.handover(),
+      scope: this.scope(),
+      category: this.category(),
+      locations: this.locationFilters(),
+    };
+  }
+
+  // Восстанавливает всё состояние из снапшота.
+  applySnapshot(p: SavedFilterPayload): void {
+    this.filters.set({ ...p.filters });
+    this.dealType.set(p.dealType);
+    this.handover.set(p.handover);
+    this.scope.set(p.scope);
+    this.category.set(p.category);
+    this.locationFilters.set([...p.locations]);
+  }
+
+  // Применить снапшот + пометить как «загружен» (isDirtySinceLoad = false).
+  markLoaded(id: string, payload: SavedFilterPayload): void {
+    this.applySnapshot(payload);
+    this.loadedFilterId.set(id);
+    this.loadedSnapshotJson.set(JSON.stringify(this.snapshot()));
+  }
+
+  // Снять пометку загруженного фильтра (не трогает сами фильтры).
+  clearLoaded(): void {
+    this.loadedFilterId.set(null);
+    this.loadedSnapshotJson.set(null);
   }
 
   // Выбранный агент (ФИО) из автокомплита → клиентский фильтр загруженных строк
