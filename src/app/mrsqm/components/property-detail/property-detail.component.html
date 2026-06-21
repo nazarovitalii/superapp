@@ -202,14 +202,14 @@
             }
           </span>
           <div class="type-chips">
-            @if (vm().previousPrice) {
-              <span class="type-chip"> <mat-icon>trending_down</mat-icon>Снижение </span>
+            @if (vm().isReduced) {
+              <span class="type-chip"> <mat-icon>trending_down</mat-icon>Reduced </span>
+            }
+            @if (vm().isBelowOp) {
+              <span class="type-chip">Below OP</span>
             }
             @if (vm().isDistress) {
               <span class="type-chip">Срочно</span>
-            }
-            @if (vm().isNegotiable) {
-              <span class="type-chip">Торг</span>
             }
             @if (vm().commissionIncluded) {
               <span class="type-chip">Комиссия включена</span>

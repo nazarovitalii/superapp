@@ -588,4 +588,36 @@ describe('PropertyDetailComponent', () => {
     await comp.loadProperty();
     expect(comp.vm().project?.handover).toBeNull();
   });
+
+  it('is_reduced true → vm().isReduced true', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_reduced: true });
+    await comp.loadProperty();
+    expect(comp.vm().isReduced).toBe(true);
+  });
+
+  it('is_below_op true → vm().isBelowOp true', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_below_op: true });
+    await comp.loadProperty();
+    expect(comp.vm().isBelowOp).toBe(true);
+  });
+
+  it('флаги null → false', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_reduced: null, is_below_op: null });
+    await comp.loadProperty();
+    expect(comp.vm().isReduced).toBe(false);
+    expect(comp.vm().isBelowOp).toBe(false);
+  });
+
+  it('бейдж «Торг» не рендерится даже при is_negotiable', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ is_negotiable: true });
+    await comp.loadProperty();
+    fixture.detectChanges();
+    const chips: string =
+      fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';
+    expect(chips).not.toContain('Торг');
+  });
 });

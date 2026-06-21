@@ -372,6 +372,8 @@ export interface PropertyDetail {
   lat: number | null;
   lng: number | null;
   is_distress: boolean;
+  is_reduced: boolean | null;
+  is_below_op: boolean | null;
   occupancy_status: string | null;
   lease_until: string | null;
   description: string | null;
