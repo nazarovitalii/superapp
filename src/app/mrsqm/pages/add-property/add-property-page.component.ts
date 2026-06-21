@@ -153,6 +153,7 @@ export class AddPropertyPageComponent {
   readonly bedrooms = signal<number | null>(null);
   readonly bathrooms = signal<number | null>(null);
   readonly isMaid = signal(false);
+  readonly isStudy = signal(false);
   readonly isHotelPool = signal(false);
   readonly isVastu = signal(false);
   readonly areaSqft = signal<string>('');
@@ -168,6 +169,10 @@ export class AddPropertyPageComponent {
   // ─── Шаг 4: Цена ───────────────────────────────────────────────────────
   readonly price = signal<string>('');
   readonly isNegotiable = signal(false);
+  // Оригинальная цена (OP) — только для продажи. Кол-во чеков — только аренда.
+  readonly originalPrice = signal<string>('');
+  readonly cheques = signal<number | null>(null);
+  readonly chequeOptions: readonly number[] = [1, 2, 3, 4, 6, 12];
 
   // ─── Шаг 5: Состояние ──────────────────────────────────────────────────
   readonly handover = signal<string>('ready');
@@ -643,6 +648,11 @@ export class AddPropertyPageComponent {
     this.price.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
 
+  onOriginalPriceInput(val: string): void {
+    const digits = val.replace(/\D/g, '');
+    this.originalPrice.set(digits ? Number(digits).toLocaleString('en-US') : '');
+  }
+
   // ─── Навигация ──────────────────────────────────────────────────────────
   private _validateStep(): string | null {
     const tf = this.fields();
@@ -743,6 +753,9 @@ export class AddPropertyPageComponent {
       is_maid: tf.maid ? this.isMaid() : false,
       is_hotel_pool: tf.hotelPool ? this.isHotelPool() : false,
       is_vastu: tf.vastu ? this.isVastu() : false,
+      is_study: tf.maid ? this.isStudy() : false,
+      original_price: this.dealType() === 'sale' ? num(this.originalPrice()) : null,
+      cheques: this.dealType() === 'rent' ? this.cheques() : null,
       area_sqft: sqft,
       area_sqm: sqft ? Math.round(sqft * SQFT_TO_SQM * 100) / 100 : null,
       plot_sqft: plot,

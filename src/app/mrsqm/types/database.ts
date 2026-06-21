@@ -196,6 +196,9 @@ export interface PropertyInsert {
   is_maid: boolean;
   is_hotel_pool: boolean;
   is_vastu?: boolean | null;
+  is_study?: boolean | null;
+  original_price?: number | null;
+  cheques?: number | null;
   area_sqft: number | null;
   area_sqm: number | null;
   plot_sqft: number | null;

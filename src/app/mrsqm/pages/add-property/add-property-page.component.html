@@ -466,6 +466,16 @@
                         />
                       </label>
                     }
+                    @if (fields().maid) {
+                      <label class="check-row">
+                        <span class="check-label">Study room</span>
+                        <input
+                          type="checkbox"
+                          [ngModel]="isStudy()"
+                          (ngModelChange)="isStudy.set($event)"
+                        />
+                      </label>
+                    }
                     @if (fields().hotelPool) {
                       <label class="check-row">
                         <span class="check-label">Hotel Apartment</span>
@@ -663,6 +673,34 @@
                 (ngModelChange)="isNegotiable.set($event)"
               />
             </label>
+            @if (dealType() === 'sale') {
+              <div class="field">
+                <span class="field-label">What was the original price? (optional)</span>
+                <input
+                  [ngModel]="originalPrice()"
+                  (ngModelChange)="onOriginalPriceInput($event)"
+                  inputmode="numeric"
+                  placeholder="напр. 1,400,000"
+                />
+              </div>
+            }
+            @if (dealType() === 'rent') {
+              <div class="field">
+                <span class="field-label">Количество чеков</span>
+                <div class="chips">
+                  @for (c of chequeOptions; track c) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="cheques() === c"
+                      (click)="cheques.set(c)"
+                    >
+                      {{ c }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
           }
 
           <!-- ШАГ 5: Состояние -->

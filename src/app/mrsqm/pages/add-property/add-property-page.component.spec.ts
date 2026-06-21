@@ -747,6 +747,113 @@ describe('AddPropertyPageComponent — developer-автокомплит (AP-5)',
   });
 });
 
+// ─── Новые поля: is_study / original_price / cheques ─────────────────────────
+describe('AddPropertyPageComponent — новые поля формы', () => {
+  let component: AddPropertyPageComponent;
+  let create: FakePropertyCreateService;
+
+  beforeEach(async () => {
+    create = new FakePropertyCreateService();
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useValue: create },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('onOriginalPriceInput форматирует с разделителями тысяч', () => {
+    component.onOriginalPriceInput('1400000');
+    expect(component.originalPrice()).toBe('1,400,000');
+  });
+
+  it('chequeOptions = [1,2,3,4,6,12]', () => {
+    expect([...component.chequeOptions]).toEqual([1, 2, 3, 4, 6, 12]);
+  });
+
+  it('payload (sale): пишет original_price, cheques=null, is_study', async () => {
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+    const auth = TestBed.inject(MrsqmAuthService);
+    (auth as unknown as { currentUser: () => unknown }).currentUser = () => ({
+      id: 'u1',
+    });
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt');
+    component.locationId.set('loc1');
+    component.step.set(7);
+    component.dealType.set('sale');
+    component.bedrooms.set(2);
+    component.bathrooms.set(2);
+    component.areaSqft.set('1200');
+    component.floorLevelId.set('fl1');
+    component.isStudy.set(true);
+    component.originalPrice.set('1,400,000');
+    component.price.set('1,200,000');
+    await component.submit();
+    const payload = captured[0] as {
+      original_price: number | null;
+      cheques: number | null;
+      is_study: boolean;
+    };
+    expect(payload.original_price).toBe(1_400_000);
+    expect(payload.cheques).toBeNull();
+    expect(payload.is_study).toBe(true);
+  });
+
+  it('payload (rent): пишет cheques, original_price=null', async () => {
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+    const auth = TestBed.inject(MrsqmAuthService);
+    (auth as unknown as { currentUser: () => unknown }).currentUser = () => ({
+      id: 'u1',
+    });
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt');
+    component.locationId.set('loc1');
+    component.step.set(7);
+    component.dealType.set('rent');
+    component.bedrooms.set(1);
+    component.bathrooms.set(1);
+    component.areaSqft.set('800');
+    component.floorLevelId.set('fl1');
+    component.cheques.set(4);
+    component.originalPrice.set('999,000');
+    component.price.set('90,000');
+    await component.submit();
+    const payload = captured[0] as {
+      original_price: number | null;
+      cheques: number | null;
+    };
+    expect(payload.cheques).toBe(4);
+    expect(payload.original_price).toBeNull();
+  });
+});
+
 // ─── yearOptions (V-6) ────────────────────────────────────────────────────────
 describe('AddPropertyPageComponent — yearOptions (V-6)', () => {
   let component: AddPropertyPageComponent;
