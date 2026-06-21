@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { FeedFilterPanelComponent, FloorChip } from './feed-filter-panel.component';
 import { FeedFilterService } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
-import { FilterOptions } from '../../types/database';
+import { DeveloperSearchItem, FilterOptions } from '../../types/database';
 import { signal } from '@angular/core';
 
 // Минимальный мок FilterOptions для тестов этажей.
@@ -109,5 +109,79 @@ describe('FeedFilterPanelComponent — floorChips + toggleFloorChip', () => {
     component.options.set(null);
     expect(() => component.floorChips()).not.toThrow();
     expect(component.floorChips()).toEqual([]);
+  });
+});
+
+// ─── Застройщик: автокомплит мультиселект ────────────────────────────────────
+describe('FeedFilterPanelComponent — developer autocomplete', () => {
+  let component: FeedFilterPanelComponent;
+  let searchDevelopersSpy: jasmine.Spy;
+
+  const MOCK_DEV: DeveloperSearchItem = { id: 'd1', name: 'Emaar', logo_url: null };
+  const MOCK_DEV2: DeveloperSearchItem = { id: 'd2', name: 'Damac', logo_url: null };
+
+  beforeEach(async () => {
+    searchDevelopersSpy = jasmine.createSpy('searchDevelopers').and.returnValue(
+      Promise.resolve([MOCK_DEV, MOCK_DEV2]),
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: {
+            getFilterOptions: () => Promise.resolve(MOCK_OPTIONS),
+            searchDevelopers: searchDevelopersSpy,
+          },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    component.options.set(MOCK_OPTIONS);
+  });
+
+  it('addDeveloper → draft().developerIds содержит id, pickedDevelopers содержит элемент', () => {
+    component.addDeveloper(MOCK_DEV);
+    expect(component.draft().developerIds).toContain('d1');
+    expect(component.pickedDevelopers().some((d) => d.id === 'd1')).toBeTrue();
+  });
+
+  it('повторный addDeveloper с тем же id → без дублей', () => {
+    component.addDeveloper(MOCK_DEV);
+    component.addDeveloper(MOCK_DEV);
+    expect(component.draft().developerIds.filter((v) => v === 'd1').length).toBe(1);
+    expect(component.pickedDevelopers().filter((d) => d.id === 'd1').length).toBe(1);
+  });
+
+  it('removeDeveloper → id убран из developerIds и pickedDevelopers', () => {
+    component.addDeveloper(MOCK_DEV);
+    component.removeDeveloper('d1');
+    expect(component.draft().developerIds).not.toContain('d1');
+    expect(component.pickedDevelopers().some((d) => d.id === 'd1')).toBeFalse();
+  });
+
+  it('onDeveloperQuery с 1 символом → developerResults пуст, RPC не вызывался', async () => {
+    await component.onDeveloperQuery('e');
+    expect(searchDevelopersSpy).not.toHaveBeenCalled();
+    expect(component.developerResults()).toEqual([]);
+  });
+
+  it('onDeveloperQuery с ≥2 символами → developerResults = результат мока', async () => {
+    await component.onDeveloperQuery('Emaar');
+    expect(searchDevelopersSpy).toHaveBeenCalledWith('Emaar');
+    expect(component.developerResults()).toEqual([MOCK_DEV, MOCK_DEV2]);
+  });
+
+  it('reset() → очищает developerQuery, developerResults, pickedDevelopers', () => {
+    component.addDeveloper(MOCK_DEV);
+    component.reset();
+    expect(component.developerQuery()).toBe('');
+    expect(component.developerResults()).toEqual([]);
+    expect(component.pickedDevelopers()).toEqual([]);
+    expect(component.draft().developerIds).toEqual([]);
   });
 });

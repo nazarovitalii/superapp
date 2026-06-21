@@ -496,6 +496,47 @@
     }
   </div>
 
+    <!-- Застройщик — автокомплит мультиселект -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>business</mat-icon>Застройщик</div>
+      <!-- Выбранные застройщики — чипы с крестиком -->
+      @if (pickedDevelopers().length) {
+        <div class="chip-row">
+          @for (d of pickedDevelopers(); track d.id) {
+            <button
+              type="button"
+              class="chip is-selected"
+              (click)="removeDeveloper(d.id)"
+            >
+              {{ d.name }}&nbsp;<mat-icon class="chip-close">close</mat-icon>
+            </button>
+          }
+        </div>
+      }
+      <!-- Поле поиска -->
+      <input
+        class="developer-search-input"
+        type="text"
+        placeholder="Поиск застройщика..."
+        [ngModel]="developerQuery()"
+        (ngModelChange)="onDeveloperQuery($event)"
+      />
+      <!-- Результаты поиска -->
+      @if (developerResults().length) {
+        <div class="developer-results">
+          @for (d of developerResults(); track d.id) {
+            <button
+              type="button"
+              class="developer-result-item"
+              (click)="addDeveloper(d)"
+            >
+              {{ d.name }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
   <!-- Низ — кнопка применить -->
   <div class="panel-footer">
     <button

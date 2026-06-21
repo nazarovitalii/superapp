@@ -16,7 +16,12 @@ import {
   FeedFilterService,
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
-import { FilterOptions, FilterOptionId, ListingType } from '../../types/database';
+import {
+  FilterOptions,
+  FilterOptionId,
+  ListingType,
+  DeveloperSearchItem,
+} from '../../types/database';
 import { typeFieldsFor } from '../../pages/add-property/property-type-fields';
 
 // Чип этажа с пометкой группы: level → floorLevelIds, units → floorsInUnitIds.
@@ -61,6 +66,11 @@ export class FeedFilterPanelComponent {
 
   // Локальная черновая копия — применяем по кнопке «Применить».
   readonly draft = signal<FeedFilters>({ ...this._filterService.filters() });
+
+  // ─── Застройщик — автокомплит (мультиселект) ─────────────────────────────
+  readonly developerQuery = signal<string>('');
+  readonly developerResults = signal<DeveloperSearchItem[]>([]);
+  readonly pickedDevelopers = signal<DeveloperSearchItem[]>([]);
 
   // Категория (Residential/Commercial) выбирается в хедере — каскад типов
   // фильтруем по ней (item 5/6).
@@ -293,8 +303,40 @@ export class FeedFilterPanelComponent {
     this._patch({ cheques: this._toggleInArray(this.draft().cheques, n) });
   }
 
+  // ─── Застройщик: ввод поиска ─────────────────────────────────────────────
+  async onDeveloperQuery(q: string): Promise<void> {
+    this.developerQuery.set(q);
+    if (q.trim().length >= 2) {
+      try {
+        this.developerResults.set(await this._createService.searchDevelopers(q));
+      } catch {
+        this.developerResults.set([]);
+      }
+    } else {
+      this.developerResults.set([]);
+    }
+  }
+
+  // ─── Застройщик: добавить в мультиселект ─────────────────────────────────
+  addDeveloper(d: DeveloperSearchItem): void {
+    if (this.draft().developerIds.includes(d.id)) return;
+    this._patch({ developerIds: [...this.draft().developerIds, d.id] });
+    this.pickedDevelopers.set([...this.pickedDevelopers(), d]);
+    this.developerQuery.set('');
+    this.developerResults.set([]);
+  }
+
+  // ─── Застройщик: убрать из мультиселекта ─────────────────────────────────
+  removeDeveloper(id: string): void {
+    this._patch({ developerIds: this.draft().developerIds.filter((v) => v !== id) });
+    this.pickedDevelopers.set(this.pickedDevelopers().filter((d) => d.id !== id));
+  }
+
   reset(): void {
     this.draft.set({ ...EMPTY_FILTERS });
+    this.developerQuery.set('');
+    this.developerResults.set([]);
+    this.pickedDevelopers.set([]);
   }
 
   apply(): void {
