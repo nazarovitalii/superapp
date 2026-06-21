@@ -306,6 +306,27 @@ describe('ChatPageComponent', () => {
     expect(component.messages()[0].feedback).toBeUndefined();
   });
 
+  it('клик по чипу причины ставит dislike нужному сообщению (а не по индексу причины)', async () => {
+    loadHistorySpy.and.resolveTo([
+      { id: 'm0', role: 'assistant', text: 'первый', created_at: 'a' },
+      { id: 'm1', role: 'assistant', text: 'второй', created_at: 'b' },
+    ]);
+    await createComponent();
+    // дизлайк ВТОРОГО сообщения (index 1) → открыть picker
+    component.setFeedback(1, 'dislike');
+    fixture.detectChanges();
+    // кликаем ПЕРВЫЙ чип причины (его inner $index = 0)
+    const chips = fixture.nativeElement.querySelectorAll(
+      '.msg-reason-chip',
+    ) as NodeListOf<HTMLButtonElement>;
+    expect(chips.length).toBeGreaterThan(0);
+    chips[0].click();
+    fixture.detectChanges();
+    // feedback должен лечь на сообщение 1 (которое дизлайкнули), не на 0
+    expect(component.messages()[1].feedback).toBe('dislike');
+    expect(component.messages()[0].feedback).toBeUndefined();
+  });
+
   it('setFeedback вызывает sendFeedback если есть messageId', async () => {
     loadHistorySpy.and.resolveTo([
       { id: 'msg-1', role: 'assistant', text: 'ответ', created_at: 'x' },

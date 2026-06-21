@@ -28,7 +28,7 @@
         }
 
         <!-- Сообщения -->
-        @for (m of messages(); track $index) {
+        @for (m of messages(); track $index; let msgIdx = $index) {
           <div
             class="msg"
             [class.user]="m.role === 'user'"
@@ -82,7 +82,7 @@
                         <button
                           type="button"
                           class="msg-reason-chip"
-                          (click)="setDislikeReason($index, r.key)"
+                          (click)="setDislikeReason(msgIdx, r.key)"
                         >
                           {{ r.label }}
                         </button>
