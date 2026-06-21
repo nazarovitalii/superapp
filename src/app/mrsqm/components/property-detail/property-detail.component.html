@@ -310,6 +310,7 @@
                 <span class="kv-label">Bedrooms</span>
                 <span class="kv-value">
                   {{ vm().bedrooms }}{{ vm().isMaid ? ' + maid' : ''
+                  }}{{ vm().isStudy ? ' + study' : ''
                   }}{{ vm().isVastu ? ' + vastu' : '' }}
                 </span>
               </div>
@@ -411,13 +412,13 @@
               }
               @if (pr.completion) {
                 <div class="kv-row">
-                  <span class="kv-label">Completion</span
+                  <span class="kv-label">Status</span
                   ><span class="kv-value">{{ pr.completion }}</span>
                 </div>
               }
               @if (pr.handover) {
                 <div class="kv-row">
-                  <span class="kv-label">Handover</span
+                  <span class="kv-label">Completion</span
                   ><span class="kv-value">{{ pr.handover }}</span>
                 </div>
               }

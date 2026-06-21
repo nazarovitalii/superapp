@@ -141,6 +141,7 @@ export class PropertyDetailComponent implements OnDestroy {
       bedrooms: d?.bedrooms ?? f.bedrooms,
       bathrooms: d?.bathrooms ?? f.bathrooms,
       isMaid: d?.is_maid ?? false,
+      isStudy: d?.is_study ?? false,
       areaSqft: d?.area_sqft ?? f.area_sqft,
       plotSqft: d?.plot_sqft ?? f.plot_sqft ?? null,
       floorLevel: this._label(d?.floor_level_id, opts?.floor_levels),

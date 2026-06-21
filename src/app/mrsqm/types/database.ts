@@ -356,6 +356,7 @@ export interface PropertyDetail {
   bedrooms: number | null;
   bathrooms: number | null;
   is_maid: boolean | null;
+  is_study: boolean | null;
   is_hotel_pool: boolean | null;
   area_sqft: number | null;
   area_sqm: number | null;

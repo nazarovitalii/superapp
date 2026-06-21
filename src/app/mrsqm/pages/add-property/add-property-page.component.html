@@ -684,14 +684,6 @@
                 placeholder="напр. 1,200,000"
               />
             </div>
-            <label class="toggle-row">
-              <span>Торг уместен</span>
-              <input
-                type="checkbox"
-                [ngModel]="isNegotiable()"
-                (ngModelChange)="isNegotiable.set($event)"
-              />
-            </label>
             @if (dealType() === 'sale') {
               <div class="field">
                 <span class="field-label">What was the original price? (optional)</span>
@@ -825,15 +817,6 @@
                 </div>
               }
             }
-
-            <label class="toggle-row">
-              <span>Срочная продажа (distress)</span>
-              <input
-                type="checkbox"
-                [ngModel]="isDistress()"
-                (ngModelChange)="isDistress.set($event)"
-              />
-            </label>
           }
 
           <!-- ШАГ 6: Листинг -->
