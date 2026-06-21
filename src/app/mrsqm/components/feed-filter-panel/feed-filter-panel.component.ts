@@ -4,12 +4,12 @@ import {
   inject,
   output,
   signal,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
-import { computed } from '@angular/core';
 import {
   EMPTY_FILTERS,
   FeedFilters,
@@ -17,6 +17,27 @@ import {
 } from '../../services/feed-filter.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { FilterOptions, FilterOptionId, ListingType } from '../../types/database';
+import { typeFieldsFor } from '../../pages/add-property/property-type-fields';
+
+// Чип этажа с пометкой группы: level → floorLevelIds, units → floorsInUnitIds.
+export interface FloorChip {
+  id: string;
+  label: string;
+  group: 'level' | 'units';
+}
+
+// Статические варианты заселённости (если get_filter_options не вернул occupancy_options).
+const STATIC_OCCUPANCY: { value: string; label_en: string }[] = [
+  { value: 'vacant', label_en: 'Vacant' },
+  { value: 'occupied', label_en: 'Occupied' },
+  { value: 'vacant_on_transfer', label_en: 'Vacant on Transfer' },
+];
+
+// Варианты квартала сдачи off-plan.
+const COMPLETION_Q_OPTIONS: string[] = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+// Варианты числа чеков при аренде.
+const CHEQUE_OPTIONS: number[] = [1, 2, 3, 4, 6, 12];
 
 @Component({
   selector: 'mrsqm-feed-filter-panel',
@@ -28,8 +49,12 @@ import { FilterOptions, FilterOptionId, ListingType } from '../../types/database
 })
 export class FeedFilterPanelComponent {
   readonly closed = output<void>();
-  private readonly _filterService = inject(FeedFilterService);
+  readonly _filterService = inject(FeedFilterService);
   private readonly _createService = inject(PropertyCreateService);
+
+  // Константы для шаблона
+  readonly completionQOptions = COMPLETION_Q_OPTIONS;
+  readonly chequeOptions = CHEQUE_OPTIONS;
 
   // Справочники из БД (get_filter_options) — все типы недвижимости, спальни, санузлы.
   readonly options = signal<FilterOptions | null>(null);
@@ -57,6 +82,73 @@ export class FeedFilterPanelComponent {
     const unitId = this.draft().unitTypeId;
     if (!opts || !unitId) return [];
     return (opts.sub_types ?? []).filter((s) => s.parent_id === unitId);
+  });
+
+  // ─── Динамические чипы «Этаж» ────────────────────────────────────────────
+  // Если тип выбран — чипы по матрице typeFieldsFor; если нет — union всех.
+  readonly floorChips = computed<FloorChip[]>(() => {
+    const opts = this.options();
+    if (!opts) return [];
+    const unitTypeId = this.draft().unitTypeId;
+    const unitTypeValue = unitTypeId
+      ? ((opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null)
+      : null;
+    const tf = typeFieldsFor(unitTypeValue);
+
+    if (unitTypeValue) {
+      // Тип выбран — строим набор по флагам матрицы.
+      const chips: FloorChip[] = [];
+      if (tf.floorLevel) {
+        for (const o of opts.floor_levels ?? []) {
+          chips.push({ id: o.id, label: o.label_en, group: 'level' });
+        }
+      }
+      if (tf.floorsInUnit) {
+        for (const o of opts.floors_in_unit_house ?? []) {
+          chips.push({ id: o.id, label: o.label_en, group: 'units' });
+        }
+      }
+      return chips;
+    } else {
+      // Тип не выбран — union: floor_levels + floors_in_unit_apt + floors_in_unit_house.
+      const chips: FloorChip[] = [];
+      for (const o of opts.floor_levels ?? []) {
+        chips.push({ id: o.id, label: o.label_en, group: 'level' });
+      }
+      for (const o of opts.floors_in_unit_apt ?? []) {
+        chips.push({ id: o.id, label: o.label_en, group: 'units' });
+      }
+      for (const o of opts.floors_in_unit_house ?? []) {
+        chips.push({ id: o.id, label: o.label_en, group: 'units' });
+      }
+      return chips;
+    }
+  });
+
+  // TypeFields для выбранного типа (null → NONE). Нужны для условного показа секций.
+  readonly typeFields = computed(() => {
+    const opts = this.options();
+    const unitTypeId = this.draft().unitTypeId;
+    if (!opts || !unitTypeId) return typeFieldsFor(null);
+    const unitTypeValue =
+      (opts.unit_types ?? []).find((u) => u.id === unitTypeId)?.value ?? null;
+    return typeFieldsFor(unitTypeValue);
+  });
+
+  // Тип выбран — для шаблона.
+  readonly hasUnitType = computed(() => !!this.draft().unitTypeId);
+
+  // Список заселённости: из справочника или статика.
+  readonly occupancyOptions = computed(() => {
+    const opts = this.options();
+    if (opts?.occupancy_options?.length) return opts.occupancy_options;
+    return STATIC_OCCUPANCY;
+  });
+
+  // Годы для off-plan: текущий + 5 вперёд.
+  readonly completionYearOptions = computed<number[]>(() => {
+    const base = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => base + i);
   });
 
   constructor() {
@@ -94,11 +186,40 @@ export class FeedFilterPanelComponent {
     this._patch({ bathrooms: this._toggleInArray(this.draft().bathrooms, value) });
   }
 
-  private _toggleInArray(arr: number[], value: number): number[] {
-    return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+  // ─── Чипы этажа — динамические ───────────────────────────────────────────
+  toggleFloorChip(chip: FloorChip): void {
+    if (chip.group === 'level') {
+      this._patch({
+        floorLevelIds: this._toggleStrArray(this.draft().floorLevelIds, chip.id),
+      });
+    } else {
+      this._patch({
+        floorsInUnitIds: this._toggleStrArray(this.draft().floorsInUnitIds, chip.id),
+      });
+    }
   }
 
-  // ─── Цена / площадь — с форматированием запятыми ─────────────────────────
+  isFloorChipSelected(chip: FloorChip): boolean {
+    if (chip.group === 'level') {
+      return this.draft().floorLevelIds.includes(chip.id);
+    }
+    return this.draft().floorsInUnitIds.includes(chip.id);
+  }
+
+  // ─── Виды / расположение / удобства ──────────────────────────────────────
+  toggleView(id: string): void {
+    this._patch({ viewIds: this._toggleStrArray(this.draft().viewIds, id) });
+  }
+
+  togglePosition(id: string): void {
+    this._patch({ positionIds: this._toggleStrArray(this.draft().positionIds, id) });
+  }
+
+  toggleAmenity(id: string): void {
+    this._patch({ amenityIds: this._toggleStrArray(this.draft().amenityIds, id) });
+  }
+
+  // ─── Цена / площадь / участок — с форматированием запятыми ──────────────
   formatNum(value: number | null): string {
     return value !== null ? value.toLocaleString('en-US') : '';
   }
@@ -119,9 +240,12 @@ export class FeedFilterPanelComponent {
     this._patch({ areaMax: this._parseNum(value) });
   }
 
-  private _parseNum(value: string): number | null {
-    const digits = value.replace(/\D/g, '');
-    return digits ? Number(digits) : null;
+  setPlotMin(value: string): void {
+    this._patch({ plotMin: this._parseNum(value) });
+  }
+
+  setPlotMax(value: string): void {
+    this._patch({ plotMax: this._parseNum(value) });
   }
 
   // ─── Мебель / готовность / листинг ───────────────────────────────────────
@@ -131,6 +255,42 @@ export class FeedFilterPanelComponent {
 
   setListingType(type: ListingType | 'all'): void {
     this._patch({ listingType: type });
+  }
+
+  // ─── Чекбоксы (null ↔ true) ───────────────────────────────────────────────
+  toggleBool(
+    field: 'isMaid' | 'isHotelPool' | 'isVastu' | 'isStudy' | 'isReduced' | 'isBelowOp',
+  ): void {
+    const cur = this.draft()[field];
+    this._patch({ [field]: cur === true ? null : true });
+  }
+
+  // ─── Заселённость ─────────────────────────────────────────────────────────
+  setOccupancy(value: string): void {
+    this._patch({
+      occupancyStatus: this.draft().occupancyStatus === value ? null : value,
+    });
+  }
+
+  // ─── Период аренды ────────────────────────────────────────────────────────
+  setPricePeriod(value: string): void {
+    this._patch({ pricePeriod: this.draft().pricePeriod === value ? null : value });
+  }
+
+  // ─── Год и квартал сдачи (off-plan) ──────────────────────────────────────
+  toggleCompletionYear(year: number): void {
+    this._patch({
+      completionYears: this._toggleInArray(this.draft().completionYears, year),
+    });
+  }
+
+  toggleCompletionQ(q: string): void {
+    this._patch({ completionQ: this._toggleStrArray(this.draft().completionQ, q) });
+  }
+
+  // ─── Чеки (аренда) ────────────────────────────────────────────────────────
+  toggleCheque(n: number): void {
+    this._patch({ cheques: this._toggleInArray(this.draft().cheques, n) });
   }
 
   reset(): void {
@@ -144,5 +304,18 @@ export class FeedFilterPanelComponent {
 
   private _patch(patch: Partial<FeedFilters>): void {
     this.draft.set({ ...this.draft(), ...patch });
+  }
+
+  private _toggleInArray(arr: number[], value: number): number[] {
+    return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+  }
+
+  private _toggleStrArray(arr: string[], value: string): string[] {
+    return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+  }
+
+  private _parseNum(value: string): number | null {
+    const digits = value.replace(/\D/g, '');
+    return digits ? Number(digits) : null;
   }
 }

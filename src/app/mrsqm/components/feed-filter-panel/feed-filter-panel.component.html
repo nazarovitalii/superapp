@@ -95,7 +95,141 @@
           }
         </div>
       </div>
+
+      <!-- Этаж — динамически по типу объекта (ядро задачи) -->
+      @if (floorChips().length) {
+        <div class="filter-group">
+          <div class="filter-label"><mat-icon>layers</mat-icon>Этаж</div>
+          <div class="chip-row">
+            @for (chip of floorChips(); track chip.id) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="isFloorChipSelected(chip)"
+                (click)="toggleFloorChip(chip)"
+              >
+                {{ chip.label }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Виды из окна — показываем когда: тип не выбран, или tf.views = true -->
+      @if (!hasUnitType() || typeFields().views) {
+        @if (opts.views?.length) {
+          <div class="filter-group">
+            <div class="filter-label"><mat-icon>landscape</mat-icon>Виды</div>
+            <div class="chip-row">
+              @for (v of opts.views; track v.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.is-selected]="draft().viewIds.includes(v.id)"
+                  (click)="toggleView(v.id)"
+                >
+                  {{ v.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Расположение — показываем когда: тип не выбран, или tf.positions = true -->
+      @if (!hasUnitType() || typeFields().positions) {
+        @if (opts.positions?.length) {
+          <div class="filter-group">
+            <div class="filter-label"><mat-icon>place</mat-icon>Расположение</div>
+            <div class="chip-row">
+              @for (p of opts.positions; track p.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.is-selected]="draft().positionIds.includes(p.id)"
+                  (click)="togglePosition(p.id)"
+                >
+                  {{ p.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Удобства — показываем когда: тип не выбран, или tf.amenities = true -->
+      @if (!hasUnitType() || typeFields().amenities) {
+        @if (opts.amenities?.length) {
+          <div class="filter-group">
+            <div class="filter-label"><mat-icon>local_parking</mat-icon>Удобства</div>
+            <div class="chip-row">
+              @for (a of opts.amenities; track a.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [class.is-selected]="draft().amenityIds.includes(a.id)"
+                  (click)="toggleAmenity(a.id)"
+                >
+                  {{ a.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Чекбоксы по типу — Комната прислуги, Hotel apartment, Vastu, Кабинет -->
+      @let tf = typeFields();
+      @if (!hasUnitType() || tf.maid || tf.hotelPool || tf.vastu) {
+        <div class="filter-group">
+          <div class="filter-label">
+            <mat-icon>check_circle_outline</mat-icon>Особенности
+          </div>
+          <div class="chip-row">
+            @if (!hasUnitType() || tf.maid) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="draft().isMaid === true"
+                (click)="toggleBool('isMaid')"
+              >
+                Комната прислуги
+              </button>
+            }
+            @if (!hasUnitType() || tf.hotelPool) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="draft().isHotelPool === true"
+                (click)="toggleBool('isHotelPool')"
+              >
+                Hotel apartment
+              </button>
+            }
+            @if (!hasUnitType() || tf.vastu) {
+              <button
+                type="button"
+                class="chip"
+                [class.is-selected]="draft().isVastu === true"
+                (click)="toggleBool('isVastu')"
+              >
+                Vastu
+              </button>
+            }
+            <!-- Кабинет — показываем всегда (isStudy не в TypeFields, бизнес-решение) -->
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().isStudy === true"
+              (click)="toggleBool('isStudy')"
+            >
+              Кабинет
+            </button>
+          </div>
+        </div>
+      }
     }
+    <!-- /if options -->
 
     <!-- Цена, AED -->
     <div class="filter-group">
@@ -124,6 +258,29 @@
           />
           <span class="num-suffix">AED</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Флаги цены — показываем всегда -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>trending_down</mat-icon>Флаги цены</div>
+      <div class="chip-row">
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().isReduced === true"
+          (click)="toggleBool('isReduced')"
+        >
+          Снижена цена
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.is-selected]="draft().isBelowOp === true"
+          (click)="toggleBool('isBelowOp')"
+        >
+          Ниже OP
+        </button>
       </div>
     </div>
 
@@ -157,6 +314,40 @@
       </div>
     </div>
 
+    <!-- Площадь участка — только когда tf.plot = true или тип не выбран -->
+    @if (!hasUnitType() || (options() && typeFields().plot)) {
+      <div class="filter-group">
+        <div class="filter-label">
+          <mat-icon>crop_square</mat-icon>Площадь участка, sqft
+        </div>
+        <div class="range-inputs">
+          <div class="num-field">
+            <input
+              class="num-input"
+              type="text"
+              inputmode="numeric"
+              placeholder="От"
+              [ngModel]="formatNum(draft().plotMin)"
+              (ngModelChange)="setPlotMin($event)"
+            />
+            <span class="num-suffix">sqft</span>
+          </div>
+          <span class="range-dash">—</span>
+          <div class="num-field">
+            <input
+              class="num-input"
+              type="text"
+              inputmode="numeric"
+              placeholder="До"
+              [ngModel]="formatNum(draft().plotMax)"
+              (ngModelChange)="setPlotMax($event)"
+            />
+            <span class="num-suffix">sqft</span>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Мебель -->
     <div class="filter-group">
       <div class="filter-label"><mat-icon>chair</mat-icon>Мебель</div>
@@ -177,6 +368,23 @@
         >
           Без мебели
         </button>
+      </div>
+    </div>
+
+    <!-- Заселённость — всегда -->
+    <div class="filter-group">
+      <div class="filter-label"><mat-icon>person</mat-icon>Заселённость</div>
+      <div class="chip-row">
+        @for (o of occupancyOptions(); track o.value) {
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="draft().occupancyStatus === o.value"
+            (click)="setOccupancy(o.value)"
+          >
+            {{ o.label_en }}
+          </button>
+        }
       </div>
     </div>
 
@@ -210,6 +418,82 @@
         </button>
       </div>
     </div>
+
+    <!-- Off-plan: год и квартал сдачи -->
+    @if (_filterService.handover() === 'offplan') {
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>event</mat-icon>Год сдачи</div>
+        <div class="chip-row">
+          @for (year of completionYearOptions(); track year) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().completionYears.includes(year)"
+              (click)="toggleCompletionYear(year)"
+            >
+              {{ year }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>date_range</mat-icon>Квартал сдачи</div>
+        <div class="chip-row">
+          @for (q of completionQOptions; track q) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().completionQ.includes(q)"
+              (click)="toggleCompletionQ(q)"
+            >
+              {{ q }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Аренда: период и число чеков -->
+    @if (_filterService.dealType() === 'rent') {
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>calendar_today</mat-icon>Период аренды</div>
+        <div class="chip-row">
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="draft().pricePeriod === 'yearly'"
+            (click)="setPricePeriod('yearly')"
+          >
+            Yearly
+          </button>
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="draft().pricePeriod === 'monthly'"
+            (click)="setPricePeriod('monthly')"
+          >
+            Monthly
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>receipt_long</mat-icon>Кол-во чеков</div>
+        <div class="chip-row">
+          @for (n of chequeOptions; track n) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="draft().cheques.includes(n)"
+              (click)="toggleCheque(n)"
+            >
+              {{ n }}
+            </button>
+          }
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Низ — кнопка применить -->
