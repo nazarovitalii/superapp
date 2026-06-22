@@ -2,11 +2,12 @@
 -- ⚠️ Staleness-proof: ПЕРЕД применением сверить с текущим телом:
 --    SELECT pg_get_functiondef('public.track_view(uuid,uuid)'::regprocedure);
 --    Перенести в новое тело любые расхождения DECLARE/резолва юзера, не учтённые здесь.
+--    Сохранять живой SET search_path дословно — не сужать (live использует 'public','extensions').
 CREATE OR REPLACE FUNCTION public.track_view(p_property_id uuid, p_user_id uuid DEFAULT NULL::uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path TO 'public', 'extensions'
 AS $$
 DECLARE
   v_current_user_id uuid := COALESCE(p_user_id, auth.uid());
