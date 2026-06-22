@@ -35,4 +35,18 @@ export class SeenTrackingService {
       console.error('[SeenTrackingService] recordContact ошибка:', e);
     }
   }
+
+  // Стадия (Баг B): пометить объекты просмотренными в контексте сохранённого фильтра.
+  // Гасит бейдж этого фильтра ровно на показанные внутри него объекты. Fire-and-forget.
+  async markFilterSeen(filterId: string, propertyIds: string[]): Promise<void> {
+    if (!propertyIds.length) return;
+    try {
+      await this._supabase.rpc('mark_filter_seen', {
+        p_filter_id: filterId,
+        p_property_ids: propertyIds,
+      });
+    } catch (e) {
+      console.error('[SeenTrackingService] markFilterSeen ошибка:', e);
+    }
+  }
 }

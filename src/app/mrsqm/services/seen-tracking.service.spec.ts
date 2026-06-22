@@ -44,4 +44,22 @@ describe('SeenTrackingService', () => {
     await service.recordContact('c1');
     expect(rpc).toHaveBeenCalledWith('mark_listing_contact', { p_property_id: 'c1' });
   });
+
+  it('markFilterSeen шлёт filterId+ids в mark_filter_seen', async () => {
+    await service.markFilterSeen('f1', ['a', 'b']);
+    expect(rpc).toHaveBeenCalledWith('mark_filter_seen', {
+      p_filter_id: 'f1',
+      p_property_ids: ['a', 'b'],
+    });
+  });
+
+  it('markFilterSeen с пустым массивом — no-op', async () => {
+    await service.markFilterSeen('f1', []);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('markFilterSeen не пробрасывает ошибку RPC', async () => {
+    rpc.and.rejectWith(new Error('boom'));
+    await expectAsync(service.markFilterSeen('f1', ['a'])).toBeResolved();
+  });
 });
