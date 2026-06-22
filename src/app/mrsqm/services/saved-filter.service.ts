@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilter, SavedFilterPayload } from './feed-filter.service';
 
@@ -43,6 +43,33 @@ export class SavedFilterService {
       .eq('id', id);
     if (error) {
       throw error;
+    }
+  }
+
+  // Оптимистичный локальный seen-по-фильтру: Map<filterId, Set<propertyId>>.
+  // Вычитается из серверного unseen_count до следующего list() (там сброс — сервер уже учёл).
+  private readonly _localFilterSeen = signal<Map<string, Set<string>>>(new Map());
+  readonly localFilterSeen = this._localFilterSeen.asReadonly();
+
+  // Сколько объектов помечено локально просмотренными в данном фильтре.
+  localSeenCount(filterId: string): number {
+    return this._localFilterSeen().get(filterId)?.size ?? 0;
+  }
+
+  // Пометить объекты просмотренными в фильтре (оптимистично, без round-trip).
+  markSeenLocally(filterId: string, propertyIds: string[]): void {
+    if (!propertyIds.length) return;
+    const map = new Map(this._localFilterSeen());
+    const set = new Set(map.get(filterId) ?? []);
+    for (const id of propertyIds) set.add(id);
+    map.set(filterId, set);
+    this._localFilterSeen.set(map);
+  }
+
+  // Сброс локального seen (после list(): сервер уже отдал актуальные unseen_count).
+  clearLocalSeen(): void {
+    if (this._localFilterSeen().size) {
+      this._localFilterSeen.set(new Map());
     }
   }
 
