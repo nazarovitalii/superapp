@@ -507,10 +507,11 @@ export class FeedPageComponent {
   // Тоггл правого sidebar по hover-кнопке: если карточка уже открыта —
   // сворачиваем панель, иначе открываем (item 2).
   toggleDetail(property: PropertyFeedItem): void {
-    void this._seen.recordView(property.id);
     if (this.selectedPropertyId === property.id) {
       this._panels.closeProperty();
     } else {
+      // Открытие карточки = подтверждённый интерес → engagement-сигнал (seen_full).
+      void this._seen.recordView(property.id);
       this._panels.openProperty(property);
     }
   }

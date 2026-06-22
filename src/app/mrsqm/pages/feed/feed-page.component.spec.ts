@@ -30,8 +30,15 @@ class FakeSupabase {
 }
 
 class FakePanels {
-  selectedProperty = (): null => null;
+  private _selected: { id: string } | null = null;
+  selectedProperty = (): { id: string } | null => this._selected;
+  setSelected(val: { id: string } | null): void {
+    this._selected = val;
+  }
   openProperty(): void {
+    /* noop */
+  }
+  closeProperty(): void {
     /* noop */
   }
 }
@@ -67,6 +74,7 @@ describe('FeedPageComponent', () => {
   let filter: FeedFilterService;
   let fakeSnack: FakeSnack;
   let fakeSaved: FakeSaved;
+  let fakePanels: FakePanels;
   // Spy для трекинга просмотров (Task 4)
   let seenSpy: jasmine.SpyObj<SeenTrackingService>;
 
@@ -75,7 +83,7 @@ describe('FeedPageComponent', () => {
       providers: [
         FeedFilterService,
         { provide: MrsqmSupabaseService, useValue: fake },
-        { provide: PanelContentService, useClass: FakePanels },
+        { provide: PanelContentService, useValue: fakePanels },
         { provide: MrsqmAuthService, useClass: FakeAuth },
         { provide: SnackService, useValue: fakeSnack },
         { provide: SavedPropertiesService, useValue: fakeSaved },
@@ -90,6 +98,7 @@ describe('FeedPageComponent', () => {
     fake = new FakeSupabase();
     fakeSnack = new FakeSnack();
     fakeSaved = new FakeSaved();
+    fakePanels = new FakePanels();
     seenSpy = jasmine.createSpyObj('SeenTrackingService', ['markShown', 'recordView']);
     seenSpy.markShown.and.resolveTo(undefined);
     seenSpy.recordView.and.resolveTo(undefined);
@@ -600,5 +609,25 @@ describe('FeedPageComponent', () => {
     const prop = { id: 'z' } as PropertyFeedItem;
     component.openDetail(prop);
     expect(seenSpy.recordView).toHaveBeenCalledWith('z');
+  });
+
+  // ─── Task-4 fix: toggleDetail → recordView только при открытии ──────────────
+
+  it('toggleDetail на закрытую карточку вызывает recordView (открытие)', () => {
+    // Панель сейчас показывает другую карточку (или ничего) → prop не открыта → открываем.
+    fakePanels.setSelected(null);
+    const component = build();
+    const prop = { id: 'card-1' } as PropertyFeedItem;
+    component.toggleDetail(prop);
+    expect(seenSpy.recordView).toHaveBeenCalledWith('card-1');
+  });
+
+  it('toggleDetail на уже открытую карточку НЕ вызывает recordView (закрытие)', () => {
+    // Панель уже показывает эту же карточку → toggleDetail закрывает её → recordView не нужен.
+    fakePanels.setSelected({ id: 'card-2' });
+    const component = build();
+    const prop = { id: 'card-2' } as PropertyFeedItem;
+    component.toggleDetail(prop);
+    expect(seenSpy.recordView).not.toHaveBeenCalled();
   });
 });
