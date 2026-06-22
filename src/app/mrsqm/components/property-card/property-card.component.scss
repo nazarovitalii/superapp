@@ -17,7 +17,7 @@
   outline: none;
 
   // Стадия 1: жёлтая полоска «непросмотрен» — левое ребро, полная высота.
-  // Класс .is-unseen добавляет feed-page после 3с → opacity 1→0 = fade-out.
+  // Класс .is-unseen снимает feed-page после 3с → opacity 1→0 = fade-out.
   &::before {
     content: '';
     position: absolute;
@@ -25,7 +25,7 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--c-warn);
+    background: var(--sun-yellow);
     opacity: 0;
     transition: opacity var(--transition-duration-l) var(--ani-leave-timing);
     pointer-events: none;
