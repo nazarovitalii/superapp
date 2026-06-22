@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   ChangeDetectionStrategy,
+  DestroyRef,
   effect,
   computed,
   signal,
@@ -37,6 +38,7 @@ import { MrsqmAuthService } from '../../services/auth.service';
 import { PropertyOwnerService } from '../../services/property-owner.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 
 // W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
 const COMMERCIAL_ALLOWLIST = new Set([
@@ -81,6 +83,10 @@ export class FeedPageComponent {
   readonly selection = inject(FeedSelectionService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _owner = inject(PropertyOwnerService);
+  private readonly _seen = inject(SeenTrackingService);
+  private readonly _destroyRef = inject(DestroyRef);
+  // Активные таймеры гашения полосок — чистим при destroy.
+  private readonly _stripeTimers = new Set<ReturnType<typeof setTimeout>>();
 
   // W-1: раскрыта ли панель локаций снизу (управляется кнопкой-стрелкой)
   readonly locExpanded = signal(false);
@@ -419,6 +425,12 @@ export class FeedPageComponent {
         void this._load();
       }
     });
+
+    // Чистим все pending-таймеры при уничтожении компонента.
+    this._destroyRef.onDestroy(() => {
+      this._stripeTimers.forEach((t) => clearTimeout(t));
+      this._stripeTimers.clear();
+    });
   }
 
   private async _loadFilterOptions(): Promise<void> {
@@ -488,12 +500,14 @@ export class FeedPageComponent {
   }
 
   openDetail(property: PropertyFeedItem): void {
+    void this._seen.recordView(property.id);
     this._panels.openProperty(property);
   }
 
   // Тоггл правого sidebar по hover-кнопке: если карточка уже открыта —
   // сворачиваем панель, иначе открываем (item 2).
   toggleDetail(property: PropertyFeedItem): void {
+    void this._seen.recordView(property.id);
     if (this.selectedPropertyId === property.id) {
       this._panels.closeProperty();
     } else {
@@ -559,6 +573,24 @@ export class FeedPageComponent {
     };
   }
 
+  // Стадия 1: помечаем загруженную страницу показанной (батч), затем через 3с гасим полоски
+  // локально (CSS-fade). На следующем чтении get_feed они уже не is_unseen (shown_at обновлён).
+  private _markPageShown(items: PropertyFeedItem[]): void {
+    const ids = items.map((it) => it.id);
+    if (!ids.length) return;
+    void this._seen.markShown(ids);
+    const idSet = new Set(ids);
+    const timer = setTimeout(() => {
+      this._stripeTimers.delete(timer);
+      this.properties.update((arr) =>
+        arr.map((it) =>
+          idSet.has(it.id) && it.is_unseen ? { ...it, is_unseen: false } : it,
+        ),
+      );
+    }, 3000);
+    this._stripeTimers.add(timer);
+  }
+
   private async _load(append = false): Promise<void> {
     this.isLoading.set(true);
     this.loadError.set(false);
@@ -570,6 +602,8 @@ export class FeedPageComponent {
       const items = await this._withTypeLabels(res.results ?? []);
       // Пустой результат — валиден (объектов нет), показываем empty-state.
       this.properties.set(append ? [...this.properties(), ...items] : items);
+      // Батч-impression только по только что добавленным items (для append — новая страница).
+      this._markPageShown(items);
       this.countTotal.set(res.count_total ?? 0);
       this.hasMore.set(this.properties().length < (res.count_total ?? 0));
     } catch {

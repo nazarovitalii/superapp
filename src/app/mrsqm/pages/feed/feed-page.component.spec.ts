@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { FeedPageComponent } from './feed-page.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { FeedFilterService } from '../../services/feed-filter.service';
@@ -11,6 +12,7 @@ import {
 } from '../../types/database';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 
 // Заглушка Supabase: фиксируем параметры вызова get_feed.
 class FakeSupabase {
@@ -65,6 +67,8 @@ describe('FeedPageComponent', () => {
   let filter: FeedFilterService;
   let fakeSnack: FakeSnack;
   let fakeSaved: FakeSaved;
+  // Spy для трекинга просмотров (Task 4)
+  let seenSpy: jasmine.SpyObj<SeenTrackingService>;
 
   const build = (): FeedPageComponent => {
     TestBed.configureTestingModule({
@@ -75,6 +79,7 @@ describe('FeedPageComponent', () => {
         { provide: MrsqmAuthService, useClass: FakeAuth },
         { provide: SnackService, useValue: fakeSnack },
         { provide: SavedPropertiesService, useValue: fakeSaved },
+        { provide: SeenTrackingService, useValue: seenSpy },
       ],
     });
     filter = TestBed.inject(FeedFilterService);
@@ -85,6 +90,9 @@ describe('FeedPageComponent', () => {
     fake = new FakeSupabase();
     fakeSnack = new FakeSnack();
     fakeSaved = new FakeSaved();
+    seenSpy = jasmine.createSpyObj('SeenTrackingService', ['markShown', 'recordView']);
+    seenSpy.markShown.and.resolveTo(undefined);
+    seenSpy.recordView.and.resolveTo(undefined);
     TestBed.resetTestingModule();
   });
 
@@ -547,5 +555,50 @@ describe('FeedPageComponent', () => {
     filter.filters.update((f) => ({ ...f, occupancyStatus: ['vacant', 'occupied'] }));
     await flush();
     expect(fake.lastParams?.['p_occupancy_status']).toEqual(['vacant', 'occupied']);
+  });
+
+  // ─── Task 4: батч-impression + 3с-fade + recordView ─────────────────────────
+
+  it('после загрузки страницы шлёт markShown с id объектов', fakeAsync(() => {
+    // Настраиваем get_feed так, чтобы вернул объекты с id ['a','b'] и is_unseen=true
+    fake.response = {
+      results: [
+        { id: 'a', is_unseen: true },
+        { id: 'b', is_unseen: true },
+      ],
+      count_total: 2,
+      limit: 20,
+      offset: 0,
+    };
+    const component = build();
+    // _load вызывается из effect() при создании компонента; дрейним все микрозадачи
+    tick();
+    expect(seenSpy.markShown).toHaveBeenCalledWith(['a', 'b']);
+  }));
+
+  it('через 3с гасит is_unseen у загруженных объектов', fakeAsync(() => {
+    fake.response = {
+      results: [
+        { id: 'a', is_unseen: true },
+        { id: 'b', is_unseen: true },
+      ],
+      count_total: 2,
+      limit: 20,
+      offset: 0,
+    };
+    const component = build();
+    tick();
+    // Сразу после загрузки — полоски всё ещё видны
+    expect(component.properties().every((p) => p.is_unseen)).toBeTrue();
+    // Через 3 секунды — is_unseen флипается в false
+    tick(3000);
+    expect(component.properties().every((p) => p.is_unseen === false)).toBeTrue();
+  }));
+
+  it('openDetail шлёт recordView с id объекта', () => {
+    const component = build();
+    const prop = { id: 'z' } as PropertyFeedItem;
+    component.openDetail(prop);
+    expect(seenSpy.recordView).toHaveBeenCalledWith('z');
   });
 });
