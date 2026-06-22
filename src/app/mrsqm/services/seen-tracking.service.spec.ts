@@ -19,7 +19,9 @@ describe('SeenTrackingService', () => {
 
   it('markShown шлёт ids в mark_listings_shown', async () => {
     await service.markShown(['a', 'b']);
-    expect(rpc).toHaveBeenCalledWith('mark_listings_shown', { p_property_ids: ['a', 'b'] });
+    expect(rpc).toHaveBeenCalledWith('mark_listings_shown', {
+      p_property_ids: ['a', 'b'],
+    });
   });
 
   it('markShown с пустым массивом — no-op', async () => {

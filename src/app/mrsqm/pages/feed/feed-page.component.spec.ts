@@ -579,8 +579,8 @@ describe('FeedPageComponent', () => {
       limit: 20,
       offset: 0,
     };
-    const component = build();
     // _load вызывается из effect() при создании компонента; дрейним все микрозадачи
+    build();
     tick();
     expect(seenSpy.markShown).toHaveBeenCalledWith(['a', 'b']);
   }));
