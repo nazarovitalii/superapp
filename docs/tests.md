@@ -100,4 +100,32 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+---
+
+### T-TU2: Создание тест-юзера 2 — полный чеклист (6 шагов)
+
+**Дата:** 2026-06-22 · **Где:** прод Supabase, под `supabase_admin`.
+**Что проверяли:** создание test2@mrsqm.dev (uuid b0000002-…002) и последовательное устранение трёх независимых точек отказа — GoTrue login, RLS-цепочка триггера, пустая лента.
+**Шаги и результаты:**
+
+1. `auth.users` создан (bcrypt пароль, email_confirmed_at, raw_app_meta_data) → `curl /auth/v1/token?grant_type=password` → **500** (нет identity).
+2. `auth.identities` добавлен (provider=email, provider_id=user_id, identity_data jsonb, без GENERATED-колонки `email`) → повтор curl → **500** (NULL token fields).
+3. Все token-поля (confirmation_token, recovery_token, …) обнулены `COALESCE(x,'')` → повтор curl → **200**, access_token получен ✅.
+4. `public.users` (role=agent, is_active=true) уже был → вход в приложение ✅.
+5. Создан первый объект → **42501** (RLS agent_activity). Исправлено: `ALTER FUNCTION activate_user() SECURITY DEFINER`. Повтор → объект создан ✅.
+6. Лента пустая — `user_context.city_id = NULL`. `UPDATE user_context SET city_id=Dubai`. Лента показала 3 объекта test2 ✅.
+   **Вывод:** ✅ все 6 шагов обязательны — без любого из них тихие падения. Чеклист в памяти `test-user-creation-checklist.md`.
+
+---
+
+### T-RT014: Owner-skip matching (014) — верификация
+
+**Дата:** 2026-06-22 · **Где:** прод Supabase (psql через apply-migration.sh).
+**Что проверяли:** `match_property`/`match_filter` с owner-skip не отдают владельцу его же объекты.
+**Ожидали:** `match_filter('9ad6160b-…' — фильтр «Апарты» nazarovitalii)` = только объекты test2 (не nazarovitalii).
+**Получили:** 2 результата — `7141534d…` и `5d7a8fea…` (оба от test2, unit_type = e39baf07 Apartment). Третий объект test2 `b9e3a5d3…` (unit_type = 4bd56ade, не совпадает с фильтром) — корректно исключён. 12 объектов nazarovitalii исключены owner-skip.
+**Вывод:** ✅ owner-skip корректен, NULL-safe (`IS DISTINCT FROM`). GRANT service_role сохранён.
+
+---
+
 _Других тестов пока нет._
