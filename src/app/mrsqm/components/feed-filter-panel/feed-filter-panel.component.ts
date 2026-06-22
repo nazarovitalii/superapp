@@ -15,7 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import {
-  EMPTY_FILTERS,
   FeedFilters,
   FeedFilterService,
   FeedHandover,
@@ -92,6 +91,18 @@ export class FeedFilterPanelComponent {
       : 'Сохранить',
   );
 
+  // ─── 3 состояния футера (Баг #2, #3) ─────────────────────────────────────
+  // Кнопку «Применить» показываем только когда нет загруженного фильтра.
+  readonly showApply = computed<boolean>(
+    () => this._filterService.loadedFilterId() === null,
+  );
+  // Кнопку «Сохранить/Изменить» показываем когда нет загруженного ИЛИ он dirty.
+  readonly showSaveOrEdit = computed<boolean>(
+    () =>
+      this._filterService.loadedFilterId() === null ||
+      this._filterService.isDirtySinceLoad(),
+  );
+
   // Константы для шаблона
   readonly completionQOptions = COMPLETION_Q_OPTIONS;
   readonly chequeOptions = CHEQUE_OPTIONS;
@@ -99,8 +110,10 @@ export class FeedFilterPanelComponent {
   // Справочники из БД (get_filter_options) — все типы недвижимости, спальни, санузлы.
   readonly options = signal<FilterOptions | null>(null);
 
-  // Локальная черновая копия — применяем по кнопке «Применить».
-  readonly draft = signal<FeedFilters>({ ...this._filterService.filters() });
+  // Живая ссылка на состояние сервиса — draft() = _filterService.filters() (Баг #4).
+  // Все мутаторы пишут напрямую через _filterService.patch(); draft() служит
+  // только чтению (шаблон + тесты, которые обращаются к component.draft()).
+  readonly draft = computed<FeedFilters>(() => this._filterService.filters());
 
   // ─── Застройщик — автокомплит (мультиселект) ─────────────────────────────
   readonly developerQuery = signal<string>('');
@@ -519,27 +532,21 @@ export class FeedFilterPanelComponent {
   }
 
   reset(): void {
-    // Сбрасываем живой тип (категория + unitTypeId + subTypeIds) через сервис.
-    this._filterService.clearType();
-    this.draft.set({ ...EMPTY_FILTERS });
+    // Полный сброс всего живого состояния через сервис (Баги #1, #5).
+    this._filterService.resetAll();
+    // Локальное состояние застройщика — не в сервисе, чистим вручную.
     this.developerQuery.set('');
     this.developerResults.set([]);
     this.pickedDevelopers.set([]);
   }
 
   apply(): void {
-    const live = this._filterService.filters();
-    // Тип живёт в сервисе — не затираем его значением из draft.
-    this._filterService.filters.set({
-      ...this.draft(),
-      unitTypeId: live.unitTypeId,
-      subTypeIds: live.subTypeIds,
-    });
+    // Все фильтры уже живые в сервисе — просто закрываем панель (Баг #3).
     this.closed.emit();
   }
 
   private _patch(patch: Partial<FeedFilters>): void {
-    this.draft.set({ ...this.draft(), ...patch });
+    this._filterService.patch(patch);
   }
 
   private _toggleInArray(arr: number[], value: number): number[] {

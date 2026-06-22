@@ -700,24 +700,32 @@
     </div>
   </div>
 
-  <!-- Низ — кнопка «Сохранить/Изменить» + «Применить» -->
-  <div class="panel-footer">
-    <button
-      mat-stroked-button
-      class="save-btn"
-      (click)="onSaveOrUpdate()"
-    >
-      {{ saveButtonLabel() }}
-    </button>
-    <button
-      mat-flat-button
-      color="primary"
-      class="apply-btn"
-      (click)="apply()"
-    >
-      Применить
-    </button>
-  </div>
+  <!-- Низ — 3 состояния: нет загруженного → [Сохранить][Применить];
+       загружен и не dirty → пустой футер;
+       загружен и dirty → только [Изменить]. -->
+  @if (showSaveOrEdit() || showApply()) {
+    <div class="panel-footer">
+      @if (showSaveOrEdit()) {
+        <button
+          mat-stroked-button
+          class="save-btn"
+          (click)="onSaveOrUpdate()"
+        >
+          {{ saveButtonLabel() }}
+        </button>
+      }
+      @if (showApply()) {
+        <button
+          mat-flat-button
+          color="primary"
+          class="apply-btn"
+          (click)="apply()"
+        >
+          Применить
+        </button>
+      }
+    </div>
+  }
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

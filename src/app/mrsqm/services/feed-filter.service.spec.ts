@@ -438,3 +438,71 @@ describe('FeedFilterService — snapshot / applySnapshot / dirty-трекинг'
     expect(service.isDirtySinceLoad()).toBe(false);
   });
 });
+
+// ─── resetAll ─────────────────────────────────────────────────────────────────
+describe('FeedFilterService — resetAll()', () => {
+  let service: FeedFilterService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [FeedFilterService] });
+    service = TestBed.inject(FeedFilterService);
+  });
+
+  it('resetAll: filters пустые после вызова', () => {
+    service.patch({ bedrooms: [2, 3], priceMin: 500000, viewIds: ['v1'] });
+    service.resetAll();
+    const f = service.filters();
+    expect(f.bedrooms).toEqual([]);
+    expect(f.priceMin).toBeNull();
+    expect(f.viewIds).toEqual([]);
+  });
+
+  it('resetAll: locations[] пустые', () => {
+    service.addLocation({ id: 'loc-1', name: 'Marina' });
+    service.addLocation({ id: 'loc-2', name: 'JBR' });
+    service.resetAll();
+    expect(service.locationFilters()).toEqual([]);
+  });
+
+  it('resetAll: handover = null', () => {
+    service.setHandover('ready');
+    service.resetAll();
+    expect(service.handover()).toBeNull();
+  });
+
+  it('resetAll: scope = "public"', () => {
+    service.scope.set('friends');
+    service.resetAll();
+    expect(service.scope()).toBe('public');
+  });
+
+  it('resetAll: category = null', () => {
+    service.setCategory('commercial');
+    service.resetAll();
+    expect(service.category()).toBeNull();
+  });
+
+  it('resetAll: loadedFilterId = null (clearLoaded)', () => {
+    const payload: SavedFilterPayload = service.snapshot();
+    service.markLoaded('sf-1', payload);
+    expect(service.loadedFilterId()).toBe('sf-1');
+    service.resetAll();
+    expect(service.loadedFilterId()).toBeNull();
+  });
+
+  it('resetAll: activeFilterCount() = 0 после полного сброса', () => {
+    service.patch({ bedrooms: [2], viewIds: ['v1'] });
+    service.addLocation({ id: 'loc-1', name: 'Marina' });
+    service.setHandover('offplan');
+    service.scope.set('friends');
+    service.setCategory('residential');
+    service.resetAll();
+    expect(service.activeFilterCount()).toBe(0);
+  });
+
+  it('resetAll: dealType НЕ трогается', () => {
+    service.set('rent');
+    service.resetAll();
+    expect(service.dealType()).toBe('rent');
+  });
+});

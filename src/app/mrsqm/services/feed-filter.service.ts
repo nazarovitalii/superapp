@@ -292,4 +292,15 @@ export class FeedFilterService {
   reset(): void {
     this.filters.set({ ...EMPTY_FILTERS });
   }
+
+  // Полный сброс всех фильтров панели (Баги #1, #5).
+  // НЕ трогает dealType (всегда sale/rent) и список сохранённых фильтров.
+  resetAll(): void {
+    this.filters.set({ ...EMPTY_FILTERS });
+    this.clearLocations();
+    this.handover.set(null);
+    this.scope.set('public');
+    this.category.set(null);
+    this.clearLoaded();
+  }
 }

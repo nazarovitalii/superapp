@@ -761,3 +761,150 @@ describe('FeedFilterPanelComponent — сохранённые фильтры (FF
     expect(clearSpy).toHaveBeenCalled();
   });
 });
+
+// ─── FF22 fix: живая панель — draft=computed, reset=resetAll, кнопки ──────────
+describe('FeedFilterPanelComponent — FF22 fix: живое состояние и кнопки футера', () => {
+  let component: FeedFilterPanelComponent;
+  let filterService: FeedFilterService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    filterService = TestBed.inject(FeedFilterService);
+    component.options.set(MOCK_OPTIONS);
+  });
+
+  // ─── Живой выбор — draft() = filterService.filters() ───────────────────────
+  it('toggleBedroom(2) пишет в filterService.filters().bedrooms напрямую', () => {
+    component.toggleBedroom(2);
+    expect(filterService.filters().bedrooms).toContain(2);
+  });
+
+  it('toggleBedroom(2) увеличивает activeFilterCount()', () => {
+    const before = filterService.activeFilterCount();
+    component.toggleBedroom(2);
+    expect(filterService.activeFilterCount()).toBeGreaterThan(before);
+  });
+
+  it('component.draft() === filterService.filters() (одно и то же состояние)', () => {
+    component.toggleBedroom(3);
+    expect(component.draft()).toBe(filterService.filters());
+  });
+
+  it('toggleBathroom пишет в сервис', () => {
+    component.toggleBathroom(2);
+    expect(filterService.filters().bathrooms).toContain(2);
+  });
+
+  it('setPriceMin пишет в сервис', () => {
+    component.setPriceMin('500,000');
+    expect(filterService.filters().priceMin).toBe(500000);
+  });
+
+  it('setFurnished пишет в сервис', () => {
+    component.setFurnished('furnished');
+    expect(filterService.filters().furnished).toBe('furnished');
+  });
+
+  it('toggleOccupancy пишет в сервис', () => {
+    component.toggleOccupancy('vacant');
+    expect(filterService.filters().occupancyStatus).toContain('vacant');
+  });
+
+  // ─── reset() чистит всё живое состояние через resetAll() ────────────────────
+  it('reset() → filterService.filters() пустые', () => {
+    component.toggleBedroom(2);
+    component.reset();
+    expect(filterService.filters().bedrooms).toEqual([]);
+  });
+
+  it('reset() → filterService.locationFilters() пустые', () => {
+    filterService.addLocation({ id: 'loc-1', name: 'Marina' });
+    component.reset();
+    expect(filterService.locationFilters()).toEqual([]);
+  });
+
+  it('reset() → filterService.handover() = null', () => {
+    filterService.setHandover('ready');
+    component.reset();
+    expect(filterService.handover()).toBeNull();
+  });
+
+  it('reset() → filterService.scope() = "public"', () => {
+    filterService.scope.set('friends');
+    component.reset();
+    expect(filterService.scope()).toBe('public');
+  });
+
+  it('reset() → filterService.loadedFilterId() = null', () => {
+    const payload = filterService.snapshot();
+    filterService.markLoaded('sf-test', payload);
+    component.reset();
+    expect(filterService.loadedFilterId()).toBeNull();
+  });
+
+  it('reset() → activeFilterCount() = 0', () => {
+    component.toggleBedroom(2);
+    filterService.addLocation({ id: 'loc-1', name: 'Marina' });
+    filterService.setHandover('offplan');
+    component.reset();
+    expect(filterService.activeFilterCount()).toBe(0);
+  });
+
+  // ─── 3 состояния кнопок футера ──────────────────────────────────────────────
+  it('loadedFilterId null → showApply = true', () => {
+    expect(component.showApply()).toBe(true);
+  });
+
+  it('loadedFilterId null → showSaveOrEdit = true', () => {
+    expect(component.showSaveOrEdit()).toBe(true);
+  });
+
+  it('markLoaded → showApply = false', () => {
+    const payload = filterService.snapshot();
+    filterService.markLoaded('sf-1', payload);
+    expect(component.showApply()).toBe(false);
+  });
+
+  it('markLoaded, не dirty → showSaveOrEdit = false', () => {
+    const payload = filterService.snapshot();
+    filterService.markLoaded('sf-1', payload);
+    expect(component.showSaveOrEdit()).toBe(false);
+  });
+
+  it('markLoaded затем изменяем поле → showSaveOrEdit = true, showApply = false', () => {
+    const payload = filterService.snapshot();
+    filterService.markLoaded('sf-1', payload);
+    // Меняем что-то → dirty
+    component.toggleBedroom(2);
+    expect(component.showSaveOrEdit()).toBe(true);
+    expect(component.showApply()).toBe(false);
+  });
+
+  // ─── apply() просто закрывает ────────────────────────────────────────────────
+  it('apply() генерирует closed event', () => {
+    let emitted = false;
+    component.closed.subscribe(() => (emitted = true));
+    component.apply();
+    expect(emitted).toBe(true);
+  });
+
+  it('apply() не трогает filters в сервисе', () => {
+    component.toggleBedroom(2);
+    filterService.selectUnitType('residential', 'ut1'); // живой тип
+    component.apply();
+    expect(filterService.filters().bedrooms).toContain(2);
+    expect(filterService.filters().unitTypeId).toBe('ut1');
+  });
+});
