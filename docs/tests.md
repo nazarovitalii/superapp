@@ -76,4 +76,18 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-US1: Стадия 1 unseen-трекинга — read-side (5 миграций)
+
+**Дата:** 2026-06-22 · **Где:** прод Supabase (self-hosted), под `supabase_admin`, каждая в транзакции (`apply-migration.sh`).
+**Что проверяли:** применение 5 миграций Стадии 1 и корректность read-side контракта (интроспекция + smoke).
+**Ожидали:** `user_seen_listings.shown_at` есть; `seen_at` стал nullable; `mark_listings_shown(uuid[])` создан;
+`get_feed` отдаёт `is_unseen`; `track_view` без гарда «раз в день», пишет `shown_at`, сохранил `search_path extensions`.
+**Получили:** ✅ `shown_at`=YES, `seen_at` is_nullable=YES; `mark_listings_shown(p_property_ids uuid[])` существует;
+`position('is_unseen' in pg_get_functiondef('get_feed'))>0`=t; `track_view`: `CURRENT_DATE` поз=0 (гард снят),
+`shown_at` пишется=t, `extensions` в search_path=t. Pre-apply: типы ключей все uuid, дублей `(filter_id,property_id)`=0.
+**Вывод:** ✅ read-side корректен, backward-compatible (текущий прод-фронт не затронут). ⏳ UI e2e (полоска+3с-fade) —
+визуальная проверка на проде после раскатки фронта.
+
+---
+
 _Других тестов пока нет._
