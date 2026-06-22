@@ -142,4 +142,17 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-FB2: Re-notify по updated_at — DB-верификация
+
+**Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-транзакция).
+**Что проверяли:** 2 применённых патча — `mark_filter_seen` (`ON CONFLICT DO UPDATE seen_at=now()`) и `get_saved_filters.unseen_count` (`GREATEST(p.created_at,p.updated_at) > GREATEST(sf.created_at, COALESCE(seen_at,'epoch'))`).
+**Цикл (один матч фильтра):**
+- A: объект изменён (`last_actualized_at=now`), не просмотрен → `unseen_count=2` (считается).
+- B: просмотрел в фильтре (`mark_filter_seen` → `seen_at=now`) → `=1` (**−1**, объект ушёл из счётчика).
+- C: объект изменён ПОСЛЕ просмотра (симуляция: `seen_at` сдвинут в прошлое) → `=2` (**re-notify +1**).
+
+**Вывод:** ✅ фильтр стартует с 0 (объекты старше фильтра исключены: `GREATEST(obj) ≤ sf.created_at`); объект, созданный/обновлённый позже фильтра — считается; повторное обновление после просмотра снова даёт +1. Доставка числа — pull (при чтении `get_saved_filters`/открытии панели), live-push отложен. Артефакт смоука: `now()` заморожен в транзакции, поэтому «изменён после просмотра» воспроизводится сдвигом `seen_at`, не баг.
+
+---
+
 _Других тестов пока нет._
