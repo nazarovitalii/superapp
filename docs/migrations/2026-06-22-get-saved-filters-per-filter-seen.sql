@@ -25,6 +25,15 @@ BEGIN
     RETURN;
   END IF;
 
+  -- I-2: убеждаемся, что литерал 'notification_type' в теле ровно один (якорь конца
+  -- выражения unseen_count). В PG ARE при смешении greedy/non-greedy жадность всей регулярки
+  -- задаёт ПЕРВЫЙ квантификатор ([[:space:]]* — жадный), поэтому .*? де-факто жадный; при
+  -- >1 вхождении замена захватила бы лишнее. Падаем явно, а не портим функцию.
+  IF (length(v_def) - length(replace(v_def, '''notification_type''', '')))
+       / length('''notification_type''') <> 1 THEN
+    RAISE EXCEPTION 'get_saved_filters: ''notification_type'' встречается не один раз — якорь неоднозначен, патч прерван';
+  END IF;
+
   v_new := regexp_replace(
     v_def,
     E'(''unseen_count''[[:space:]]*,[[:space:]]*).*?([[:space:]]*,[[:space:]]*''notification_type'')',
