@@ -18,5 +18,8 @@ AS $$
   ON CONFLICT (user_id, property_id) DO UPDATE SET shown_at = now();
 $$;
 
+-- ⚠️ В Supabase default privileges навешивают EXECUTE на anon/authenticated через ALTER DEFAULT
+--    PRIVILEGES (НЕ через PUBLIC) → REVOKE FROM PUBLIC их НЕ снимает. Явно отзываем у anon/authenticated.
 REVOKE ALL ON FUNCTION public.mark_listings_shown(uuid[], uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.mark_listings_shown(uuid[], uuid) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mark_listings_shown(uuid[], uuid) TO service_role;
