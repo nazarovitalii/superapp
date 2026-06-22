@@ -574,7 +574,7 @@ export class FeedPageComponent {
     };
   }
 
-  // Стадия 1: помечаем загруженную страницу показанной (батч), затем через 3с гасим полоски
+  // Стадия 1: помечаем загруженную страницу показанной (батч), затем через 5с гасим полоски
   // локально (CSS-fade). На следующем чтении get_feed они уже не is_unseen (shown_at обновлён).
   private _markPageShown(items: PropertyFeedItem[]): void {
     const ids = items.map((it) => it.id);
@@ -588,7 +588,7 @@ export class FeedPageComponent {
           idSet.has(it.id) && it.is_unseen ? { ...it, is_unseen: false } : it,
         ),
       );
-    }, 3000);
+    }, 5000);
     this._stripeTimers.add(timer);
   }
 

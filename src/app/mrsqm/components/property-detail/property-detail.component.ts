@@ -112,18 +112,6 @@ export class PropertyDetailComponent implements OnDestroy {
     () => this.detail()?.comments_count ?? this.property().comments_count ?? 0,
   );
 
-  // Метрики объекта (таб Metrics, только владельцу). Источник — get_property.
-  readonly metricsVm = computed(() => {
-    const d = this.detail();
-    return {
-      views: d?.views_count ?? 0,
-      uniqueViews: d?.unique_views_count ?? 0,
-      impressions: d?.impressions_count ?? 0,
-      contacts: d?.contacts_count ?? 0,
-      comments: d?.comments_count ?? this.property().comments_count ?? 0,
-    };
-  });
-
   readonly currentPhotoUrl = computed(() => {
     const list = this.photos();
     return list.length ? list[this.activePhotoIdx() % list.length].full_url : null;

@@ -585,7 +585,7 @@ describe('FeedPageComponent', () => {
     expect(seenSpy.markShown).toHaveBeenCalledWith(['a', 'b']);
   }));
 
-  it('через 3с гасит is_unseen у загруженных объектов', fakeAsync(() => {
+  it('через 5с гасит is_unseen у загруженных объектов', fakeAsync(() => {
     fake.response = {
       results: [
         { id: 'a', is_unseen: true },
@@ -599,8 +599,11 @@ describe('FeedPageComponent', () => {
     tick();
     // Сразу после загрузки — полоски всё ещё видны
     expect(component.properties().every((p) => p.is_unseen)).toBeTrue();
-    // Через 3 секунды — is_unseen флипается в false
+    // Через 3с ещё держатся (тайминг увеличен до 5с)
     tick(3000);
+    expect(component.properties().every((p) => p.is_unseen)).toBeTrue();
+    // Через 5с суммарно — is_unseen флипается в false
+    tick(2000);
     expect(component.properties().every((p) => p.is_unseen === false)).toBeTrue();
   }));
 

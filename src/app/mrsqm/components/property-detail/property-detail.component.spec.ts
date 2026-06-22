@@ -306,25 +306,6 @@ describe('PropertyDetailComponent', () => {
     expect(comp.activeTab()).toBe('metrics');
   });
 
-  it('metricsVm берёт метрики из detail', async () => {
-    const { comp, supa } = makeComponent();
-    supa.rpcResult = detail({
-      is_owner: true,
-      views_count: 42,
-      unique_views_count: 30,
-      impressions_count: 100,
-      contacts_count: 7,
-      comments_count: 3,
-    });
-    await comp.loadProperty();
-    const m = comp.metricsVm();
-    expect(m.views).toBe(42);
-    expect(m.uniqueViews).toBe(30);
-    expect(m.impressions).toBe(100);
-    expect(m.contacts).toBe(7);
-    expect(m.comments).toBe(3);
-  });
-
   it('reset активного таба при смене объекта', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({ is_owner: true });

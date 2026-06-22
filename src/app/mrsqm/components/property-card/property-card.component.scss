@@ -16,17 +16,19 @@
     var(--task-inner-padding-top-bottom);
   outline: none;
 
-  // Стадия 1: жёлтая полоска «непросмотрен» — левое ребро, полная высота.
-  // Класс .is-unseen снимает feed-page после 3с → opacity 1→0 = fade-out.
+  // Стадия 1: оранжевая полоска «непросмотрен» — левое ребро, полная высота.
+  // Класс .is-unseen снимает feed-page после 5с → opacity 1→0 = fade-out.
+  // z-index выше .box: фон карточки (.box, position:absolute) перекрывал полоску.
   &::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 3px;
-    background: var(--sun-yellow);
+    width: 4px;
+    background: var(--color-warning);
     opacity: 0;
+    z-index: 2;
     transition: opacity var(--transition-duration-l) var(--ani-leave-timing);
     pointer-events: none;
   }
