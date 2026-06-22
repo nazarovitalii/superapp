@@ -73,6 +73,8 @@ export interface SavedFilter {
   filters: SavedFilterPayload;
   notification_type: string | null;
   created_at: string;
+  // Сколько объектов появилось по этому фильтру с момента последнего просмотра (≥ 0).
+  unseen_count: number;
 }
 
 export const EMPTY_FILTERS: FeedFilters = {

@@ -53,6 +53,7 @@ const sampleFilter = (): SavedFilter => ({
   filters: samplePayload(),
   notification_type: null,
   created_at: '2026-06-21T10:00:00Z',
+  unseen_count: 0,
 });
 
 describe('SavedFilterService', () => {

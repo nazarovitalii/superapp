@@ -291,6 +291,21 @@
   }
 }
 
+// Бейдж непросмотренных объектов — жёлтый, тёмный текст для контраста
+.saved-filter-badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--sun-yellow);
+  color: #333;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
 .saved-filter-remove {
   appearance: none;
   border: none;

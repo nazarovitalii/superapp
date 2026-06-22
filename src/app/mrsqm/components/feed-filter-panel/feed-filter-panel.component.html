@@ -39,6 +39,10 @@
               >
                 {{ f.auto_name || 'Без названия' }}
               </button>
+              @if (f.unseen_count > 0) {
+                <!-- Бейдж непросмотренных объектов по этому фильтру -->
+                <span class="saved-filter-badge">{{ f.unseen_count }}</span>
+              }
               <button
                 type="button"
                 class="saved-filter-remove"

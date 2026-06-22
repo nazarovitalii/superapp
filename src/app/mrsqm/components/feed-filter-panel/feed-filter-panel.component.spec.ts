@@ -638,12 +638,14 @@ describe('FeedFilterPanelComponent — сохранённые фильтры (FF
     },
     notification_type: null,
     created_at: '2026-01-01T00:00:00Z',
+    unseen_count: 0,
   };
 
   const MOCK_SF_2: SavedFilter = {
     ...MOCK_SF_1,
     id: 'sf-2',
     auto_name: 'JBR Rent',
+    unseen_count: 0,
   };
 
   const buildWithSaved = async (listResult: SavedFilter[]): Promise<void> => {
@@ -906,5 +908,119 @@ describe('FeedFilterPanelComponent — FF22 fix: живое состояние �
     component.apply();
     expect(filterService.filters().bedrooms).toContain(2);
     expect(filterService.filters().unitTypeId).toBe('ut1');
+  });
+});
+
+// ─── Бейдж непросмотренных (unseen_count) ────────────────────────────────────
+describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
+  let fixture: ReturnType<typeof TestBed.createComponent<FeedFilterPanelComponent>>;
+  let component: FeedFilterPanelComponent;
+  let fakeSavedSvc: jasmine.SpyObj<SavedFilterService>;
+
+  const FILTERS_PAYLOAD = {
+    filters: {
+      unitTypeId: null,
+      subTypeIds: [],
+      bedrooms: [],
+      bathrooms: [],
+      priceMin: null,
+      priceMax: null,
+      areaMin: null,
+      areaMax: null,
+      furnished: null,
+      listingType: 'all' as const,
+      plotMin: null,
+      plotMax: null,
+      developerIds: [],
+      viewIds: [],
+      positionIds: [],
+      amenityIds: [],
+      floorLevelIds: [],
+      floorsInUnitIds: [],
+      isMaid: null,
+      isHotelPool: null,
+      isVastu: null,
+      isStudy: null,
+      isReduced: null,
+      isBelowOp: null,
+      pricePeriod: null,
+      occupancyStatus: [],
+      completionYears: [],
+      completionQ: [],
+      cheques: [],
+    },
+    dealType: 'sale' as const,
+    handover: null,
+    scope: 'public' as const,
+    category: null,
+    locations: [],
+  };
+
+  // Фильтр с непросмотренными объектами (unseen_count > 0)
+  const SF_WITH_UNSEEN: SavedFilter = {
+    id: 'sf-unseen',
+    auto_name: 'Marina Sale',
+    filters: FILTERS_PAYLOAD,
+    notification_type: null,
+    created_at: '2026-01-01T00:00:00Z',
+    unseen_count: 5,
+  };
+
+  // Фильтр без непросмотренных (unseen_count = 0)
+  const SF_NO_UNSEEN: SavedFilter = {
+    id: 'sf-seen',
+    auto_name: 'JBR Rent',
+    filters: FILTERS_PAYLOAD,
+    notification_type: null,
+    created_at: '2026-01-01T00:00:00Z',
+    unseen_count: 0,
+  };
+
+  beforeEach(async () => {
+    fakeSavedSvc = jasmine.createSpyObj<SavedFilterService>('SavedFilterService', [
+      'list',
+      'save',
+      'update',
+      'remove',
+    ]);
+    fakeSavedSvc.list.and.returnValue(Promise.resolve([SF_WITH_UNSEEN, SF_NO_UNSEEN]));
+
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+        { provide: SavedFilterService, useValue: fakeSavedSvc },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    component.options.set(MOCK_OPTIONS);
+    // Устанавливаем фильтры синхронно, не ждём async _loadSavedFilters
+    component.savedFilters.set([SF_WITH_UNSEEN, SF_NO_UNSEEN]);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('бейдж отображается когда unseen_count > 0', () => {
+    const items = fixture.nativeElement.querySelectorAll('.saved-filter-item');
+    const firstItem = items[0] as HTMLElement;
+    const badge = firstItem.querySelector('.saved-filter-badge') as HTMLElement | null;
+    expect(badge).not.toBeNull();
+    expect(badge!.textContent!.trim()).toBe('5');
+  });
+
+  it('бейдж НЕ отображается когда unseen_count === 0', () => {
+    const items = fixture.nativeElement.querySelectorAll('.saved-filter-item');
+    const secondItem = items[1] as HTMLElement;
+    const badge = secondItem.querySelector('.saved-filter-badge') as HTMLElement | null;
+    expect(badge).toBeNull();
   });
 });
