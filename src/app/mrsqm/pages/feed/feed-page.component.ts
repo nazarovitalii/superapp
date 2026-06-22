@@ -39,6 +39,7 @@ import { PropertyOwnerService } from '../../services/property-owner.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
 
 // W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
 const COMMERCIAL_ALLOWLIST = new Set([
@@ -84,6 +85,7 @@ export class FeedPageComponent {
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _owner = inject(PropertyOwnerService);
   private readonly _seen = inject(SeenTrackingService);
+  private readonly _savedFilters = inject(SavedFilterService);
   private readonly _destroyRef = inject(DestroyRef);
   // Активные таймеры гашения полосок — чистим при destroy.
   private readonly _stripeTimers = new Set<ReturnType<typeof setTimeout>>();
@@ -580,6 +582,19 @@ export class FeedPageComponent {
     const ids = items.map((it) => it.id);
     if (!ids.length) return;
     void this._seen.markShown(ids);
+
+    // Баг B: если открыт сохранённый фильтр — частично гасим его бейдж ровно на
+    // показанные ЧУЖИЕ объекты (свои в матчи не входят — owner-skip матчера).
+    const fid = this.filter.loadedFilterId();
+    if (fid) {
+      const myId = this._auth.currentUser()?.id ?? null;
+      const matchIds = items.filter((it) => it.owner_id !== myId).map((it) => it.id);
+      if (matchIds.length) {
+        this._savedFilters.markSeenLocally(fid, matchIds); // оптимистично сразу
+        void this._seen.markFilterSeen(fid, matchIds); // сервер подтверждает фоном
+      }
+    }
+
     const idSet = new Set(ids);
     const timer = setTimeout(() => {
       this._stripeTimers.delete(timer);

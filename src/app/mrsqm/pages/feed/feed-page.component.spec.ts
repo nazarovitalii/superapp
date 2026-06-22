@@ -13,6 +13,7 @@ import {
 import { SnackService } from '../../../core/snack/snack.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
 
 // Заглушка Supabase: фиксируем параметры вызова get_feed.
 class FakeSupabase {
@@ -77,6 +78,8 @@ describe('FeedPageComponent', () => {
   let fakePanels: FakePanels;
   // Spy для трекинга просмотров (Task 4)
   let seenSpy: jasmine.SpyObj<SeenTrackingService>;
+  // Spy для сохранённых фильтров (Task 8)
+  let savedFilterSpy: jasmine.SpyObj<SavedFilterService>;
 
   const build = (): FeedPageComponent => {
     TestBed.configureTestingModule({
@@ -88,6 +91,7 @@ describe('FeedPageComponent', () => {
         { provide: SnackService, useValue: fakeSnack },
         { provide: SavedPropertiesService, useValue: fakeSaved },
         { provide: SeenTrackingService, useValue: seenSpy },
+        { provide: SavedFilterService, useValue: savedFilterSpy },
       ],
     });
     filter = TestBed.inject(FeedFilterService);
@@ -99,9 +103,15 @@ describe('FeedPageComponent', () => {
     fakeSnack = new FakeSnack();
     fakeSaved = new FakeSaved();
     fakePanels = new FakePanels();
-    seenSpy = jasmine.createSpyObj('SeenTrackingService', ['markShown', 'recordView']);
+    seenSpy = jasmine.createSpyObj('SeenTrackingService', [
+      'markShown',
+      'recordView',
+      'markFilterSeen',
+    ]);
     seenSpy.markShown.and.resolveTo(undefined);
     seenSpy.recordView.and.resolveTo(undefined);
+    seenSpy.markFilterSeen.and.resolveTo(undefined);
+    savedFilterSpy = jasmine.createSpyObj('SavedFilterService', ['markSeenLocally']);
     TestBed.resetTestingModule();
   });
 
@@ -632,5 +642,49 @@ describe('FeedPageComponent', () => {
     const prop = { id: 'card-2' } as PropertyFeedItem;
     component.toggleDetail(prop);
     expect(seenSpy.recordView).not.toHaveBeenCalled();
+  });
+
+  // ─── Task-8: пометка показанных в активном фильтре объектов ─────────────────
+
+  it('при активном фильтре помечает показанные чужие объекты (не свои)', () => {
+    const component = build();
+
+    // seenSpy и savedFilterSpy уже созданы как SpyObj — просто сбрасываем счётчики.
+    seenSpy.markFilterSeen.calls.reset();
+    savedFilterSpy.markSeenLocally.calls.reset();
+
+    // Активен сохранённый фильтр f1; текущий юзер — me.
+    TestBed.inject(FeedFilterService).loadedFilterId.set('f1');
+    spyOn(TestBed.inject(MrsqmAuthService), 'currentUser').and.returnValue({
+      id: 'me',
+    } as never);
+
+    // Прямой вызов приватного хелпера через каст (минимизируем поверхность теста).
+    (
+      component as unknown as {
+        _markPageShown(items: PropertyFeedItem[]): void;
+      }
+    )._markPageShown([
+      { id: 'p1', owner_id: 'other' } as PropertyFeedItem,
+      { id: 'p2', owner_id: 'me' } as PropertyFeedItem, // свой — не считаем
+    ]);
+
+    expect(seenSpy.markFilterSeen).toHaveBeenCalledWith('f1', ['p1']);
+    expect(savedFilterSpy.markSeenLocally).toHaveBeenCalledWith('f1', ['p1']);
+  });
+
+  it('без активного фильтра markFilterSeen не вызывается', () => {
+    const component = build();
+
+    seenSpy.markFilterSeen.calls.reset();
+    TestBed.inject(FeedFilterService).loadedFilterId.set(null);
+
+    (
+      component as unknown as {
+        _markPageShown(items: PropertyFeedItem[]): void;
+      }
+    )._markPageShown([{ id: 'p1', owner_id: 'other' } as PropertyFeedItem]);
+
+    expect(seenSpy.markFilterSeen).not.toHaveBeenCalled();
   });
 });
