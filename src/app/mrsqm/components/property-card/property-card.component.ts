@@ -24,6 +24,8 @@ import { resolveFeedAddress } from '../../util/feed-address.util';
 export class PropertyCardComponent {
   readonly property = input.required<PropertyFeedItem>();
   readonly isActive = input(false);
+  // Стадия 1: новый/непросмотренный объект — жёлтая полоска по левому ребру (hot-path: только класс).
+  readonly isUnseen = input(false);
   readonly isSaved = input(false);
   // Чекбокс множественного выбора (как done-toggle в инбоксе).
   readonly isSelected = input(false);

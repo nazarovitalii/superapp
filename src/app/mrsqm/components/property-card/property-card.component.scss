@@ -15,6 +15,25 @@
   padding: calc(var(--task-inner-padding-top-bottom) - 1px) 0
     var(--task-inner-padding-top-bottom);
   outline: none;
+
+  // Стадия 1: жёлтая полоска «непросмотрен» — левое ребро, полная высота.
+  // Класс .is-unseen добавляет feed-page после 3с → opacity 1→0 = fade-out.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--c-warn);
+    opacity: 0;
+    transition: opacity var(--transition-duration-l) var(--ani-leave-timing);
+    pointer-events: none;
+  }
+
+  &.is-unseen::before {
+    opacity: 1;
+  }
 }
 
 .box {

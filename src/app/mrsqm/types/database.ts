@@ -287,6 +287,8 @@ export interface PropertyFeedItem {
   owner_agency_name: string | null;
   is_network: boolean;
   developer_name: string | null;
+  // Стадия 1: объект новый/непросмотренный для текущего юзера (по shown_at). Драйвит жёлтую полоску.
+  is_unseen?: boolean;
 }
 
 // Агент-владелец объекта — вложенный объект `agent` в ответе get_property.

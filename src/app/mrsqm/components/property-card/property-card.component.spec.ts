@@ -196,6 +196,23 @@ describe('PropertyCardComponent — click wiring', () => {
   });
 });
 
+describe('PropertyCardComponent — is-unseen stripe', () => {
+  it('добавляет класс is-unseen на .inner-wrapper при isUnseen=true', () => {
+    const fixture = makeFixture();
+    fixture.componentRef.setInput('isUnseen', true);
+    fixture.detectChanges();
+    const wrapper: HTMLElement = fixture.nativeElement.querySelector('.inner-wrapper');
+    expect(wrapper.classList).toContain('is-unseen');
+  });
+
+  it('нет класса is-unseen по умолчанию', () => {
+    const fixture = makeFixture();
+    fixture.detectChanges();
+    const wrapper: HTMLElement = fixture.nativeElement.querySelector('.inner-wrapper');
+    expect(wrapper.classList).not.toContain('is-unseen');
+  });
+});
+
 describe('PropertyCardComponent — computed signals', () => {
   it('dateLabel вычисляется из last_actualized_at', () => {
     const fixture = makeFixture({ last_actualized_at: '2026-06-01T00:00:00Z' });
