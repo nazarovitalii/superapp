@@ -128,4 +128,18 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-FB1: Бейдж непросмотра по фильтру + owner-skip is_unseen — DB-верификация
+
+**Дата:** 2026-06-23 · **Где:** прод Supabase (psql через SSH+docker, всё в `BEGIN … ROLLBACK`).
+**Что проверяли:** функционально (не только наличие патчей) 4 применённые миграции.
+
+1. **Патчи легли** (definition-check): `get_saved_filters` содержит `user_filter_seen`=t; `get_feed` содержит owner-skip предикат=t; `mark_filter_seen(uuid,uuid[])` существует=t; таблица `user_filter_seen` существует=t. → **4×t** ✅
+2. **`mark_filter_seen` security guard** (impersonation через `set_config('request.jwt.claims')`): пометка СВОЕГО фильтра → вставлено `own_rows=1`; попытка пометить ЧУЖОЙ фильтр → `foreign_rows=0` (заблокировано EXISTS-guard). → ✅ нельзя пометить чужой фильтр.
+3. **Бейдж частичное гашение** (Bug B): владелец фильтра с активными матчами, `get_saved_filters.unseen_count` **BEFORE=2** → `mark_filter_seen(fid,[1 матч])` → **AFTER=1** (ровно −1). → ✅ бейдж считает по `user_filter_seen`, тает частично; на `shown_at` (общую ленту) больше не завязан.
+
+**Контекст:** в системе `fm_active_total=3` активных матчей. Всё прогнано в ROLLBACK — следов в БД нет.
+**Вывод:** ✅ DB-уровень полностью. Критерий #1 (свои не светятся) доказан definition-check'ом + проверкой приоритета операторов (opus-ревью); визуальная проверка на проде (капсула, частичное гашение в UI) — **pending после деплоя Coolify**.
+
+---
+
 _Других тестов пока нет._
