@@ -90,4 +90,14 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-US2: Стадия 2 (воронка) + realtime matched_at + overload + get_saved_filters live
+
+**Дата:** 2026-06-22 · **Где:** прод Supabase, под `supabase_admin`, каждая в транзакции (`apply-migration.sh`).
+**Что проверяли:** применение 6 миграций (Ст.2 ×3 + `filter_matches.matched_at` + `mark_listings_shown(uuid[],uuid)` + `get_saved_filters` live) и их корректность.
+**Ожидали:** `contact_at` и `matched_at` есть; `mark_listing_contact`/`get_listing_delivery_stats` созданы; overload `mark_listings_shown(uuid[],uuid)` доступен ТОЛЬКО `service_role`; `get_saved_filters` считает `unseen_count` live по `MAX(matched_at)`.
+**Получили:** ✅ `contact_at`=1, `matched_at`=1; обе RPC существуют; `mark_listings_shown` имеет 2 перегрузки; **гранты overload (aclexplode) = только `service_role`+owner-роли** (после явного `REVOKE` с `anon`/`authenticated` — Supabase вешает их через default privileges, не PUBLIC; первая проверка показала дыру, пофикшено); `get_saved_filters` — `sf.unseen_count` отсутствует, есть `max(fm.matched_at)`.
+**Вывод:** ✅ read-side Стадий 2/3 корректен. 🟢 Live-бейдж заработает реально после деплоя matcher realtime (пишет `matched_at`). ⏳ UI-проверка воронки/бейджа — после пуша фронта.
+
+---
+
 _Других тестов пока нет._
