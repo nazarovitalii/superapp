@@ -27,7 +27,7 @@
       <div class="filter-group saved-filters-group">
         <div class="filter-label"><mat-icon>bookmark</mat-icon>Сохранённые</div>
         <div class="saved-filters-list">
-          @for (f of savedFilters(); track f.id) {
+          @for (f of savedFiltersView(); track f.id) {
             <div
               class="saved-filter-item"
               [class.is-active]="_filterService.loadedFilterId() === f.id"
@@ -39,9 +39,9 @@
               >
                 {{ f.auto_name || 'Без названия' }}
               </button>
-              @if (f.unseen_count > 0) {
-                <!-- Бейдж непросмотренных объектов по этому фильтру -->
-                <span class="saved-filter-badge">{{ f.unseen_count }}</span>
+              @if (f.displayUnseen > 0) {
+                <!-- Бейдж непросмотренных объектов по этому фильтру (минус просмотренные в нём) -->
+                <span class="saved-filter-badge">{{ f.displayUnseen }}</span>
               }
               <button
                 type="button"

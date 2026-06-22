@@ -654,8 +654,12 @@ describe('FeedFilterPanelComponent — сохранённые фильтры (FF
       'save',
       'update',
       'remove',
+      'localSeenCount',
+      'clearLocalSeen',
     ]);
     fakeSavedSvc.list.and.returnValue(Promise.resolve(listResult));
+    (fakeSavedSvc.localSeenCount as jasmine.Spy).and.returnValue(0);
+    (fakeSavedSvc.clearLocalSeen as jasmine.Spy).and.stub();
 
     await TestBed.configureTestingModule({
       imports: [FeedFilterPanelComponent],
@@ -982,8 +986,13 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
       'save',
       'update',
       'remove',
+      'localSeenCount',
+      'clearLocalSeen',
     ]);
     fakeSavedSvc.list.and.returnValue(Promise.resolve([SF_WITH_UNSEEN, SF_NO_UNSEEN]));
+    // localSeenCount возвращает 0 → displayUnseen === unseen_count (бейдж без изменений)
+    (fakeSavedSvc.localSeenCount as jasmine.Spy).and.returnValue(0);
+    (fakeSavedSvc.clearLocalSeen as jasmine.Spy).and.stub();
 
     await TestBed.configureTestingModule({
       imports: [FeedFilterPanelComponent],
@@ -1022,5 +1031,45 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
     const secondItem = items[1] as HTMLElement;
     const badge = secondItem.querySelector('.saved-filter-badge') as HTMLElement | null;
     expect(badge).toBeNull();
+  });
+});
+
+// ─── savedFiltersView: эффективный бейдж (вычет локального seen) ─────────────
+describe('FeedFilterPanelComponent — savedFiltersView (эффективный бейдж)', () => {
+  let component: FeedFilterPanelComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FeedFilterPanelComponent],
+      providers: [
+        {
+          provide: PropertyCreateService,
+          useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
+        },
+        FeedFilterService,
+        SavedFilterService,
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(FeedFilterPanelComponent);
+    component = fixture.componentInstance;
+    component.options.set(MOCK_OPTIONS);
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('savedFiltersView вычитает локальный seen и не уходит ниже 0', () => {
+    component.savedFilters.set([
+      { id: 'f1', auto_name: 'A', unseen_count: 5 } as never,
+      { id: 'f2', auto_name: 'B', unseen_count: 1 } as never,
+    ]);
+    component._savedSvc.markSeenLocally('f1', ['a', 'b']); // 5 - 2 = 3
+    component._savedSvc.markSeenLocally('f2', ['x', 'y']); // 1 - 2 → 0 (clamp)
+
+    const view = component.savedFiltersView();
+    expect(view.find((f) => f.id === 'f1')?.displayUnseen).toBe(3);
+    expect(view.find((f) => f.id === 'f2')?.displayUnseen).toBe(0);
   });
 });

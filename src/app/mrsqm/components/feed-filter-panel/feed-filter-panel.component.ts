@@ -76,6 +76,14 @@ export class FeedFilterPanelComponent {
   // ─── Сохранённые фильтры ─────────────────────────────────────────────────────
   readonly savedFilters = signal<SavedFilter[]>([]);
 
+  // Бейдж с учётом оптимистично просмотренных в фильтре объектов (≥0).
+  readonly savedFiltersView = computed(() =>
+    this.savedFilters().map((f) => ({
+      ...f,
+      displayUnseen: Math.max(0, f.unseen_count - this._savedSvc.localSeenCount(f.id)),
+    })),
+  );
+
   // Поле ввода названия нового фильтра
   readonly newFilterName = signal<string>('');
 
@@ -245,6 +253,7 @@ export class FeedFilterPanelComponent {
     try {
       const list = await this._savedSvc.list();
       this.savedFilters.set(list);
+      this._savedSvc.clearLocalSeen();
     } catch {
       // сохранённые фильтры недоступны — не критично
     }
