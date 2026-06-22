@@ -25,4 +25,14 @@ export class SeenTrackingService {
       console.error('[SeenTrackingService] recordView ошибка:', e);
     }
   }
+
+  // Стадия 2: нажатие кнопки контакта (WA/TG) — сильнейший сигнал воронки (seen_contact).
+  // Бэк бампает contact_at + seen_at + shown_at. Fire-and-forget.
+  async recordContact(propertyId: string): Promise<void> {
+    try {
+      await this._supabase.rpc('mark_listing_contact', { p_property_id: propertyId });
+    } catch (e) {
+      console.error('[SeenTrackingService] recordContact ошибка:', e);
+    }
+  }
 }

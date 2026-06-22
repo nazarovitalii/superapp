@@ -35,6 +35,7 @@ import {
   PropertyOwnerService,
 } from '../../services/property-owner.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 import Swiper from 'swiper';
@@ -62,6 +63,7 @@ export class PropertyDetailComponent implements OnDestroy {
   private readonly _saved = inject(SavedPropertiesService);
   private readonly _snack = inject(SnackService);
   private readonly _injector = inject(Injector);
+  private readonly _seen = inject(SeenTrackingService);
 
   @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
   @ViewChild('lightboxMain') private _lightboxMainEl?: ElementRef<HTMLElement>;
@@ -438,10 +440,14 @@ export class PropertyDetailComponent implements OnDestroy {
   }
 
   openWhatsApp(phone: string): void {
+    const id = this.detail()?.id;
+    if (id) void this._seen.recordContact(id);
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
   }
 
   openTelegram(username: string): void {
+    const id = this.detail()?.id;
+    if (id) void this._seen.recordContact(id);
     window.open(`https://t.me/${username.replace(/^@/, '')}`, '_blank');
   }
 

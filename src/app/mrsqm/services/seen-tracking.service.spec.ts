@@ -39,4 +39,9 @@ describe('SeenTrackingService', () => {
     await expectAsync(service.markShown(['a'])).toBeResolved();
     await expectAsync(service.recordView('x')).toBeResolved();
   });
+
+  it('recordContact шлёт id в mark_listing_contact', async () => {
+    await service.recordContact('c1');
+    expect(rpc).toHaveBeenCalledWith('mark_listing_contact', { p_property_id: 'c1' });
+  });
 });

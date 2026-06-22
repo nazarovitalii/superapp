@@ -4,6 +4,7 @@ import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import {
   FilterOptions,
@@ -123,12 +124,21 @@ const makeComponent = (): {
   create: FakeCreate;
   saved: FakeSaved;
   snack: FakeSnack;
+  seen: jasmine.SpyObj<SeenTrackingService>;
 } => {
   const supa = new FakeSupabase();
   const photos = new FakePhotos();
   const create = new FakeCreate();
   const saved = new FakeSaved();
   const snack = new FakeSnack();
+  const seen = jasmine.createSpyObj<SeenTrackingService>('SeenTrackingService', [
+    'recordContact',
+    'recordView',
+    'markShown',
+  ]);
+  seen.recordContact.and.resolveTo(undefined);
+  seen.recordView.and.resolveTo(undefined);
+  seen.markShown.and.resolveTo(undefined);
   TestBed.configureTestingModule({
     imports: [PropertyDetailComponent],
     providers: [
@@ -137,11 +147,12 @@ const makeComponent = (): {
       { provide: PropertyCreateService, useValue: create },
       { provide: SavedPropertiesService, useValue: saved },
       { provide: SnackService, useValue: snack },
+      { provide: SeenTrackingService, useValue: seen },
     ],
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
-  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved, snack };
+  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved, snack, seen };
 };
 
 describe('PropertyDetailComponent', () => {
@@ -630,5 +641,23 @@ describe('PropertyDetailComponent', () => {
       fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';
     expect(chips).not.toContain('Торг');
     expect(chips).not.toContain('Срочно');
+  });
+
+  // ─── seen_contact: хук на кнопки WA/TG ──────────────────────────────────────
+
+  it('openWhatsApp вызывает recordContact с id объекта', async () => {
+    const { comp, supa, seen } = makeComponent();
+    supa.rpcResult = detail({ id: 'p1' });
+    await comp.loadProperty();
+    comp.openWhatsApp('+971500000000');
+    expect(seen.recordContact).toHaveBeenCalledWith('p1');
+  });
+
+  it('openTelegram вызывает recordContact с id объекта', async () => {
+    const { comp, supa, seen } = makeComponent();
+    supa.rpcResult = detail({ id: 'p1' });
+    await comp.loadProperty();
+    comp.openTelegram('@ivan');
+    expect(seen.recordContact).toHaveBeenCalledWith('p1');
   });
 });
