@@ -49,7 +49,6 @@ export class SavedFilterService {
   // Оптимистичный локальный seen-по-фильтру: Map<filterId, Set<propertyId>>.
   // Вычитается из серверного unseen_count до следующего list() (там сброс — сервер уже учёл).
   private readonly _localFilterSeen = signal<Map<string, Set<string>>>(new Map());
-  readonly localFilterSeen = this._localFilterSeen.asReadonly();
 
   // Сколько объектов помечено локально просмотренными в данном фильтре.
   localSeenCount(filterId: string): number {
