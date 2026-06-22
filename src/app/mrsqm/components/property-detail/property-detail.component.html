@@ -126,6 +126,21 @@
         <span class="metric-label">Ваш контакт просмотрено</span>
         <span class="metric-value">{{ metricsVm().contacts | number }}</span>
       </div>
+      <!-- Воронка доставки: загружается лениво из get_listing_delivery_stats -->
+      @if (funnel(); as fn) {
+        <div class="metric-row">
+          <span class="metric-label">Мелькнул в ленте</span>
+          <span class="metric-value">{{ fn.seen_preview | number }}</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Открыли карточку</span>
+          <span class="metric-value">{{ fn.seen_full | number }}</span>
+        </div>
+        <div class="metric-row metric-row--accent">
+          <span class="metric-label">Нажали контакт</span>
+          <span class="metric-value">{{ fn.seen_contact | number }}</span>
+        </div>
+      }
     </div>
   } @else {
     <div class="detail-scroll">

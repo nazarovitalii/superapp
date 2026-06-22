@@ -87,6 +87,13 @@ export class PropertyDetailComponent implements OnDestroy {
   readonly activeTab = signal<'details' | 'comments' | 'metrics'>('details');
   readonly commentsScope = signal<'all' | 'private'>('all');
 
+  // Воронка доставки (Stage 2, Task 3): загружается лениво при первом открытии таба Metrics владельцем.
+  readonly funnel = signal<{
+    seen_preview: number;
+    seen_full: number;
+    seen_contact: number;
+  } | null>(null);
+
   // Состояние лайтбокса Swiper.
   readonly lightboxOpen = signal(false);
   readonly lightboxIdx = signal(0);
@@ -194,6 +201,29 @@ export class PropertyDetailComponent implements OnDestroy {
 
   setTab(tab: 'details' | 'comments' | 'metrics'): void {
     this.activeTab.set(tab);
+    // Ленивая загрузка воронки при первом открытии таба Metrics владельцем.
+    if (tab === 'metrics' && this.isOwner() && this.funnel() === null) {
+      void this._loadFunnel();
+    }
+  }
+
+  private async _loadFunnel(): Promise<void> {
+    const id = this.detail()?.id;
+    if (!id || !this.isOwner()) return;
+    try {
+      const r = await this._supabase.rpc<{
+        seen_preview?: number;
+        seen_full?: number;
+        seen_contact?: number;
+      }>('get_listing_delivery_stats', { p_property_id: id });
+      this.funnel.set({
+        seen_preview: r?.seen_preview ?? 0,
+        seen_full: r?.seen_full ?? 0,
+        seen_contact: r?.seen_contact ?? 0,
+      });
+    } catch {
+      // воронка недоступна — просто не показываем
+    }
   }
 
   setCommentsScope(scope: 'all' | 'private'): void {
@@ -208,6 +238,7 @@ export class PropertyDetailComponent implements OnDestroy {
     this.activePhotoIdx.set(0);
     this.activeTab.set('details');
     this.isSaved.set(false);
+    this.funnel.set(null); // Сброс воронки при смене объекта.
     if (this._lightboxDialogEl?.nativeElement.open) {
       this.closeLightbox();
     }

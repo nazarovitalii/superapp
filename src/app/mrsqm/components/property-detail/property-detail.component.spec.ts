@@ -17,9 +17,10 @@ import {
 // ─── Заглушки сервисов ───────────────────────────────────────────────────────
 class FakeSupabase {
   rpcResult: unknown = null;
-  async rpc<T>(): Promise<T> {
+  // Перегружаемый мок: если переопределить rpc, используется он; иначе — rpcResult.
+  rpc = async <T>(_name: string, _args?: unknown): Promise<T> => {
     return this.rpcResult as T;
-  }
+  };
 }
 class FakePhotos {
   photos: PropertyPhoto[] = [];
@@ -152,7 +153,16 @@ const makeComponent = (): {
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
-  return { comp: fixture.componentInstance, fixture, supa, photos, create, saved, snack, seen };
+  return {
+    comp: fixture.componentInstance,
+    fixture,
+    supa,
+    photos,
+    create,
+    saved,
+    snack,
+    seen,
+  };
 };
 
 describe('PropertyDetailComponent', () => {
@@ -659,5 +669,75 @@ describe('PropertyDetailComponent', () => {
     await comp.loadProperty();
     comp.openTelegram('@ivan');
     expect(seen.recordContact).toHaveBeenCalledWith('p1');
+  });
+
+  // ─── Воронка владельца (Stage 2, Task 3) ────────────────────────────────────
+
+  it('setTab("metrics") у владельца вызывает RPC get_listing_delivery_stats и заполняет funnel()', async () => {
+    const { comp, supa } = makeComponent();
+    // Первый вызов rpc — get_property (в loadProperty). Второй — get_listing_delivery_stats.
+    // Переопределим rpc-заглушку, чтобы различить вызовы.
+    const rpcCalls: { name: string; args: unknown }[] = [];
+    supa.rpc = async <T>(name: string, args: unknown): Promise<T> => {
+      rpcCalls.push({ name, args });
+      if (name === 'get_property')
+        return detail({ id: 'p1', is_owner: true }) as unknown as T;
+      if (name === 'get_listing_delivery_stats')
+        return { seen_preview: 10, seen_full: 4, seen_contact: 1 } as unknown as T;
+      return null as unknown as T;
+    };
+
+    await comp.loadProperty();
+    expect(comp.isOwner()).toBe(true);
+    expect(comp.funnel()).toBeNull(); // ещё не загружена
+
+    comp.setTab('metrics');
+    // _loadFunnel — async, ждём один микротик
+    await Promise.resolve();
+
+    expect(rpcCalls.some((c) => c.name === 'get_listing_delivery_stats')).toBe(true);
+    const fn = comp.funnel();
+    expect(fn).not.toBeNull();
+    expect(fn?.seen_preview).toBe(10);
+    expect(fn?.seen_full).toBe(4);
+    expect(fn?.seen_contact).toBe(1);
+  });
+
+  it('setTab("metrics") у не-владельца НЕ вызывает RPC воронки', async () => {
+    const { comp, supa } = makeComponent();
+    const rpcCalls: string[] = [];
+    supa.rpc = async <T>(name: string): Promise<T> => {
+      rpcCalls.push(name);
+      if (name === 'get_property')
+        return detail({ id: 'p1', is_owner: false }) as unknown as T;
+      return null as unknown as T;
+    };
+
+    await comp.loadProperty();
+    comp.setTab('metrics');
+    await Promise.resolve();
+
+    expect(rpcCalls).not.toContain('get_listing_delivery_stats');
+    expect(comp.funnel()).toBeNull();
+  });
+
+  it('повторный setTab("metrics") не вызывает RPC второй раз (lazy once)', async () => {
+    const { comp, supa } = makeComponent();
+    let callCount = 0;
+    supa.rpc = async <T>(name: string): Promise<T> => {
+      if (name === 'get_listing_delivery_stats') callCount++;
+      if (name === 'get_property')
+        return detail({ id: 'p1', is_owner: true }) as unknown as T;
+      return { seen_preview: 5, seen_full: 2, seen_contact: 0 } as unknown as T;
+    };
+
+    await comp.loadProperty();
+    comp.setTab('metrics');
+    await Promise.resolve();
+    comp.setTab('details');
+    comp.setTab('metrics');
+    await Promise.resolve();
+
+    expect(callCount).toBe(1);
   });
 });
