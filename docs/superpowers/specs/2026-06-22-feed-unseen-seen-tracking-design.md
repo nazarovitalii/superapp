@@ -12,17 +12,20 @@
 
 ## Три поверхности — одна модель
 
-Все три считаются из **одной** пары `(user_id, property_id)` в `user_seen_listings` с двумя метками:
+Все три считаются из **одной** пары `(user_id, property_id)` в `user_seen_listings` с тремя метками
+(третья, `contact_at`, добавляется на Стадии 2):
 
 - **`shown_at`** — слабый частый сигнал «показан в ленте» (impression). Драйвит полоску, `is_unseen`, `seen_preview`.
-- **`seen_at`** — сильный редкий сигнал «открыл карточку» (engagement). Драйвит `seen_full`.
+- **`seen_at`** — средний сигнал «открыл карточку» (engagement). Драйвит `seen_full`.
+- **`contact_at`** — сильнейший сигнал «нажал контакт WA/TG» (Стадия 2). Драйвит `seen_contact`.
 
+Воронка владельца **вложенная**: `seen_preview` ⊇ `seen_full` ⊇ `seen_contact`.
 Увидел объект **где угодно** → `shown_at` бампается → он гаснет везде, фильтры пересчитываются сами.
 
 | Поверхность | Read-side формула | Кто блокирует | E2E сейчас |
 |---|---|---|---|
 | **2. Полоска в общей ленте** | `is_unseen` = `GREATEST(created,updated) > shown_at` (Прил. D) | никто — целиком superApp | ✅ да |
-| **3. Воронка владельца** | `seen_preview` (shown_at) + `seen_full` (seen_at) | никто — целиком superApp | ✅ да |
+| **3. Воронка владельца** | `seen_preview` (shown_at) + `seen_full` (seen_at) + `seen_contact` (contact_at) | никто — целиком superApp | ✅ да |
 | **1. Бейдж сохр. фильтра** | `unseen_count` = COUNT по `matched_at > shown_at` (Прил. A) | realtime: нет `filter_matches.matched_at` | ⚠️ нет |
 
 ## Авторитетные правки модели от владельца (канон поверх ТЗ)
@@ -33,6 +36,10 @@
 3. **Открыл карточку → всегда шлём `seen_full` (`track_view`)**, независимо от того, видел ли объект в ленте.
 4. **Гашение полоски:** видна сразу при загрузке, держится **3 секунды**, затем **плавно уходит анимацией**.
    Цель — «успеть увидеть новое» + чистый список при следующем чтении.
+5. **`seen_contact` — третий сигнал воронки (Стадия 2):** нажатие кнопки контакта (WhatsApp/Telegram)
+   в карточке листинга = самый сильный сигнал интереса. Засчитывать **на нажатие кнопки**, не на факт
+   переписки. Нажатие подразумевает, что карточка открыта и объект показан → отдельно слать open/impression
+   не нужно, бэк проставит нижележащие метки (`seen_at`, `shown_at`) сам.
 
 ## Состояние БД на старте (проверено по `docs/database.md`)
 
@@ -45,6 +52,7 @@
   а не живой COUNT по `shown_at` (семантика из Прил. A — другая).
 - `filter_matches`: есть `notified_at`, **нет `matched_at`** (нужен для Прил. A/B — realtime-сторона).
 - `get_listing_delivery_stats` — **не существует**.
+- `user_seen_listings` **не имеет `contact_at`** (нужен для `seen_contact`, Стадия 2).
 
 ## Порядок работ — Подход A (стадиями по зависимостям)
 
@@ -122,13 +130,24 @@
 
 ---
 
-## Стадия 2 — воронка владельца (`seen_preview` + `seen_full`)
+## Стадия 2 — воронка владельца (вложенная: `seen_preview` ⊇ `seen_full` ⊇ `seen_contact`)
 
-- **SQL:** новый `get_listing_delivery_stats(p_property_id)` → `seen_preview` =
-  `COUNT(DISTINCT user_id) WHERE shown_at IS NOT NULL`, `seen_full` =
-  `COUNT(DISTINCT user_id) WHERE seen_at IS NOT NULL` (Прил. C).
-- **Фронт:** в карточке владельца (`property-detail`) показать две цифры — «мелькнул» / «открыли».
-- Верифицируется отдельно (данные уже копятся со Стадии 1).
+- **SQL:**
+  - `user_seen_listings += contact_at timestamptz` — `ADD COLUMN IF NOT EXISTS` (аддитивно, с согласия владельца БД).
+  - **«Отметить контакт»** — расширить `track_view` параметром `p_action text DEFAULT 'view'`
+    (рекомендация — DRY, переиспользует owner-skip + идемпотентный upsert): `action='contact'` бампает
+    `contact_at = now()` **И** `seen_at = now()` **И** `shown_at = now()` (контакт ⟹ открыл ⟹ показан);
+    `action='view'` — как в Стадии 1. Идемпотентно по PK пары `(user, property)`.
+  - новый `get_listing_delivery_stats(p_property_id)` → три цифры (Прил. C):
+    `seen_preview` = `COUNT(DISTINCT user_id) WHERE shown_at IS NOT NULL`,
+    `seen_full` = `COUNT(DISTINCT user_id) WHERE seen_at IS NOT NULL`,
+    `seen_contact` = `COUNT(DISTINCT user_id) WHERE contact_at IS NOT NULL`.
+- **Фронт:**
+  - в карточке листинга на нажатие кнопки **WhatsApp/Telegram** → `SeenTrackingService.recordContact(id)`
+    (`track_view` с `p_action='contact'`). Засчитывать на нажатие, не на факт переписки;
+  - в карточке владельца (`property-detail`) показать три цифры воронки.
+- Верифицируется отдельно (данные `shown_at`/`seen_at` уже копятся со Стадии 1).
+- **Опционально на будущее (не v1):** колонка `contact_channel` для разбивки контакт через WA vs TG.
 
 ---
 
