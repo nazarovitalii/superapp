@@ -654,12 +654,11 @@ describe('FeedFilterPanelComponent — сохранённые фильтры (FF
       'save',
       'update',
       'remove',
-      'localSeenCount',
-      'clearLocalSeen',
+      'bumpReload',
     ]);
     fakeSavedSvc.list.and.returnValue(Promise.resolve(listResult));
-    (fakeSavedSvc.localSeenCount as jasmine.Spy).and.returnValue(0);
-    (fakeSavedSvc.clearLocalSeen as jasmine.Spy).and.stub();
+    (fakeSavedSvc as unknown as { reloadTick: () => number }).reloadTick = () => 0;
+    (fakeSavedSvc.bumpReload as jasmine.Spy).and.stub();
 
     await TestBed.configureTestingModule({
       imports: [FeedFilterPanelComponent],
@@ -986,13 +985,11 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
       'save',
       'update',
       'remove',
-      'localSeenCount',
-      'clearLocalSeen',
+      'bumpReload',
     ]);
     fakeSavedSvc.list.and.returnValue(Promise.resolve([SF_WITH_UNSEEN, SF_NO_UNSEEN]));
-    // localSeenCount возвращает 0 → displayUnseen === unseen_count (бейдж без изменений)
-    (fakeSavedSvc.localSeenCount as jasmine.Spy).and.returnValue(0);
-    (fakeSavedSvc.clearLocalSeen as jasmine.Spy).and.stub();
+    (fakeSavedSvc as unknown as { reloadTick: () => number }).reloadTick = () => 0;
+    (fakeSavedSvc.bumpReload as jasmine.Spy).and.stub();
 
     await TestBed.configureTestingModule({
       imports: [FeedFilterPanelComponent],

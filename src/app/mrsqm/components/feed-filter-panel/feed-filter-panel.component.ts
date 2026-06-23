@@ -9,6 +9,7 @@ import {
   ElementRef,
   afterNextRender,
   Injector,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -231,7 +232,10 @@ export class FeedFilterPanelComponent {
 
   constructor() {
     void this._loadOptions();
-    void this._loadSavedFilters();
+    effect(() => {
+      this._savedSvc.reloadTick(); // зависимость: перезагрузка по сигналу
+      void this._loadSavedFilters();
+    });
   }
 
   private async _loadOptions(): Promise<void> {
@@ -246,7 +250,6 @@ export class FeedFilterPanelComponent {
     try {
       const list = await this._savedSvc.list();
       this.savedFilters.set(list);
-      this._savedSvc.clearLocalSeen();
     } catch {
       // сохранённые фильтры недоступны — не критично
     }

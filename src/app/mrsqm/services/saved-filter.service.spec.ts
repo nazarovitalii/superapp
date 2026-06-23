@@ -162,26 +162,6 @@ describe('SavedFilterService', () => {
     await expectAsync(svc.remove('filter-uuid-1')).toBeRejected();
   });
 
-  // ─── localSeen ─────────────────────────────────────────────────────────────
-
-  it('markSeenLocally копит уникальные id по фильтру', () => {
-    svc.markSeenLocally('f1', ['a', 'b']);
-    svc.markSeenLocally('f1', ['b', 'c']);
-    expect(svc.localSeenCount('f1')).toBe(3);
-    expect(svc.localSeenCount('f2')).toBe(0);
-  });
-
-  it('clearLocalSeen обнуляет локальный seen', () => {
-    svc.markSeenLocally('f1', ['a']);
-    svc.clearLocalSeen();
-    expect(svc.localSeenCount('f1')).toBe(0);
-  });
-
-  it('markSeenLocally с пустым массивом — no-op', () => {
-    svc.markSeenLocally('f1', []);
-    expect(svc.localSeenCount('f1')).toBe(0);
-  });
-
   // ─── reloadTick / bumpReload ────────────────────────────────────────────────
 
   it('bumpReload инкрементит reloadTick', () => {

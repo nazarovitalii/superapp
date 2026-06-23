@@ -46,32 +46,6 @@ export class SavedFilterService {
     }
   }
 
-  // Оптимистичный локальный seen-по-фильтру: Map<filterId, Set<propertyId>>.
-  // Вычитается из серверного unseen_count до следующего list() (там сброс — сервер уже учёл).
-  private readonly _localFilterSeen = signal<Map<string, Set<string>>>(new Map());
-
-  // Сколько объектов помечено локально просмотренными в данном фильтре.
-  localSeenCount(filterId: string): number {
-    return this._localFilterSeen().get(filterId)?.size ?? 0;
-  }
-
-  // Пометить объекты просмотренными в фильтре (оптимистично, без round-trip).
-  markSeenLocally(filterId: string, propertyIds: string[]): void {
-    if (!propertyIds.length) return;
-    const map = new Map(this._localFilterSeen());
-    const set = new Set(map.get(filterId) ?? []);
-    for (const id of propertyIds) set.add(id);
-    map.set(filterId, set);
-    this._localFilterSeen.set(map);
-  }
-
-  // Сброс локального seen (после list(): сервер уже отдал актуальные unseen_count).
-  clearLocalSeen(): void {
-    if (this._localFilterSeen().size) {
-      this._localFilterSeen.set(new Map());
-    }
-  }
-
   // Тик перезагрузки списка фильтров: бампается после серверной пометки seen
   // (feed-page), панель перечитывает get_saved_filters → бейдж = чистое число бекенда.
   readonly reloadTick = signal(0);

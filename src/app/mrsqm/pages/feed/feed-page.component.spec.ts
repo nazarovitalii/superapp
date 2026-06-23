@@ -113,7 +113,6 @@ describe('FeedPageComponent', () => {
     seenSpy.markFilterSeen.and.resolveTo(undefined);
     savedFilterSpy = jasmine.createSpyObj<SavedFilterService>('SavedFilterService', [
       'bumpReload',
-      'markSeenLocally',
     ]);
     savedFilterSpy.bumpReload.and.returnValue(undefined);
     TestBed.resetTestingModule();
@@ -653,9 +652,8 @@ describe('FeedPageComponent', () => {
   it('при активном фильтре помечает показанные чужие объекты (не свои)', () => {
     const component = build();
 
-    // seenSpy и savedFilterSpy уже созданы как SpyObj — просто сбрасываем счётчики.
+    // seenSpy уже создан как SpyObj — сбрасываем счётчик.
     seenSpy.markFilterSeen.calls.reset();
-    savedFilterSpy.markSeenLocally.calls.reset();
 
     // Активен сохранённый фильтр f1; текущий юзер — me.
     TestBed.inject(FeedFilterService).loadedFilterId.set('f1');
