@@ -155,4 +155,39 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-SC1: get_feed серверный scope + P2-фикс + единый проход
+
+**Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-смоук → реальное применение под supabase_admin).
+**Тест-юзеры:** `nazarovitalii@gmail.com` (8db1f713, 15 active + 2 pending sale), `test2@mrsqm.dev` (b0000002, 3 active sale, visibility=network). Подружены обоюдно (`friendships` accepted → matview `user_network` обновлён триггером).
+**Данные:** сид-база (18 active total, 2 owner, 0 public-объектов; сети были пусты до теста).
+
+**Отрицательные/структурные (ROLLBACK-смоук):**
+- A: сигнатура оканчивается на `p_scope text DEFAULT 'all'` + `p_my_status text DEFAULT 'all'` → ✅
+- B: старый дубль `visibility IN ('public','network')` отсутствует (единый предикат) → ✅
+- C: scope=my по статусам: `all=17` (15 active + 2 pending), `active=15`, `pending=2`, `archived=0` → ✅ маппинг верен
+- D/E: scope=all `count_total = returned` → ✅
+- G: невалидный `p_scope` И невалидный `p_my_status` → исключение (оба PASS) → ✅
+
+**Положительный путь P2 (после дружбы, ROLLBACK-смоук):**
+- nazarovitalii `friends` = **3** (network-объекты test2), все `owner=test2`, `is_network=true`, своих нет → ✅
+- nazarovitalii `all` = **3** (0 public + 3 своя-сеть), своих нет → ✅
+- test2 `friends` = **15** (network-объекты nazarovitalii) → ✅
+- Чужой карман вне сети НЕ виден (старая функция отдавала 18 = свои+чужой network — утечка P2 закрыта).
+
+**Применение (реально):** `DROP FUNCTION` + `CREATE FUNCTION` + `GRANT` без ошибок; пост-верификация: `has_scope=t`, `no_visibility_IN=t`, сигнатура с двумя новыми параметрами.
+**Вывод:** ✅ Серверный охват (all/friends/my) и статус-фильтр My работают; P2 закрыт в обе стороны; единый проход (count(*) OVER()) корректен. Файл → `applied/`.
+
+---
+
+### T-SC2: get_saved_filters — unseen_count=0 для My-фильтров
+
+**Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-смоук → реальное применение).
+**Что проверяли:** staleness-proof DO-патч: обёртка формулы re-notify в `CASE WHEN sf.filters->>'scope'='my' THEN 0 ELSE <re-notify> END`.
+- Патч применён: NOTICE «my-scope → 0 применён»; `has_scope_case=t` (определение содержит `sf.filters->>'scope'`) → ✅
+- Существующие фильтры не сломаны: `get_saved_filters(nazarovitalii)` = 2 строки (как и до патча) → ✅ правка меняет только скаляр unseen_count между якорями, число строк не меняется.
+- My-scope фильтров в сид-данных нет (4 фильтра: 3 public + 1 null-scope) → ветка my→0 проверена логикой/смоуком вакуумно.
+**Вывод:** ✅ Применено; My-фильтры получат `unseen_count=0` (жёлтого бейджа нет). Файл → `applied/`.
+
+---
+
 _Других тестов пока нет._
