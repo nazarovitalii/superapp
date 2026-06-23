@@ -608,6 +608,73 @@ describe('AddPropertyPageComponent — selectReveal (B5)', () => {
   });
 });
 
+// ─── FB-1: дедуп leaf на адрес-бегунке (building self-ref) ───────────────────
+describe('AddPropertyPageComponent — pickLocation дедуп leaf (FB-1)', () => {
+  let component: AddPropertyPageComponent;
+  let service: FakePropertyCreateService;
+
+  const makeInfo = (
+    breadcrumb: import('../../types/database').LocationBreadcrumbItem[],
+  ): import('../../types/database').LocationInfo => ({
+    location: {
+      id: 'b1',
+      name: 'Sadaf 4',
+      level: 'building',
+      lat: null,
+      lng: null,
+      is_popular: false,
+      completion_status: null,
+      developer_ids: [],
+    },
+    breadcrumb,
+    children: [], // leaf
+  });
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useClass: FakePropertyCreateService },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+    component = TestBed.createComponent(AddPropertyPageComponent).componentInstance;
+    service = TestBed.inject(
+      PropertyCreateService,
+    ) as unknown as FakePropertyCreateService;
+  });
+
+  it('breadcrumb уже заканчивается выбранным узлом → leaf НЕ дублируется', async () => {
+    spyOn(service, 'locationInfo').and.resolveTo(
+      makeInfo([
+        { id: 'c0', name: 'Dubai', level: 'city' },
+        { id: 'c1', name: 'JBR', level: 'community' },
+        { id: 'b1', name: 'Sadaf 4', level: 'building' }, // self уже в конце
+      ]),
+    );
+    await component.pickLocation('b1');
+    const path = component.addrPath();
+    expect(path.map((p) => p.id)).toEqual(['c0', 'c1', 'b1']);
+    expect(path.filter((p) => p.id === 'b1').length).toBe(1);
+  });
+
+  it('breadcrumb без выбранного узла → self аппендится в конец', async () => {
+    spyOn(service, 'locationInfo').and.resolveTo(
+      makeInfo([
+        { id: 'c0', name: 'Dubai', level: 'city' },
+        { id: 'c1', name: 'JBR', level: 'community' },
+      ]),
+    );
+    await component.pickLocation('b1');
+    expect(component.addrPath().map((p) => p.id)).toEqual(['c0', 'c1', 'b1']);
+  });
+});
+
 // ─── revealIndexFromFraction (U-0a) ──────────────────────────────────────────
 describe('revealIndexFromFraction', () => {
   // n=4 уровня, точки в центрах сегментов: 0→1/8, 1→3/8, 2→5/8, 3→7/8.

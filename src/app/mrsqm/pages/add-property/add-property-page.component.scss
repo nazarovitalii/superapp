@@ -349,22 +349,32 @@
   }
 }
 
-// Слова-уровни: flex без переноса, каждый занимает 1/N (S3).
+// Слова-уровни: flex, каждый занимает 1/N (S3). FB-2: подписи до 2 строк вместо
+// обрезки в одну. Футпринт сохранён прежним (min-height 30 + margin 10 = 40px),
+// чтобы не сдвигать абсолютную геометрию трека/точек/ручки ниже.
 .reveal-ticks {
   display: flex;
   flex-wrap: nowrap;
-  font-size: 13px;
-  margin-bottom: 24px; // отступ до трека
+  align-items: flex-start;
+  font-size: 12px;
+  min-height: 30px; // резерв под 2 строки → уровни выровнены по верху
+  margin-bottom: 10px; // 30 + 10 = прежние 40px до трека
 }
 
 .reveal-tick {
   flex: 1 1 0;
+  min-width: 0;
+  padding: 0 2px; // воздух между колонками
   text-align: center;
   color: var(--text-color-muted);
   opacity: 0.5;
-  white-space: nowrap;
+  // FB-2: перенос до 2 строк (длинные имена читаются); >2 строк — ellipsis + title-тултип.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  overflow-wrap: anywhere; // длинное одно слово тоже переносится
 
   &.on {
     color: var(--c-primary);

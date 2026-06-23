@@ -29,19 +29,26 @@
         <div class="saved-filters-list">
           @for (f of savedFilters(); track f.id) {
             <div
-              class="saved-filter-item"
+              class="saved-filter-card"
               [class.is-active]="_filterService.loadedFilterId() === f.id"
             >
+              <!-- Клик по карточке загружает фильтр в ленту (закладка + имя) -->
               <button
                 type="button"
-                class="saved-filter-name"
+                class="saved-filter-load"
                 (click)="loadSavedFilter(f)"
               >
-                {{ f.auto_name || 'Без названия' }}
+                <mat-icon class="saved-filter-icon">bookmark</mat-icon>
+                <span class="saved-filter-name">{{ f.auto_name || 'Без названия' }}</span>
               </button>
               @if (f.unseen_count > 0) {
-                <!-- Бейдж непросмотренных объектов по этому фильтру (серверный unseen_count) -->
-                <span class="saved-filter-badge">{{ f.unseen_count }}</span>
+                <!-- Бейдж непросмотренных: статичный по сохранённому фильтру;
+                     пульсирует (рифма с точкой ленты) пока этот фильтр загружен. -->
+                <span
+                  class="saved-filter-badge"
+                  [class.is-pulsing]="_filterService.loadedFilterId() === f.id"
+                  >{{ f.unseen_count }}</span
+                >
               }
               <button
                 type="button"

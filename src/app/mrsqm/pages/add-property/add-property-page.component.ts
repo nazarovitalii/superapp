@@ -471,7 +471,11 @@ export class AddPropertyPageComponent {
         name: info.location.name,
       };
       // Полная цепочка = предки (breadcrumb) + сам выбранный уровень.
-      this.addrPath.set([...info.breadcrumb, self]);
+      // Гоча: для building (self-ref) breadcrumb уже заканчивается выбранным узлом —
+      // тогда self не аппендим, иначе leaf дублируется (Sadaf 4 ×2). [[locations-path-building-gotcha]]
+      const bc = info.breadcrumb;
+      const endsWithSelf = bc.length > 0 && bc[bc.length - 1].id === self.id;
+      this.addrPath.set(endsWithSelf ? [...bc] : [...bc, self]);
       this.children.set(info.children);
       this._developerId.set(info.location.developer_ids?.[0] ?? null);
 

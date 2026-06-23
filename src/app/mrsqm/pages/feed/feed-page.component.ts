@@ -392,6 +392,9 @@ export class FeedPageComponent {
       this.filter.sortBy();
       this.filter.serverScope(); // охват теперь серверный → перезагрузка
       this.filter.myStatus();
+      // Загрузка/сброс сохранённого фильтра меняет p_filter_id → перезагрузка
+      // (clearLoaded не трогает filters(), поэтому зависимость нужна явно).
+      this.filter.loadedFilterId();
       this.offset.set(0);
       this.properties.set([]);
       void this._load();
@@ -510,6 +513,8 @@ export class FeedPageComponent {
       p_offset: this.offset(),
       p_scope: this.filter.serverScope(),
       p_my_status: this.filter.serverScope() === 'my' ? this.filter.myStatus() : 'all',
+      // Загруженный сохранённый фильтр → per-filter is_unseen (синхрон с бейджем).
+      p_filter_id: this.filter.loadedFilterId(),
       p_sort_by: this.filter.sortBy(),
       p_category_id: categoryVal ? await this._getCategoryId(categoryVal) : null,
       p_unit_type_id: f.unitTypeId,
@@ -565,27 +570,31 @@ export class FeedPageComponent {
     if (!ids.length) return;
     void this._seen.markShown(ids);
 
-    // Если открыт сохранённый фильтр — помечаем показанные ЧУЖИЕ объекты просмотренными
-    // на сервере; затем перечитываем бейджи (число берём только с бекенда, без оптимистики).
+    // Если открыт сохранённый фильтр — собираем показанные ЧУЖИЕ объекты, чтобы
+    // через 5с пометить их просмотренными per-filter (фиксируем сейчас, до фейда).
     const fid = this.filter.loadedFilterId();
-    if (fid) {
-      const myId = this._auth.currentUser()?.id ?? null;
-      const matchIds = items.filter((it) => it.owner_id !== myId).map((it) => it.id);
-      if (matchIds.length) {
-        void this._seen
-          .markFilterSeen(fid, matchIds)
-          .then(() => this._savedFilters.bumpReload());
-      }
-    }
+    const myId = this._auth.currentUser()?.id ?? null;
+    const matchIds = fid
+      ? items.filter((it) => it.owner_id !== myId).map((it) => it.id)
+      : [];
 
     const idSet = new Set(ids);
     const timer = setTimeout(() => {
       this._stripeTimers.delete(timer);
+      // Локально гасим точки непросмотра в ленте (CSS-fade).
       this.properties.update((arr) =>
         arr.map((it) =>
           idSet.has(it.id) && it.is_unseen ? { ...it, is_unseen: false } : it,
         ),
       );
+      // Синхронно с фейдом точек: помечаем показанные чужие объекты просмотренными
+      // на сервере и перечитываем бейджи (число только с бекенда, без оптимистики).
+      // Перенос сюда (а не мгновенно) даёт бейджу пульсировать те же 5с, что и точки.
+      if (fid && matchIds.length) {
+        void this._seen
+          .markFilterSeen(fid, matchIds)
+          .then(() => this._savedFilters.bumpReload());
+      }
     }, 5000);
     this._stripeTimers.add(timer);
   }

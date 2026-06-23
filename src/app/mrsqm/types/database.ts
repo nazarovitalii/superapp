@@ -456,6 +456,9 @@ export type FeedParams = {
   p_scope?: 'all' | 'friends' | 'my';
   p_my_status?: 'all' | 'active' | 'archived' | 'rejected' | 'expired' | 'pending';
   p_city_id?: string | null;
+  // Загруженный сохранённый фильтр: когда задан, is_unseen в ленте считается
+  // per-filter (та же формула, что у бейджа), а не глобально. NULL = глобально.
+  p_filter_id?: string | null;
 } & Record<string, unknown>;
 
 export interface LocationSearchResult {

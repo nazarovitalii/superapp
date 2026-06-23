@@ -247,44 +247,91 @@
   flex: 1;
 }
 
-// ─── Сохранённые фильтры ────────────────────────────────────────────────────
+// ─── Сохранённые фильтры — карточки-плитки ───────────────────────────────────
 .saved-filters-list {
   display: flex;
   flex-direction: column;
   gap: var(--s-half);
 }
 
-.saved-filter-item {
+// Каждый сохранённый фильтр — отдельная карточка (язык .filter-group, но компактнее).
+// Активная = акцент-бар слева + лёгкая заливка primary. Зрительно отделяет
+// «сохранённые представления ленты» от живых чипов ниже.
+.saved-filter-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--s-half);
+  padding: 6px 6px 6px 8px;
+  background: var(--task-detail-bg);
+  border: 1px solid var(--extra-border-color);
   border-radius: var(--card-border-radius);
-  padding: 4px 8px 4px 4px;
-  transition: background var(--transition-standard);
+  box-shadow: var(--task-detail-shadow);
+  overflow: hidden;
+  transition: var(--transition-standard);
+  transition-property: background, border-color, box-shadow;
 
-  &.is-active {
-    background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  // Акцент-бар слева (без сдвига контента) — проявляется на активной карточке.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--c-primary);
+    opacity: 0;
+    transition: opacity var(--transition-standard);
   }
 
   &:hover {
-    background: var(--bg-lighter);
+    border-color: var(--c-primary);
+  }
+
+  &.is-active {
+    background: color-mix(in srgb, var(--c-primary) 10%, var(--task-detail-bg));
+
+    &::before {
+      opacity: 1;
+    }
+  }
+}
+
+// Кликабельная зона загрузки фильтра: иконка-закладка + имя.
+.saved-filter-load {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+}
+
+.saved-filter-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-color-muted);
+
+  .is-active & {
+    color: var(--c-primary);
   }
 }
 
 .saved-filter-name {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--text-color);
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 4px var(--s-half);
+  font-size: 14px;
 
   .is-active & {
     color: var(--c-primary);
@@ -292,7 +339,8 @@
   }
 }
 
-// Бейдж непросмотренных объектов — жёлтый, тёмный текст для контраста
+// Бейдж непросмотренных объектов — жёлтый, тёмный текст для контраста.
+// .is-pulsing (фильтр загружен в ленту) — пульсация scale в ритме точки ленты.
 .saved-filter-badge {
   flex-shrink: 0;
   min-width: 18px;
@@ -305,6 +353,21 @@
   font-weight: 600;
   line-height: 18px;
   text-align: center;
+
+  &.is-pulsing {
+    animation: saved-filter-badge-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+// Пульс бейджа — то же ядро, что у маркера непросмотра в ленте (1.2s scale).
+@keyframes saved-filter-badge-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1);
+  }
 }
 
 .saved-filter-remove {
@@ -319,6 +382,18 @@
   padding: 2px;
   border-radius: 50%;
   flex-shrink: 0;
+  // На touch (нет hover) — всегда видна; на десктопе — проявляется на ховер карточки.
+  opacity: 1;
+
+  @media (hover: hover) {
+    opacity: 0;
+    transition: opacity var(--transition-standard);
+
+    .saved-filter-card:hover &,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
 
   mat-icon {
     font-size: 16px;
@@ -327,7 +402,7 @@
   }
 
   &:hover {
-    color: var(--warn);
+    color: var(--warn-color, #f44336);
   }
 }
 

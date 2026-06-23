@@ -649,7 +649,7 @@ describe('FeedPageComponent', () => {
 
   // ─── Task-8: пометка показанных в активном фильтре объектов ─────────────────
 
-  it('при активном фильтре помечает показанные чужие объекты (не свои)', () => {
+  it('при активном фильтре помечает показанные чужие объекты (не свои) ЧЕРЕЗ 5с', fakeAsync(() => {
     const component = build();
 
     // seenSpy уже создан как SpyObj — сбрасываем счётчик.
@@ -671,10 +671,14 @@ describe('FeedPageComponent', () => {
       { id: 'p2', owner_id: 'me' } as PropertyFeedItem, // свой — не считаем
     ]);
 
-    expect(seenSpy.markFilterSeen).toHaveBeenCalledWith('f1', ['p1']);
-  });
+    // До 5с — НЕ вызвано: бейдж должен пульсировать те же 5с, что и точки ленты.
+    expect(seenSpy.markFilterSeen).not.toHaveBeenCalled();
 
-  it('без активного фильтра markFilterSeen не вызывается', () => {
+    tick(5000);
+    expect(seenSpy.markFilterSeen).toHaveBeenCalledWith('f1', ['p1']);
+  }));
+
+  it('без активного фильтра markFilterSeen не вызывается', fakeAsync(() => {
     const component = build();
 
     seenSpy.markFilterSeen.calls.reset();
@@ -686,8 +690,9 @@ describe('FeedPageComponent', () => {
       }
     )._markPageShown([{ id: 'p1', owner_id: 'other' } as PropertyFeedItem]);
 
+    tick(5000);
     expect(seenSpy.markFilterSeen).not.toHaveBeenCalled();
-  });
+  }));
 
   // ─── SC-4: серверный охват в p_scope / клиентская фильтрация убрана ──────────
 
@@ -700,6 +705,22 @@ describe('FeedPageComponent', () => {
     )._buildParams();
     expect(params['p_scope']).toBe('friends');
     expect(params['p_my_status']).toBe('all');
+  });
+
+  it('_buildParams шлёт p_filter_id из loadedFilterId (per-filter is_unseen), иначе null', async () => {
+    const component = build();
+    await flush();
+    const buildParams = (): Promise<Record<string, unknown>> =>
+      (
+        component as unknown as { _buildParams(): Promise<Record<string, unknown>> }
+      )._buildParams();
+
+    // Ни один фильтр не загружен → p_filter_id = null (глобальный is_unseen).
+    expect((await buildParams())['p_filter_id']).toBeNull();
+
+    // Загружен фильтр → его id уходит в RPC.
+    component.filter.loadedFilterId.set('sf-42');
+    expect((await buildParams())['p_filter_id']).toBe('sf-42');
   });
 
   it('visibleProperties не фильтрует по охвату для серверных scope (friends)', () => {

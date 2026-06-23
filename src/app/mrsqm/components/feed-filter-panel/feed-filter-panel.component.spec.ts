@@ -1016,7 +1016,7 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
   });
 
   it('бейдж отображается когда unseen_count > 0', () => {
-    const items = fixture.nativeElement.querySelectorAll('.saved-filter-item');
+    const items = fixture.nativeElement.querySelectorAll('.saved-filter-card');
     const firstItem = items[0] as HTMLElement;
     const badge = firstItem.querySelector('.saved-filter-badge') as HTMLElement | null;
     expect(badge).not.toBeNull();
@@ -1024,10 +1024,26 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
   });
 
   it('бейдж НЕ отображается когда unseen_count === 0', () => {
-    const items = fixture.nativeElement.querySelectorAll('.saved-filter-item');
+    const items = fixture.nativeElement.querySelectorAll('.saved-filter-card');
     const secondItem = items[1] as HTMLElement;
     const badge = secondItem.querySelector('.saved-filter-badge') as HTMLElement | null;
     expect(badge).toBeNull();
+  });
+
+  it('бейдж пульсирует (.is-pulsing) только когда этот фильтр загружен в ленту', () => {
+    // По умолчанию ни один фильтр не загружен — пульса нет.
+    let badge = fixture.nativeElement
+      .querySelectorAll('.saved-filter-card')[0]
+      .querySelector('.saved-filter-badge') as HTMLElement;
+    expect(badge.classList.contains('is-pulsing')).toBe(false);
+
+    // Загружаем фильтр с непросмотром — его бейдж начинает пульсировать.
+    component._filterService.markLoaded(SF_WITH_UNSEEN.id, SF_WITH_UNSEEN.filters);
+    fixture.detectChanges();
+    badge = fixture.nativeElement
+      .querySelectorAll('.saved-filter-card')[0]
+      .querySelector('.saved-filter-badge') as HTMLElement;
+    expect(badge.classList.contains('is-pulsing')).toBe(true);
   });
 });
 
