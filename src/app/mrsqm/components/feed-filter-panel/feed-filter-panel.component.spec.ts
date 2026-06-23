@@ -1034,8 +1034,8 @@ describe('FeedFilterPanelComponent — бейдж unseen_count', () => {
   });
 });
 
-// ─── savedFiltersView: эффективный бейдж (вычет локального seen) ─────────────
-describe('FeedFilterPanelComponent — savedFiltersView (эффективный бейдж)', () => {
+// ─── Task 5: scopeChoices (3) + setLiveScope→setScope ────────────────────────
+describe('FeedFilterPanelComponent — scopeChoices и setLiveScope (Task 5)', () => {
   let component: FeedFilterPanelComponent;
 
   beforeEach(async () => {
@@ -1047,7 +1047,6 @@ describe('FeedFilterPanelComponent — savedFiltersView (эффективный 
           useValue: { getFilterOptions: () => Promise.resolve(MOCK_OPTIONS) },
         },
         FeedFilterService,
-        SavedFilterService,
       ],
     }).compileComponents();
 
@@ -1060,16 +1059,17 @@ describe('FeedFilterPanelComponent — savedFiltersView (эффективный 
     TestBed.resetTestingModule();
   });
 
-  it('savedFiltersView вычитает локальный seen и не уходит ниже 0', () => {
-    component.savedFilters.set([
-      { id: 'f1', auto_name: 'A', unseen_count: 5 } as never,
-      { id: 'f2', auto_name: 'B', unseen_count: 1 } as never,
+  it('scopeChoices содержит ровно All/Friends/My (без Favourites)', () => {
+    expect(component.scopeChoices.map((c) => c.value)).toEqual([
+      'public',
+      'friends',
+      'my',
     ]);
-    component._savedSvc.markSeenLocally('f1', ['a', 'b']); // 5 - 2 = 3
-    component._savedSvc.markSeenLocally('f2', ['x', 'y']); // 1 - 2 → 0 (clamp)
+  });
 
-    const view = component.savedFiltersView();
-    expect(view.find((f) => f.id === 'f1')?.displayUnseen).toBe(3);
-    expect(view.find((f) => f.id === 'f2')?.displayUnseen).toBe(0);
+  it('setLiveScope("my") выставляет myStatus=all', () => {
+    component.setLiveScope('my');
+    expect(component._filterService.scope()).toBe('my');
+    expect(component._filterService.myStatus()).toBe('all');
   });
 });

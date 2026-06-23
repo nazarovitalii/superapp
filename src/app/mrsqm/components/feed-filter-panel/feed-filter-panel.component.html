@@ -27,7 +27,7 @@
       <div class="filter-group saved-filters-group">
         <div class="filter-label"><mat-icon>bookmark</mat-icon>Сохранённые</div>
         <div class="saved-filters-list">
-          @for (f of savedFiltersView(); track f.id) {
+          @for (f of savedFilters(); track f.id) {
             <div
               class="saved-filter-item"
               [class.is-active]="_filterService.loadedFilterId() === f.id"
@@ -39,9 +39,9 @@
               >
                 {{ f.auto_name || 'Без названия' }}
               </button>
-              @if (f.displayUnseen > 0) {
-                <!-- Бейдж непросмотренных объектов по этому фильтру (минус просмотренные в нём) -->
-                <span class="saved-filter-badge">{{ f.displayUnseen }}</span>
+              @if (f.unseen_count > 0) {
+                <!-- Бейдж непросмотренных объектов по этому фильтру (серверный unseen_count) -->
+                <span class="saved-filter-badge">{{ f.unseen_count }}</span>
               }
               <button
                 type="button"
@@ -608,28 +608,41 @@
       </div>
     }
 
-    <!-- Охват: Public / Friends (живой) — над Застройщиком и Листингом -->
+    <!-- Охват: Select из 3 (All/Friends/My) — живой, над Застройщиком и Листингом -->
     <div class="filter-group">
       <div class="filter-label"><mat-icon>public</mat-icon>Охват</div>
       <div class="chip-row">
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="_filterService.scope() === 'public'"
-          (click)="setLiveScope('public')"
-        >
-          Public
-        </button>
-        <button
-          type="button"
-          class="chip"
-          [class.is-selected]="_filterService.scope() === 'friends'"
-          (click)="setLiveScope('friends')"
-        >
-          Friends
-        </button>
+        @for (c of scopeChoices; track c.value) {
+          <button
+            type="button"
+            class="chip"
+            [class.is-selected]="_filterService.scope() === c.value"
+            (click)="setLiveScope(c.value)"
+          >
+            {{ c.label }}
+          </button>
+        }
       </div>
     </div>
+
+    <!-- Статус My-инвентаря — только при scope='my' -->
+    @if (_filterService.scope() === 'my') {
+      <div class="filter-group">
+        <div class="filter-label"><mat-icon>tune</mat-icon>Статус</div>
+        <div class="chip-row">
+          @for (c of myStatusChoices; track c.value) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-selected]="_filterService.myStatus() === c.value"
+              (click)="setMyStatus(c.value)"
+            >
+              {{ c.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
 
     <!-- Застройщик — автокомплит мультиселект -->
     <div class="filter-group">

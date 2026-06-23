@@ -19,6 +19,7 @@ import {
   FeedFilterService,
   FeedHandover,
   FeedScope,
+  MyStatus,
   PropertyCategory,
   SavedFilter,
 } from '../../services/feed-filter.service';
@@ -75,14 +76,6 @@ export class FeedFilterPanelComponent {
 
   // ─── Сохранённые фильтры ─────────────────────────────────────────────────────
   readonly savedFilters = signal<SavedFilter[]>([]);
-
-  // Бейдж с учётом оптимистично просмотренных в фильтре объектов (≥0).
-  readonly savedFiltersView = computed(() =>
-    this.savedFilters().map((f) => ({
-      ...f,
-      displayUnseen: Math.max(0, f.unseen_count - this._savedSvc.localSeenCount(f.id)),
-    })),
-  );
 
   // Поле ввода названия нового фильтра
   readonly newFilterName = signal<string>('');
@@ -535,9 +528,30 @@ export class FeedFilterPanelComponent {
     this._filterService.setSegment(value);
   }
 
-  // Охват: Public / Friends (my/favourites через панель не выбираются).
+  // Охват: Select из 3 (All/Friends/My). My/Public/Friends — серверные; favourites
+  // выбирается только вкладкой тулбара, в панели его нет.
+  readonly scopeChoices: ReadonlyArray<{ value: FeedScope; label: string }> = [
+    { value: 'public', label: 'All Inventory' },
+    { value: 'friends', label: 'Friends Inventory' },
+    { value: 'my', label: 'My Inventory' },
+  ];
+
   setLiveScope(value: FeedScope): void {
-    this._filterService.scope.set(value);
+    this._filterService.setScope(value);
+  }
+
+  // Статус My-инвентаря (виден только при scope='my'); дефолт All listings.
+  readonly myStatusChoices: ReadonlyArray<{ value: MyStatus; label: string }> = [
+    { value: 'all', label: 'All listings' },
+    { value: 'active', label: 'Active' },
+    { value: 'archived', label: 'Archived' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'expired', label: 'Expired' },
+    { value: 'pending', label: 'Pending' },
+  ];
+
+  setMyStatus(value: MyStatus): void {
+    this._filterService.myStatus.set(value);
   }
 
   reset(): void {
