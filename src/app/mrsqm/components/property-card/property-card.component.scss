@@ -16,23 +16,21 @@
     var(--task-inner-padding-top-bottom);
   outline: none;
 
-  // Маркер «непросмотрен» — скруглённая капсула по вертикальному центру левого
-  // ребра + мягкое тёплое свечение (box-shadow того же тона). Не на всю высоту:
-  // короткий «парящий» индикатор (~36% строки), в стиле premium-списков.
-  // Класс .is-unseen снимает feed-page после 5с → капсула тает (opacity + scaleY).
+  // Маркер «непросмотрен» — маленькая круглая точка у вертикального центра левого
+  // ребра, мягко пульсирует (scale). БЕЗ свечения/блюра — чёткий контур.
+  // Класс .is-unseen снимает feed-page после 5с → точка тает (opacity + scale).
   // z-index выше .box: фон карточки (.box, position:absolute) перекрывал маркер.
   &::before {
     content: '';
     position: absolute;
     left: var(--s-half);
     top: 50%;
-    width: 3px;
-    height: var(--s2);
-    border-radius: var(--s);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background: var(--color-warning);
-    box-shadow: 0 0 6px 1px var(--color-warning);
     opacity: 0;
-    transform: translateY(-50%) scaleY(0.4);
+    transform: translateY(-50%) scale(0);
     z-index: 2;
     transition:
       opacity var(--transition-duration-l) var(--ani-leave-timing),
@@ -42,7 +40,18 @@
 
   &.is-unseen::before {
     opacity: 1;
-    transform: translateY(-50%) scaleY(1);
+    animation: unseen-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+// Пульс маркера непросмотра: круглая точка плавно увеличивается и уменьшается.
+@keyframes unseen-pulse {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(0.6);
+  }
+  50% {
+    transform: translateY(-50%) scale(1);
   }
 }
 
