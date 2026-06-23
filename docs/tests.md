@@ -190,4 +190,16 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-SC3: get_feed — публичный адрес (public_location_name) из public_location_id
+
+**Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-смоук → реальное применение).
+**Контекст:** лента не отдавала публичный адрес → friends/public видели только community («адрес поломан»). Модель приватности (бегунок add-property): `public_location_id = NULL` → owner раскрыл ПОЛНЫЙ адрес (дефолт бегунка = leaf); заданный → урезанный уровень. Фикс: `public_location_name = COALESCE(pl.name, l.name)` (null→полный, задан→урезанный), `public_community_name = COALESCE(plc.name, lc.name)`. CREATE OR REPLACE (сигнатура та же, гранты целы).
+- def содержит `public_location_name` + join `p.public_location_id` → ✅
+- get_feed(nazarovitalii, my, 1000): **17/17** объектов вернули `public_location_name` (было 0) → ✅
+- ветка null→полный: для объектов без public_location_id `public_location_name = locations.name(location_id)` → ✅
+- ветка задан→урезанный: для объектов с public_location_id `public_location_name = locations.name(public_location_id)` → ✅
+**Вывод:** ✅ Друзья/public видят публичный адрес по модели бегунка (полный по умолчанию, урезанный если owner скрыл). Файл → `applied/`.
+
+---
+
 _Других тестов пока нет._
