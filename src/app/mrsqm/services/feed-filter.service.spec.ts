@@ -506,3 +506,25 @@ describe('FeedFilterService — resetAll()', () => {
     expect(service.dealType()).toBe('rent');
   });
 });
+
+describe('scope + myStatus (SC)', () => {
+  it('setScope("my") сбрасывает myStatus в "all"', () => {
+    const svc = TestBed.inject(FeedFilterService);
+    svc.myStatus.set('archived');
+    svc.setScope('my');
+    expect(svc.scope()).toBe('my');
+    expect(svc.myStatus()).toBe('all');
+  });
+
+  it('serverScope маппит public/favourites → all', () => {
+    const svc = TestBed.inject(FeedFilterService);
+    svc.setScope('public');
+    expect(svc.serverScope()).toBe('all');
+    svc.setScope('favourites');
+    expect(svc.serverScope()).toBe('all');
+    svc.setScope('friends');
+    expect(svc.serverScope()).toBe('friends');
+    svc.setScope('my');
+    expect(svc.serverScope()).toBe('my');
+  });
+});

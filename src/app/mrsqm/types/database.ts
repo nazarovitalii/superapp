@@ -442,6 +442,9 @@ export type FeedParams = {
   p_category_id?: string | null;
   p_sub_type_ids?: string[] | null;
   p_description?: string | null;
+  p_scope?: 'all' | 'friends' | 'my';
+  p_my_status?: 'all' | 'active' | 'archived' | 'rejected' | 'expired' | 'pending';
+  p_city_id?: string | null;
 } & Record<string, unknown>;
 
 export interface LocationSearchResult {

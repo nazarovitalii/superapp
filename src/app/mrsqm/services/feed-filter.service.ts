@@ -13,6 +13,9 @@ export type FeedSortBy = 'default' | 'price_desc' | 'price_asc' | 'date_asc';
 // (в get_feed серверного параметра охвата пока нет — см. TODO API).
 export type FeedScope = 'public' | 'friends' | 'my' | 'favourites';
 
+// Статус-фильтр My-инвентаря (виден только при scope='my'); маппится в p_my_status get_feed.
+export type MyStatus = 'all' | 'active' | 'archived' | 'rejected' | 'expired' | 'pending';
+
 // Категория недвижимости (переключатель как Sale/Rent): Residential / Commercial.
 // В get_feed маппится в p_category_id (uuid) — id резолвится из get_filter_options.
 export type PropertyCategory = 'residential' | 'commercial';
@@ -117,6 +120,8 @@ export class FeedFilterService {
   readonly sortBy = signal<FeedSortBy>('default');
   // По умолчанию показываем публичную ленту (как раньше показывался охват «Все»).
   readonly scope = signal<FeedScope>('public');
+  // Статус My-инвентаря: дефолт All listings; сбрасывается при входе в My.
+  readonly myStatus = signal<MyStatus>('all');
   // Категория и готовность вынесены в тулбар как отдельные селекты.
   readonly category = signal<PropertyCategory | null>(null);
   readonly handover = signal<FeedHandover | null>(null);
@@ -243,6 +248,19 @@ export class FeedFilterService {
     this.dealType.set(type);
   }
 
+  // Единая точка смены охвата: при входе в My сбрасываем статус в All listings.
+  setScope(scope: FeedScope): void {
+    this.scope.set(scope);
+    if (scope === 'my') this.myStatus.set('all');
+  }
+
+  // Серверный охват для get_feed: public и favourites грузятся как 'all'
+  // (favourites — клиентский вид по закладкам поверх 'all').
+  serverScope(): 'all' | 'friends' | 'my' {
+    const s = this.scope();
+    return s === 'friends' || s === 'my' ? s : 'all';
+  }
+
   // Переключатель Residential/Commercial: повторный клик сбрасывает.
   // При смене категории сбрасываем тип/подтип — они привязаны к категории.
   setCategory(value: PropertyCategory): void {
@@ -302,6 +320,7 @@ export class FeedFilterService {
     this.clearLocations();
     this.handover.set(null);
     this.scope.set('public');
+    this.myStatus.set('all');
     this.category.set(null);
     this.clearLoaded();
   }
