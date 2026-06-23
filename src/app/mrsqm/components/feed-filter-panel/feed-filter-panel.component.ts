@@ -534,7 +534,7 @@ export class FeedFilterPanelComponent {
   // Охват: Select из 3 (All/Friends/My). My/Public/Friends — серверные; favourites
   // выбирается только вкладкой тулбара, в панели его нет.
   readonly scopeChoices: ReadonlyArray<{ value: FeedScope; label: string }> = [
-    { value: 'public', label: 'All Inventory' },
+    { value: 'public', label: 'Public Inventory' },
     { value: 'friends', label: 'Friends Inventory' },
     { value: 'my', label: 'My Inventory' },
   ];

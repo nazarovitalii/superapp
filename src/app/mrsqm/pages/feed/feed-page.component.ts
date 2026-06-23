@@ -140,12 +140,12 @@ export class FeedPageComponent {
   );
 
   // Охват ленты — пилюля слева в тулбаре (метки WP-D):
-  //   All Inventory     — весь инвентарь (public + network), что вернул get_feed
+  //   Public Inventory  — весь инвентарь (public + network своей сети), что вернул get_feed
   //   Friends Inventory — только объекты сети
   //   My Inventory      — мои объекты
   //   Favourites        — добавленные в избранное
   readonly scopeOptions: ReadonlyArray<{ value: FeedScope; label: string }> = [
-    { value: 'public', label: 'All Inventory' },
+    { value: 'public', label: 'Public Inventory' },
     { value: 'friends', label: 'Friends Inventory' },
     { value: 'my', label: 'My Inventory' },
     { value: 'favourites', label: 'Favourites' },
@@ -154,7 +154,7 @@ export class FeedPageComponent {
   readonly scopeLabel = computed(
     () =>
       this.scopeOptions.find((o) => o.value === this.filter.scope())?.label ??
-      'All Inventory',
+      'Public Inventory',
   );
 
   setScope(scope: FeedScope): void {

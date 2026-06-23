@@ -212,8 +212,7 @@ export class FeedFilterService {
     if (f.unitTypeId || this.category()) n++;
     // Готовность (Ready/Off-Plan выбрана)
     if (this.handover()) n++;
-    // Охват не дефолтный
-    if (this.scope() !== 'public') n++;
+    // Охват (visibility) — тулбарный селектор, в счётчик иконки НЕ входит (как тип сделки).
     // Draft-фильтры
     if (f.subTypeIds.length) n++;
     if (f.bedrooms.length) n++;

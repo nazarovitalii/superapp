@@ -6,18 +6,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProfileService } from '../../services/profile.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { PropertyCreateService } from '../../services/property-create.service';
-import { MyListing, UserContacts, UserProfile } from '../../types/database';
-
-// Человекочитаемые статусы объекта.
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Черновик',
-  pending_review: 'На модерации',
-  active: 'Активен',
-  rejected: 'Отклонён',
-  expired: 'Истёк',
-  archived_sold: 'Продан',
-  archived_withdrawn: 'Снят',
-};
+import {
+  MyListing,
+  PropertyStatus,
+  PROPERTY_STATUS_LABELS,
+  UserContacts,
+  UserProfile,
+} from '../../types/database';
 
 type Tab = 'overview' | 'listings' | 'activity';
 
@@ -85,8 +80,8 @@ export class ProfilePageComponent {
     return (id && this._typeLabels.get(id)) || '—';
   }
 
-  statusLabel(status: string): string {
-    return STATUS_LABELS[status] ?? status;
+  statusLabel(status: PropertyStatus): string {
+    return PROPERTY_STATUS_LABELS[status] ?? status;
   }
 
   // Первая буква для аватара-заглушки.

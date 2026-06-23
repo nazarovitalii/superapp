@@ -71,7 +71,7 @@ describe('ProfileService', () => {
         id: 'p2',
         deal_type: 'rent',
         listing_type: 'official',
-        status: 'draft',
+        status: 'pending_review',
         visibility: 'public',
         price: 500,
         price_currency: 'AED',

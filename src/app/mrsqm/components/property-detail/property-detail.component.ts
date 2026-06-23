@@ -25,6 +25,7 @@ import {
   PropertyFeedItem,
   PropertyPhoto,
   PropertyProject,
+  PROPERTY_STATUS_LABELS,
 } from '../../types/database';
 import { formatDetailDate } from '../../util/feed-date.util';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
@@ -372,6 +373,13 @@ export class PropertyDetailComponent implements OnDestroy {
 
   // ─── Действия владельца над своим объектом (is_owner) ──────────────────────
   readonly isOwner = computed(() => this.detail()?.is_owner ?? false);
+
+  // Статус своего объекта (только владельцу, в блоке «Характеристики») —
+  // метка из единого источника PROPERTY_STATUS_LABELS (types/database).
+  readonly statusLabel = computed(() => {
+    const s = this.detail()?.status;
+    return s ? (PROPERTY_STATUS_LABELS[s] ?? s) : '';
+  });
   readonly ownerBusy = signal(false);
   readonly isEditing = signal(false);
   readonly editPrice = signal('');

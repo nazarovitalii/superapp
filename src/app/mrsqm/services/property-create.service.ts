@@ -112,7 +112,7 @@ export class PropertyCreateService {
   }
 
   // Создать объект: прямой INSERT в properties под RLS (owner_id = auth.uid()).
-  // status выставляется БД по умолчанию ('draft') → объект уходит на модерацию.
+  // status выставляется БД: public → 'pending_review' (на модерацию), network → 'active'.
   // Возвращает id созданного объекта.
   async createProperty(payload: PropertyInsert): Promise<string> {
     const { data, error } = await this._supabase.client

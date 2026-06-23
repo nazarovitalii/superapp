@@ -60,7 +60,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--s);
-  padding: var(--s) var(--s2);
+  // Больше вертикального воздуха: текст не должен примыкать к бордюрам блока.
+  padding: var(--s2) var(--s2);
   background: var(--task-detail-bg);
   border: 1px solid transparent;
   border-radius: var(--card-border-radius);

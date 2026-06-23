@@ -232,15 +232,26 @@ export type Furnished = 'furnished' | 'unfurnished';
 export type Handover = 'ready' | 'offplan';
 export type OccupancyStatus = 'vacant' | 'occupied' | 'vacant_on_transfer';
 export type Visibility = 'public' | 'network';
-// properties_status_check — 7 значений; объект создаётся в 'draft'.
+// Актуальные статусы объекта (draft УБРАН). Объект создаётся в 'pending_review'
+// (public → на модерацию) или 'active' (network → сразу).
 export type PropertyStatus =
-  | 'draft'
   | 'pending_review'
   | 'active'
   | 'rejected'
   | 'expired'
   | 'archived_sold'
   | 'archived_withdrawn';
+
+// Единый источник истины: человекочитаемые метки статуса (RU). Использовать везде
+// (профиль, карточка объекта), НЕ дублировать инлайн.
+export const PROPERTY_STATUS_LABELS: Record<PropertyStatus, string> = {
+  pending_review: 'На модерации',
+  active: 'Активен',
+  rejected: 'Отклонён',
+  expired: 'Истёк',
+  archived_sold: 'Продан',
+  archived_withdrawn: 'Снят',
+};
 
 export interface PropertyFeedItem {
   id: string;

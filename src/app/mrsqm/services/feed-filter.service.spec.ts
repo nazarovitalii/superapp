@@ -236,9 +236,9 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
     expect(service.activeFilterCount()).toBe(1);
   });
 
-  it('activeFilterCount() +1 за scope !== "public" (friends)', () => {
+  it('activeFilterCount() НЕ считает scope (visibility — тулбарный селектор)', () => {
     service.scope.set('friends');
-    expect(service.activeFilterCount()).toBe(1);
+    expect(service.activeFilterCount()).toBe(0);
   });
 
   it('activeFilterCount() +1 за выбранную категорию (без типа)', () => {
@@ -246,12 +246,12 @@ describe('FeedFilterService — FeedFilters v2 и activeFilterCount', () => {
     expect(service.activeFilterCount()).toBe(1);
   });
 
-  it('activeFilterCount() суммирует: 2 локации + handover + scope = 4', () => {
+  it('activeFilterCount() суммирует: 2 локации + handover = 3 (scope не считается)', () => {
     service.addLocation({ id: 'loc-1', name: 'Dubai Marina' });
     service.addLocation({ id: 'loc-2', name: 'JBR' });
     service.setHandover('ready');
     service.scope.set('friends');
-    expect(service.activeFilterCount()).toBe(4);
+    expect(service.activeFilterCount()).toBe(3);
   });
 
   it('activeFilterCount() не считает dealType (у него всегда есть значение)', () => {
