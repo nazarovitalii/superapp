@@ -112,6 +112,10 @@ describe('FeedPageComponent', () => {
     seenSpy.recordView.and.resolveTo(undefined);
     seenSpy.markFilterSeen.and.resolveTo(undefined);
     savedFilterSpy = jasmine.createSpyObj('SavedFilterService', ['markSeenLocally']);
+    // bumpReload добавляется в Task 6; пока добавляем вручную через каст
+    (savedFilterSpy as unknown as Record<string, jasmine.Spy>)['bumpReload'] = jasmine
+      .createSpy('bumpReload')
+      .and.returnValue(undefined);
     TestBed.resetTestingModule();
   });
 
@@ -670,7 +674,6 @@ describe('FeedPageComponent', () => {
     ]);
 
     expect(seenSpy.markFilterSeen).toHaveBeenCalledWith('f1', ['p1']);
-    expect(savedFilterSpy.markSeenLocally).toHaveBeenCalledWith('f1', ['p1']);
   });
 
   it('без активного фильтра markFilterSeen не вызывается', () => {
@@ -686,5 +689,31 @@ describe('FeedPageComponent', () => {
     )._markPageShown([{ id: 'p1', owner_id: 'other' } as PropertyFeedItem]);
 
     expect(seenSpy.markFilterSeen).not.toHaveBeenCalled();
+  });
+
+  // ─── SC-4: серверный охват в p_scope / клиентская фильтрация убрана ──────────
+
+  it('_buildParams включает p_scope из serverScope и p_my_status', async () => {
+    const component = build();
+    await flush();
+    component.filter.setScope('friends');
+    const params = await (
+      component as unknown as { _buildParams(): Promise<Record<string, unknown>> }
+    )._buildParams();
+    expect(params['p_scope']).toBe('friends');
+    expect(params['p_my_status']).toBe('all');
+  });
+
+  it('visibleProperties не фильтрует по охвату для серверных scope (friends)', () => {
+    const component = build();
+    component.filter.setScope('friends');
+    const a = {
+      id: '1',
+      owner_id: 'x',
+      is_network: false,
+    } as unknown as PropertyFeedItem;
+    component.properties.set([a]);
+    // сервер уже отдал нужный охват → клиент не режет по is_network
+    expect(component.visibleProperties().length).toBe(1);
   });
 });

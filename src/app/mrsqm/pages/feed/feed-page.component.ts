@@ -116,33 +116,13 @@ export class FeedPageComponent {
     return this._panels.selectedProperty()?.id ?? null;
   }
 
-  // Охват All Inventory / Friends Inventory / My Inventory / Favourites —
-  // фильтр на клиенте по полям get_feed (visibility / is_network / owner_id)
-  // и savedIds: серверного параметра охвата в RPC пока нет.
+  // Сервер отдаёт нужный охват (p_scope). На клиенте остаётся только вид
+  // Favourites (закладки поверх загрузки 'all') и интерим-фильтр по агенту (ФИО).
   readonly visibleProperties = computed<PropertyFeedItem[]>(() => {
-    const items = this.properties();
-    const scope = this.filter.scope();
-    const myId = this._auth.currentUser()?.id ?? null;
-    let scoped: PropertyFeedItem[];
-    switch (scope) {
-      case 'public':
-        // All Inventory = вся доступная лента: get_feed уже отдаёт только public +
-        // network объекты города, и count_total считает их вместе. Поэтому фильтр по
-        // visibility не нужен — иначе таблица (строго 'public') расходится со
-        // счётчиком (public+network) и под All Inventory пусто при ненулевом счётчике.
-        scoped = items;
-        break;
-      case 'friends':
-        scoped = items.filter((p) => p.is_network);
-        break;
-      case 'my':
-        scoped = items.filter((p) => p.owner_id === myId);
-        break;
-      case 'favourites':
-        scoped = items.filter((p) => this.savedIds().has(p.id));
-        break;
+    let scoped = this.properties();
+    if (this.filter.scope() === 'favourites') {
+      scoped = scoped.filter((p) => this.savedIds().has(p.id));
     }
-    // Клиентский фильтр по агенту (ФИО) — интерим, серверного параметра нет.
     const agent = this.filter.agentQuery().trim().toLowerCase();
     if (agent) {
       scoped = scoped.filter((p) =>
@@ -152,13 +132,11 @@ export class FeedPageComponent {
     return scoped;
   });
 
-  // Счётчик в пилюле охвата («Public ▾ · 1 154»).
-  // Для public — серверный count_total; для остальных охватов считаем
-  // отфильтрованные на клиенте (серверного count по охвату нет).
+  // Серверные охваты (public/friends/my) — серверный count_total; Favourites — клиентский.
   readonly foundCount = computed(() =>
-    this.filter.scope() === 'public'
-      ? this.countTotal()
-      : this.visibleProperties().length,
+    this.filter.scope() === 'favourites'
+      ? this.visibleProperties().length
+      : this.countTotal(),
   );
 
   // Охват ленты — пилюля слева в тулбаре (метки WP-D):
@@ -180,7 +158,7 @@ export class FeedPageComponent {
   );
 
   setScope(scope: FeedScope): void {
-    this.filter.scope.set(scope);
+    this.filter.setScope(scope);
   }
 
   setDealType(type: DealType): void {
@@ -402,8 +380,8 @@ export class FeedPageComponent {
     void this._loadSaved();
     void this._loadFilterOptions();
     // Перезагружаем при смене dealType, категории, готовности, выбранных адресов,
-    // фильтров или сортировки. Охват (scope) и агент — клиентские, перезагрузки
-    // не требуют.
+    // фильтров, сортировки, охвата или статуса My. Агент — клиентский, перезагрузки
+    // не требует.
     effect(() => {
       this.filter.dealType();
       this.filter.category();
@@ -412,6 +390,8 @@ export class FeedPageComponent {
       this.filter.searchQuery();
       this.filter.filters();
       this.filter.sortBy();
+      this.filter.serverScope(); // охват теперь серверный → перезагрузка
+      this.filter.myStatus();
       this.offset.set(0);
       this.properties.set([]);
       void this._load();
@@ -528,6 +508,8 @@ export class FeedPageComponent {
       p_deal_type: this.filter.dealType(),
       p_limit: PAGE_SIZE,
       p_offset: this.offset(),
+      p_scope: this.filter.serverScope(),
+      p_my_status: this.filter.serverScope() === 'my' ? this.filter.myStatus() : 'all',
       p_sort_by: this.filter.sortBy(),
       p_category_id: categoryVal ? await this._getCategoryId(categoryVal) : null,
       p_unit_type_id: f.unitTypeId,
@@ -583,15 +565,19 @@ export class FeedPageComponent {
     if (!ids.length) return;
     void this._seen.markShown(ids);
 
-    // Баг B: если открыт сохранённый фильтр — частично гасим его бейдж ровно на
-    // показанные ЧУЖИЕ объекты (свои в матчи не входят — owner-skip матчера).
+    // Если открыт сохранённый фильтр — помечаем показанные ЧУЖИЕ объекты просмотренными
+    // на сервере; затем перечитываем бейджи (число берём только с бекенда, без оптимистики).
     const fid = this.filter.loadedFilterId();
     if (fid) {
       const myId = this._auth.currentUser()?.id ?? null;
       const matchIds = items.filter((it) => it.owner_id !== myId).map((it) => it.id);
       if (matchIds.length) {
-        this._savedFilters.markSeenLocally(fid, matchIds); // оптимистично сразу
-        void this._seen.markFilterSeen(fid, matchIds); // сервер подтверждает фоном
+        void this._seen
+          .markFilterSeen(fid, matchIds)
+          // bumpReload добавляется в Task 6; каст до тех пор чтобы не блокировать Task 4
+          .then(() =>
+            (this._savedFilters as unknown as { bumpReload(): void }).bumpReload(),
+          );
       }
     }
 
