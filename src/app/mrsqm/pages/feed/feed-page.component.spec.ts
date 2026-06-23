@@ -620,6 +620,33 @@ describe('FeedPageComponent', () => {
     expect(component.properties().every((p) => p.is_unseen === false)).toBeTrue();
   }));
 
+  it('свежая загрузка гасит устаревшие stripe-таймеры: старый таймер не чистит is_unseen нового списка', fakeAsync(() => {
+    fake.response = {
+      results: [{ id: 'a', is_unseen: true }],
+      count_total: 1,
+      limit: 20,
+      offset: 0,
+    };
+    const component = build();
+    tick(); // первая загрузка → таймер T1 (5с) на 'a'
+    expect(component.properties()[0].is_unseen).toBeTrue();
+
+    // Через 4с переходим на другую сортировку → свежая перезагрузка (та же 'a' в выдаче).
+    tick(4000);
+    component.filter.sortBy.set('price_desc');
+    tick(); // reload-эффект → _load → гасит T1, ставит T2
+
+    // Ещё +1с: T1 достиг бы 5с и очистил бы 'a', но он погашен → 'a' всё ещё непросмотрен.
+    tick(1000);
+    expect(component.properties()[0].is_unseen)
+      .withContext('устаревший таймер не должен гасить новый список')
+      .toBeTrue();
+
+    // T2 (от перезагрузки) достигает 5с → теперь гаснет штатно.
+    tick(4000);
+    expect(component.properties()[0].is_unseen).toBeFalse();
+  }));
+
   it('openDetail шлёт recordView с id объекта', () => {
     const component = build();
     const prop = { id: 'z' } as PropertyFeedItem;
@@ -652,14 +679,15 @@ describe('FeedPageComponent', () => {
   it('при активном фильтре помечает показанные чужие объекты (не свои) ЧЕРЕЗ 5с', fakeAsync(() => {
     const component = build();
 
-    // seenSpy уже создан как SpyObj — сбрасываем счётчик.
-    seenSpy.markFilterSeen.calls.reset();
-
     // Активен сохранённый фильтр f1; текущий юзер — me.
     TestBed.inject(FeedFilterService).loadedFilterId.set('f1');
     spyOn(TestBed.inject(MrsqmAuthService), 'currentUser').and.returnValue({
       id: 'me',
     } as never);
+    // Даём reload от смены loadedFilterId отработать (его _load гасит stripe-таймеры),
+    // и только после этого вручную «показываем страницу» — как в реальном потоке.
+    tick();
+    seenSpy.markFilterSeen.calls.reset();
 
     // Прямой вызов приватного хелпера через каст (минимизируем поверхность теста).
     (

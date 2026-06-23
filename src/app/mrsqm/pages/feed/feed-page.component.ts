@@ -600,6 +600,14 @@ export class FeedPageComponent {
   }
 
   private async _load(append = false): Promise<void> {
+    // Свежая загрузка (не пагинация) = новый список. Гасим pending-таймеры прошлого
+    // списка: иначе устаревший 5с-таймер очистит is_unseen у совпадающих по id
+    // объектов нового списка раньше времени → кружки гаснут за ~1с, пока бейдж
+    // фильтра пульсирует свои 5с (десинк при переходе по сохранённому фильтру).
+    if (!append) {
+      this._stripeTimers.forEach((t) => clearTimeout(t));
+      this._stripeTimers.clear();
+    }
     this.isLoading.set(true);
     this.loadError.set(false);
     try {

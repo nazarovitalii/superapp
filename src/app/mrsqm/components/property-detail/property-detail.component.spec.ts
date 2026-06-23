@@ -323,6 +323,7 @@ describe('PropertyDetailComponent', () => {
     // Проверим non-owner
     supa.rpcResult = detail({ is_owner: false });
     await comp.loadProperty();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     let buttons = fixture.nativeElement.querySelectorAll('.detail-tab');
@@ -334,6 +335,7 @@ describe('PropertyDetailComponent', () => {
     // Теперь для owner
     supa.rpcResult = detail({ is_owner: true });
     await comp.loadProperty();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     buttons = fixture.nativeElement.querySelectorAll('.detail-tab');
@@ -570,6 +572,39 @@ describe('PropertyDetailComponent', () => {
     expect(comp.vm().publicLocationPath).toBe('Dubai > Marina');
   });
 
+  it('владелец, адрес полный для всех (public_location_path null) → тег «(что видят все)»', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({
+      is_owner: true,
+      location_full_path: 'Dubai > JBR > Sadaf 7',
+      public_location_path: null,
+    });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const tags = Array.from(
+      fixture.nativeElement.querySelectorAll('.loc-scope-tag') as NodeListOf<HTMLElement>,
+    ).map((el) => el.textContent!.trim());
+    // Нет «что видят другие» → одна строка, тег «(что видят все)», НЕ «(что видишь ты)».
+    expect(tags).toEqual(['(что видят все)']);
+  });
+
+  it('владелец, адрес урезан → «(что видишь ты)» + «(что видят другие)»', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({
+      is_owner: true,
+      location_full_path: 'Dubai > JBR > Sadaf 7',
+      public_location_path: 'Dubai > JBR',
+    });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const tags = Array.from(
+      fixture.nativeElement.querySelectorAll('.loc-scope-tag') as NodeListOf<HTMLElement>,
+    ).map((el) => el.textContent!.trim());
+    expect(tags).toEqual(['(что видишь ты)', '(что видят другие)']);
+  });
+
   it('handover null когда completed без built_year', async () => {
     const { comp, supa } = makeComponent();
     supa.rpcResult = detail({
@@ -627,6 +662,7 @@ describe('PropertyDetailComponent', () => {
     const { comp, fixture, supa } = makeComponent();
     supa.rpcResult = detail();
     await comp.loadProperty();
+    await fixture.whenStable();
     fixture.detectChanges();
     const chips: string =
       fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';

@@ -448,7 +448,14 @@
             <div class="section-label"><mat-icon>place</mat-icon>Расположение</div>
             @if (isOwner() && vm().locationPath) {
               <p class="section-text">
-                {{ vm().locationPath }} <span class="loc-scope-tag">(что видишь ты)</span>
+                {{ vm().locationPath }}
+                <span class="loc-scope-tag">
+                  @if (vm().publicLocationPath) {
+                    (что видишь ты)
+                  } @else {
+                    (что видят все)
+                  }
+                </span>
               </p>
               @if (vm().publicLocationPath) {
                 <div class="loc-divider"></div>
