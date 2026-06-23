@@ -72,6 +72,14 @@ export class SavedFilterService {
     }
   }
 
+  // Тик перезагрузки списка фильтров: бампается после серверной пометки seen
+  // (feed-page), панель перечитывает get_saved_filters → бейдж = чистое число бекенда.
+  readonly reloadTick = signal(0);
+
+  bumpReload(): void {
+    this.reloadTick.update((t) => t + 1);
+  }
+
   // Мягкое удаление фильтра (RPC delete_filter).
   async remove(id: string): Promise<void> {
     try {

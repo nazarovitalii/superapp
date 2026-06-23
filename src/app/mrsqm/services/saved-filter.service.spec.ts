@@ -181,4 +181,12 @@ describe('SavedFilterService', () => {
     svc.markSeenLocally('f1', []);
     expect(svc.localSeenCount('f1')).toBe(0);
   });
+
+  // ─── reloadTick / bumpReload ────────────────────────────────────────────────
+
+  it('bumpReload инкрементит reloadTick', () => {
+    const before = svc.reloadTick();
+    svc.bumpReload();
+    expect(svc.reloadTick()).toBe(before + 1);
+  });
 });

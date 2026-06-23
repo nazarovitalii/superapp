@@ -111,11 +111,11 @@ describe('FeedPageComponent', () => {
     seenSpy.markShown.and.resolveTo(undefined);
     seenSpy.recordView.and.resolveTo(undefined);
     seenSpy.markFilterSeen.and.resolveTo(undefined);
-    savedFilterSpy = jasmine.createSpyObj('SavedFilterService', ['markSeenLocally']);
-    // bumpReload добавляется в Task 6; пока добавляем вручную через каст
-    (savedFilterSpy as unknown as Record<string, jasmine.Spy>)['bumpReload'] = jasmine
-      .createSpy('bumpReload')
-      .and.returnValue(undefined);
+    savedFilterSpy = jasmine.createSpyObj<SavedFilterService>('SavedFilterService', [
+      'bumpReload',
+      'markSeenLocally',
+    ]);
+    savedFilterSpy.bumpReload.and.returnValue(undefined);
     TestBed.resetTestingModule();
   });
 
@@ -715,5 +715,17 @@ describe('FeedPageComponent', () => {
     component.properties.set([a]);
     // сервер уже отдал нужный охват → клиент не режет по is_network
     expect(component.visibleProperties().length).toBe(1);
+  });
+
+  it("scope='my' + myStatus='active' → p_scope='my' и p_my_status='active'", async () => {
+    const component = build();
+    await flush();
+    component.filter.setScope('my');
+    component.filter.myStatus.set('active');
+    const params = await (
+      component as unknown as { _buildParams(): Promise<Record<string, unknown>> }
+    )._buildParams();
+    expect(params['p_scope']).toBe('my');
+    expect(params['p_my_status']).toBe('active');
   });
 });

@@ -574,10 +574,7 @@ export class FeedPageComponent {
       if (matchIds.length) {
         void this._seen
           .markFilterSeen(fid, matchIds)
-          // bumpReload добавляется в Task 6; каст до тех пор чтобы не блокировать Task 4
-          .then(() =>
-            (this._savedFilters as unknown as { bumpReload(): void }).bumpReload(),
-          );
+          .then(() => this._savedFilters.bumpReload());
       }
     }
 
