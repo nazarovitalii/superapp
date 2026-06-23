@@ -695,3 +695,6 @@
 | `736d64f9c` | 23:29 | feat(feed): per-filter непросмотр (R4) + карточки сохранённых фильтров (R5) + фиксы адрес-бегунка                                                                                                                                                               |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                                                                                                                   |
 | `0062cc7a7` | 23:33 | docs: переписка + резюме дня 2026-06-23 (R5 карточки + R4 per-filter + баги бегунка)                                                                                                                                                                            |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `707e96d2b` | 00:09 | fix(feed): тег адреса «(что видят все)» + десинк кружков непросмотра при переходе по фильтру |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
