@@ -174,7 +174,10 @@
       <div class="detail-body">
         <!-- ── Управление своим объектом (is_owner) — owner-панель наверху (CD-2/3) ── -->
         @if (isOwner()) {
-          <div class="owner-panel" [class]="'tone-' + bannerTone()">
+          <div
+            class="owner-panel"
+            [class]="'tone-' + bannerTone()"
+          >
             <!-- Шапка статуса: иконка тона + статус (для активного — «Активно до …») -->
             <div class="owner-panel-head">
               <mat-icon>{{ statusIcon() }}</mat-icon>
@@ -209,7 +212,11 @@
                   ></textarea>
                 </label>
                 <div class="owner-edit-buttons">
-                  <button mat-stroked-button (click)="cancelEdit()" [disabled]="ownerBusy()">
+                  <button
+                    mat-stroked-button
+                    (click)="cancelEdit()"
+                    [disabled]="ownerBusy()"
+                  >
                     Отмена
                   </button>
                   <button
@@ -225,13 +232,21 @@
             } @else {
               <div class="owner-panel-actions">
                 @if (ownerActions().includes('edit')) {
-                  <button mat-stroked-button (click)="startEdit()" [disabled]="ownerBusy()">
+                  <button
+                    mat-stroked-button
+                    (click)="startEdit()"
+                    [disabled]="ownerBusy()"
+                  >
                     <mat-icon>edit</mat-icon
                     >{{ detail()?.status === 'active' ? 'Изменить' : 'Редактировать' }}
                   </button>
                 }
                 @if (ownerActions().includes('actualize')) {
-                  <button mat-stroked-button (click)="actualize()" [disabled]="ownerBusy()">
+                  <button
+                    mat-stroked-button
+                    (click)="actualize()"
+                    [disabled]="ownerBusy()"
+                  >
                     <mat-icon>arrow_upward</mat-icon>Поднять вверх
                   </button>
                 }
@@ -254,10 +269,16 @@
                     <mat-icon>inventory_2</mat-icon>Архивировать
                   </button>
                   <mat-menu #archiveMenu="matMenu">
-                    <button mat-menu-item (click)="confirmArchive('archived_sold')">
+                    <button
+                      mat-menu-item
+                      (click)="confirmArchive('archived_sold')"
+                    >
                       Продан
                     </button>
-                    <button mat-menu-item (click)="confirmArchive('archived_withdrawn')">
+                    <button
+                      mat-menu-item
+                      (click)="confirmArchive('archived_withdrawn')"
+                    >
                       Снять с публикации
                     </button>
                   </mat-menu>
@@ -608,7 +629,6 @@
             <p class="section-text description-text">{{ vm().description }}</p>
           </div>
         }
-
       </div>
     </div>
   }
