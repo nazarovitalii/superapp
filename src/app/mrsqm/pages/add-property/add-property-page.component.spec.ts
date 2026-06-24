@@ -1,9 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import {
-  AddPropertyPageComponent,
-  revealIndexFromFraction,
-} from './add-property-page.component';
+import { AddPropertyPageComponent } from './add-property-page.component';
+import { revealIndexFromFraction } from './reveal-slider.util';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { MrsqmAuthService } from '../../services/auth.service';

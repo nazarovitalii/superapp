@@ -26,7 +26,7 @@ import {
   PropertyPhoto,
 } from '../../types/database';
 import { typeFieldsFor, TypeFields } from '../add-property/property-type-fields';
-import { revealIndexFromFraction } from '../add-property/add-property-page.component';
+import { revealIndexFromFraction } from '../add-property/reveal-slider.util';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 
@@ -373,7 +373,7 @@ export class EditPropertyPageComponent {
       this.options.set(options);
       this.photos.set(photos);
       void this._loadAddressChain(detail);
-      this._prefill(detail); // реализуется в Task 5 (заглушка-метод сейчас)
+      this._prefill(detail);
     } catch {
       this.loadError.set('Не удалось загрузить объект');
     } finally {
@@ -419,7 +419,7 @@ export class EditPropertyPageComponent {
     this.positionIds.set(d.position_ids ?? []);
     this.amenityIds.set(d.amenity_ids ?? []);
     this.furnished.set(d.furnished ?? null);
-    this.price.set(d.price != null ? String(d.price) : '');
+    this.price.set(d.price != null ? Number(d.price).toLocaleString('en-US') : '');
     this.pricePeriod.set(d.price_period ?? 'yearly');
     this.occupancyStatus.set(d.occupancy_status ?? 'vacant');
     this.leaseUntil.set(d.lease_until ?? null);
