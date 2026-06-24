@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { PropertyOwnerService } from './property-owner.service';
+import { PropertyOwnerService, EditPropertyPayload } from './property-owner.service';
 import { MrsqmSupabaseService } from './supabase.service';
 
 class FakeSupabase {
@@ -121,5 +121,69 @@ describe('PropertyOwnerService', () => {
     const b2 = svc.changedTick();
     await expectAsync(svc.deleteProperty('p')).toBeRejected();
     expect(svc.changedTick()).toBe(b2);
+  });
+});
+
+describe('PropertyOwnerService.editProperty', () => {
+  let service: PropertyOwnerService;
+  let rpc: jasmine.Spy;
+
+  beforeEach(() => {
+    rpc = jasmine.createSpy('rpc').and.resolveTo('active');
+    TestBed.configureTestingModule({
+      providers: [
+        PropertyOwnerService,
+        { provide: MrsqmSupabaseService, useValue: { rpc } },
+      ],
+    });
+    service = TestBed.inject(PropertyOwnerService);
+  });
+
+  it('шлёт whitelist-параметры и возвращает статус', async () => {
+    const payload: EditPropertyPayload = {
+      propertyId: 'p1',
+      price: 100,
+      description: 'd',
+      isMaid: true,
+      isStudy: false,
+      isHotelPool: false,
+      isVastu: false,
+      areaSqft: 900,
+      plotSqft: null,
+      floorLevelId: 'fl',
+      floorNumber: null,
+      floorsInUnitId: null,
+      viewIds: ['v1'],
+      positionIds: null,
+      amenityIds: null,
+      furnished: 'furnished',
+      pricePeriod: null,
+      occupancyStatus: 'vacant',
+      leaseUntil: null,
+      listingType: 'pocket',
+      visibility: 'public',
+      publicLocationId: null,
+      originalPrice: null,
+    };
+    const before = service.changedTick();
+    const status = await service.editProperty(payload);
+
+    expect(status).toBe('active');
+    expect(service.changedTick()).toBe(before + 1);
+    const [name, params] = rpc.calls.mostRecent().args;
+    expect(name).toBe('edit_property');
+    expect(params).toEqual(
+      jasmine.objectContaining({
+        p_property_id: 'p1',
+        p_price: 100,
+        p_is_maid: true,
+        p_area_sqft: 900,
+        p_view_ids: ['v1'],
+        p_visibility: 'public',
+      }),
+    );
+    // неизменяемых полей в параметрах быть не должно
+    expect(params['p_bedrooms']).toBeUndefined();
+    expect(params['p_category_id']).toBeUndefined();
   });
 });
