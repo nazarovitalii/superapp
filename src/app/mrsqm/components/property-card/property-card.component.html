@@ -22,7 +22,7 @@
     <!-- Адрес: leaf + метка off-plan (U-7) + community; источник зависит от охвата (V-10) -->
     <div class="col col-address">
       <span class="addr-leaf"
-        ><span class="unseen-dot"></span>{{ addr().leaf }}
+        >{{ addr().leaf }}
         @if (property().handover === 'offplan') {
           <span class="addr-offplan"> (off-plan)</span>
         }
@@ -96,6 +96,9 @@
         <span class="agent-agency">{{ property().owner_agency_name }}</span>
       }
     </div>
+
+    <!-- Маркер «непросмотрен»: круглая пульсирующая точка в своём слоте между агентом и датой -->
+    <span class="unseen-dot"></span>
 
     <!-- Дата публикации/актуализации (U-4: читаемый формат через computed) -->
     <div class="col col-date">
