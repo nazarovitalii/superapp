@@ -428,13 +428,14 @@ describe('PropertyDetailComponent', () => {
 
   it('кнопки действий показываются владельцу', async () => {
     const { comp, fixture, supa } = makeComponent();
-    supa.rpcResult = detail({ is_owner: true });
+    supa.rpcResult = detail({ is_owner: true, status: 'active' });
     await comp.loadProperty();
     await fixture.whenStable();
     fixture.detectChanges();
     const actions = fixture.nativeElement.querySelector('.owner-actions');
     expect(actions).not.toBeNull();
-    expect(actions.textContent).toContain('Редактировать');
+    // active → кнопка «Изменить» (по матрице LM; «Редактировать» — у rejected/withdrawn).
+    expect(actions.textContent).toContain('Изменить');
   });
 
   // V-8: typeCategory / typeSubtype (заменяет typeLabel)
