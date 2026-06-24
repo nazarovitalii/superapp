@@ -15,44 +15,6 @@
   padding: calc(var(--task-inner-padding-top-bottom) - 1px) 0
     var(--task-inner-padding-top-bottom);
   outline: none;
-
-  // Маркер «непросмотрен» — маленькая круглая точка у вертикального центра левого
-  // ребра, мягко пульсирует (scale). БЕЗ свечения/блюра — чёткий контур.
-  // Класс .is-unseen снимает feed-page после 5с → точка тает (opacity + scale).
-  // z-index выше .box: фон карточки (.box, position:absolute) перекрывал маркер.
-  &::before {
-    content: '';
-    position: absolute;
-    left: var(--s-half);
-    top: 50%;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-warning);
-    opacity: 0;
-    transform: translateY(-50%) scale(0);
-    z-index: 2;
-    transition:
-      opacity var(--transition-duration-l) var(--ani-leave-timing),
-      transform var(--transition-duration-l) var(--ani-leave-timing);
-    pointer-events: none;
-  }
-
-  &.is-unseen::before {
-    opacity: 1;
-    animation: unseen-pulse 1.2s ease-in-out infinite;
-  }
-}
-
-// Пульс маркера непросмотра: круглая точка плавно увеличивается и уменьшается.
-@keyframes unseen-pulse {
-  0%,
-  100% {
-    transform: translateY(-50%) scale(0.6);
-  }
-  50% {
-    transform: translateY(-50%) scale(1);
-  }
 }
 
 .box {
@@ -162,6 +124,49 @@
 // U-7: метка «(off-plan)» инлайн в строке адреса — приглушённый цвет, тот же кегль
 .addr-offplan {
   color: var(--text-color-muted);
+}
+
+// Маркер «непросмотрен» — инлайн-точка перед текстом адреса (leaf).
+// Всегда занимает место (inline-block фиксированной ширины) — текст не прыгает.
+// Класс .is-unseen снимает feed-page после 5с → точка тает (opacity + scale).
+// БЕЗ свечения/блюра — чёткий контур по выбору создателя.
+.unseen-dot {
+  display: inline-block;
+  width: 12px; // резервирует место всегда, текст не сдвигается при появлении/исчезновении
+  height: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-warning);
+    opacity: 0;
+    transform: scale(0);
+    transition:
+      opacity var(--transition-duration-l) var(--ani-leave-timing),
+      transform var(--transition-duration-l) var(--ani-leave-timing);
+    pointer-events: none;
+  }
+}
+
+// Пульс маркера непросмотра: круглая точка плавно увеличивается и уменьшается.
+.inner-wrapper.is-unseen .unseen-dot::before {
+  opacity: 1;
+  animation: unseen-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes unseen-pulse {
+  0%,
+  100% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1);
+  }
 }
 
 .col-beds,
