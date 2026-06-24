@@ -116,4 +116,12 @@ describe('EditPropertyPageComponent', () => {
     // public_location_id null → revealIndex = leaf → publicLocationId null
     expect(c.publicLocationId()).toBeNull();
   });
+
+  it('таб «Описание» биндит сигнал description', () => {
+    const c = fixture.componentInstance;
+    c.setTab('description');
+    fixture.detectChanges();
+    const ta: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+    expect(ta.value).toBe('d');
+  });
 });

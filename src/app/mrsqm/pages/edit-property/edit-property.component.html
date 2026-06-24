@@ -368,7 +368,11 @@
           </div>
         </div>
       } @else if (tab() === 'description') {
-        <!-- Task 6 -->
+        <label class="ep-field ep-field--full">
+          <span>Описание</span>
+          <textarea rows="8" [value]="description()"
+            (input)="description.set($any($event.target).value)"></textarea>
+        </label>
       } @else {
         <!-- Task 7 -->
       }
