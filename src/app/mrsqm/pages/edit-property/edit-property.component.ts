@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,7 +31,13 @@ type EditTab = 'params' | 'description' | 'photos';
   selector: 'mrsqm-edit-property-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './edit-property.component.html',
   styleUrl: './edit-property.component.scss',
 })
@@ -83,6 +90,45 @@ export class EditPropertyPageComponent {
     const ri = this.revealIndex();
     if (ri >= this.leafIndex()) return null;
     return this.addrPath()[ri]?.id ?? null;
+  });
+
+  // ─── Таб «Параметры»: редактируемые сигналы (Task 5) ───────────────────────
+  readonly isMaid = signal(false);
+  readonly isStudy = signal(false);
+  readonly isHotelPool = signal(false);
+  readonly isVastu = signal(false);
+  readonly areaSqft = signal<string>('');
+  readonly plotSqft = signal<string>('');
+  readonly floorLevelId = signal<string | null>(null);
+  // floor_number: сигнал для сохранения, UI не рендерится (как в add-property).
+  readonly floorNumber = signal<string>('');
+  readonly floorsInUnitId = signal<string | null>(null);
+  readonly viewIds = signal<string[]>([]);
+  readonly positionIds = signal<string[]>([]);
+  readonly amenityIds = signal<string[]>([]);
+  readonly furnished = signal<string | null>(null);
+  readonly price = signal<string>('');
+  readonly pricePeriod = signal<string>('yearly');
+  readonly occupancyStatus = signal<string>('vacant');
+  readonly leaseUntil = signal<string | null>(null);
+  readonly listingType = signal<string>('pocket');
+  readonly visibility = signal<string>('public');
+  readonly originalPrice = signal<string>('');
+  readonly description = signal<string>('');
+  // ВНИМАНИЕ: publicLocationId НЕ объявляем здесь — это computed из бегунка (Task 4B).
+
+  // OP заблокирован, если в БД уже задана original_price (серверный guard дублирует).
+  readonly originalPriceLocked = computed(() => this.detail()?.original_price != null);
+  // Флаг аренды — для отображения полей периода/lease.
+  readonly isRent = computed(() => this.detail()?.deal_type === 'rent');
+
+  // Опции floors_in_unit зависят от типа объекта.
+  readonly floorsInUnitOptions = computed(() => {
+    const opts = this.options();
+    if (!opts) return [];
+    return this._unitTypeValue() === 'house'
+      ? opts.floors_in_unit_house
+      : opts.floors_in_unit_apt;
   });
 
   selectReveal(i: number): void {
@@ -185,8 +231,41 @@ export class EditPropertyPageComponent {
     this.revealIndex.set(pubIdx >= 0 ? pubIdx : leaf);
   }
 
-  // Заполнение полей формы из detail. Тело — Task 5.
-  protected _prefill(_detail: PropertyDetail): void {
-    // no-op в scaffold
+  // Заполнение редактируемых сигналов из detail (Task 5).
+  protected _prefill(d: PropertyDetail): void {
+    this.isMaid.set(d.is_maid ?? false);
+    this.isStudy.set(d.is_study ?? false);
+    this.isHotelPool.set(d.is_hotel_pool ?? false);
+    this.isVastu.set(d.is_vastu ?? false);
+    this.areaSqft.set(d.area_sqft != null ? String(d.area_sqft) : '');
+    this.plotSqft.set(d.plot_sqft != null ? String(d.plot_sqft) : '');
+    this.floorLevelId.set(d.floor_level_id ?? null);
+    this.floorNumber.set(d.floor_number != null ? String(d.floor_number) : '');
+    this.floorsInUnitId.set(d.floors_in_unit_id ?? null);
+    this.viewIds.set(d.view_ids ?? []);
+    this.positionIds.set(d.position_ids ?? []);
+    this.amenityIds.set(d.amenity_ids ?? []);
+    this.furnished.set(d.furnished ?? null);
+    this.price.set(d.price != null ? String(d.price) : '');
+    this.pricePeriod.set(d.price_period ?? 'yearly');
+    this.occupancyStatus.set(d.occupancy_status ?? 'vacant');
+    this.leaseUntil.set(d.lease_until ?? null);
+    this.listingType.set(d.listing_type ?? 'pocket');
+    this.visibility.set(d.visibility ?? 'public');
+    // publicLocationId — computed из бегунка (Task 4B); здесь НЕ трогаем.
+    this.originalPrice.set(d.original_price != null ? String(d.original_price) : '');
+    this.description.set(d.description ?? '');
+  }
+
+  // Тоггл значения в мультиселекте (views/positions/amenities).
+  toggleId(sig: ReturnType<typeof signal<string[]>>, id: string): void {
+    const cur = sig();
+    sig.set(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  }
+
+  // Форматирование цены с разделителями (как в add-property).
+  onPriceInput(val: string): void {
+    const digits = val.replace(/\D/g, '');
+    this.price.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
 }

@@ -62,7 +62,311 @@
 
     <section class="edit-body">
       @if (tab() === 'params') {
-        <!-- Task 5 -->
+        <!-- Чекбоксы: Maid/Study/Hotel/Vastu (по типу объекта) -->
+        @if (fields().maid || fields().hotelPool || fields().vastu) {
+          <div class="ep-check-group">
+            @if (fields().maid) {
+              <label class="ep-check-row">
+                <span class="ep-check-label">Maid room</span>
+                <input
+                  type="checkbox"
+                  [ngModel]="isMaid()"
+                  (ngModelChange)="isMaid.set($event)"
+                />
+              </label>
+              <label class="ep-check-row">
+                <span class="ep-check-label">Study room</span>
+                <input
+                  type="checkbox"
+                  [ngModel]="isStudy()"
+                  (ngModelChange)="isStudy.set($event)"
+                />
+              </label>
+            }
+            @if (fields().hotelPool) {
+              <label class="ep-check-row">
+                <span class="ep-check-label">Hotel Apartment</span>
+                <input
+                  type="checkbox"
+                  [ngModel]="isHotelPool()"
+                  (ngModelChange)="isHotelPool.set($event)"
+                />
+              </label>
+            }
+            @if (fields().vastu) {
+              <label class="ep-check-row">
+                <span class="ep-check-label">Vastu Compliant</span>
+                <input
+                  type="checkbox"
+                  [ngModel]="isVastu()"
+                  (ngModelChange)="isVastu.set($event)"
+                />
+              </label>
+            }
+          </div>
+        }
+
+        <!-- BUA -->
+        @if (fields().bua) {
+          <label class="ep-field">
+            <span>Площадь BUA, sqft</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              [ngModel]="areaSqft()"
+              (ngModelChange)="areaSqft.set($event)"
+              placeholder="напр. 1200"
+            />
+          </label>
+        }
+
+        <!-- Plot -->
+        @if (fields().plot) {
+          <label class="ep-field">
+            <span>Площадь участка (Plot), sqft</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              [ngModel]="plotSqft()"
+              (ngModelChange)="plotSqft.set($event)"
+              placeholder="напр. 3500"
+            />
+          </label>
+        }
+
+        <!-- Этажность (floor_level_id) -->
+        @if (fields().floorLevel && options()?.floor_levels?.length) {
+          <div class="ep-field">
+            <span>Этажность</span>
+            <div class="ep-chips">
+              @for (fl of options()!.floor_levels; track fl.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="floorLevelId() === fl.id"
+                  (click)="floorLevelId.set(fl.id)"
+                >
+                  {{ fl.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Levels (floors_in_unit) -->
+        @if (fields().floorsInUnit && floorsInUnitOptions().length) {
+          <div class="ep-field">
+            <span>Levels</span>
+            <div class="ep-chips">
+              @for (fu of floorsInUnitOptions(); track fu.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="floorsInUnitId() === fu.id"
+                  (click)="floorsInUnitId.set(fu.id)"
+                >
+                  {{ fu.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Виды из окна -->
+        @if (fields().views && options()?.views?.length) {
+          <div class="ep-field">
+            <span>Вид из окна</span>
+            <div class="ep-chips">
+              @for (v of options()!.views; track v.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="viewIds().includes(v.id)"
+                  (click)="toggleId(viewIds, v.id)"
+                >
+                  {{ v.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Расположение (positions) -->
+        @if (fields().positions && options()?.positions?.length) {
+          <div class="ep-field">
+            <span>Расположение</span>
+            <div class="ep-chips">
+              @for (p of options()!.positions; track p.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="positionIds().includes(p.id)"
+                  (click)="toggleId(positionIds, p.id)"
+                >
+                  {{ p.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Удобства (amenities) -->
+        @if (fields().amenities && options()?.amenities?.length) {
+          <div class="ep-field">
+            <span>Удобства</span>
+            <div class="ep-chips">
+              @for (a of options()!.amenities; track a.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="amenityIds().includes(a.id)"
+                  (click)="toggleId(amenityIds, a.id)"
+                >
+                  {{ a.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Меблировка -->
+        @if (fields().furnished && options()?.furnished_options?.length) {
+          <div class="ep-field">
+            <span>Мебель</span>
+            <div class="ep-chips">
+              @for (fo of options()!.furnished_options; track fo.id) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="furnished() === fo.value"
+                  (click)="furnished.set(fo.value)"
+                >
+                  {{ fo.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Цена -->
+        <label class="ep-field">
+          <span>Цена (AED)</span>
+          <input
+            type="text"
+            inputmode="numeric"
+            [value]="price()"
+            (input)="onPriceInput($any($event.target).value)"
+          />
+        </label>
+
+        <!-- Оригинальная цена (только sale; заблокирована если уже задана) -->
+        @if (detail()?.deal_type === 'sale') {
+          <label class="ep-field">
+            <span>Оригинальная цена</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              [value]="originalPrice()"
+              [disabled]="originalPriceLocked()"
+              (input)="originalPrice.set($any($event.target).value)"
+            />
+            @if (originalPriceLocked()) {
+              <small class="ep-note">Изменить нельзя — задана при создании</small>
+            }
+          </label>
+        }
+
+        <!-- Период оплаты (только аренда) -->
+        @if (isRent() && options()?.price_periods?.length) {
+          <div class="ep-field">
+            <span>Период оплаты</span>
+            <div class="ep-chips">
+              @for (p of options()!.price_periods; track p.value) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="pricePeriod() === p.value"
+                  (click)="pricePeriod.set(p.value)"
+                >
+                  {{ p.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Занятость -->
+        @if (options()?.occupancy_options?.length) {
+          <div class="ep-field">
+            <span>Занятость</span>
+            <div class="ep-chips">
+              @for (o of options()!.occupancy_options; track o.value) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="occupancyStatus() === o.value"
+                  (click)="occupancyStatus.set(o.value)"
+                >
+                  {{ o.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Занято до (lease_until) -->
+        @if (occupancyStatus() === 'occupied') {
+          <label class="ep-field">
+            <span>Занято до (необязательно)</span>
+            <input
+              type="month"
+              [ngModel]="leaseUntil()"
+              (ngModelChange)="leaseUntil.set($event)"
+            />
+          </label>
+        }
+
+        <!-- Тип листинга -->
+        @if (options()?.listing_types?.length) {
+          <div class="ep-field">
+            <span>Тип листинга</span>
+            <div class="ep-chips">
+              @for (l of options()!.listing_types; track l.value) {
+                <button
+                  type="button"
+                  class="ep-chip"
+                  [class.sel]="listingType() === l.value"
+                  (click)="listingType.set(l.value)"
+                >
+                  {{ l.label_en }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Видимость -->
+        <div class="ep-field">
+          <span>Видимость</span>
+          <div class="ep-chips">
+            <button
+              type="button"
+              class="ep-chip"
+              [class.sel]="visibility() === 'public'"
+              (click)="visibility.set('public')"
+            >
+              Все агенты
+            </button>
+            <button
+              type="button"
+              class="ep-chip"
+              [class.sel]="visibility() === 'network'"
+              (click)="visibility.set('network')"
+            >
+              Только моя сеть
+            </button>
+          </div>
+        </div>
       } @else if (tab() === 'description') {
         <!-- Task 6 -->
       } @else {

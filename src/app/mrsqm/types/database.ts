@@ -408,6 +408,8 @@ export interface PropertyDetail {
   lng: number | null;
   is_reduced: boolean | null;
   is_below_op: boolean | null;
+  // OP — оригинальная цена (задаётся при создании; if != null → locked для редактирования).
+  original_price: number | null;
   occupancy_status: string | null;
   lease_until: string | null;
   description: string | null;

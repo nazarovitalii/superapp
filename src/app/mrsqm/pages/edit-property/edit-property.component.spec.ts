@@ -20,6 +20,27 @@ describe('EditPropertyPageComponent', () => {
     description: 'd',
     location_id: 'leaf',
     public_location_id: null,
+    // Поля для теста prefill (Task 5)
+    is_maid: false,
+    is_study: false,
+    is_hotel_pool: false,
+    is_vastu: false,
+    area_sqft: null,
+    plot_sqft: null,
+    floor_level_id: null,
+    floor_number: null,
+    floors_in_unit_id: null,
+    view_ids: null,
+    position_ids: null,
+    amenity_ids: null,
+    furnished: null,
+    price_period: null,
+    occupancy_status: 'vacant',
+    lease_until: null,
+    listing_type: 'pocket',
+    visibility: 'public',
+    public_location_path: null,
+    original_price: null,
   };
 
   beforeEach(async () => {
@@ -78,6 +99,13 @@ describe('EditPropertyPageComponent', () => {
   it('setTab переключает таб', () => {
     fixture.componentInstance.setTab('photos');
     expect(fixture.componentInstance.tab()).toBe('photos');
+  });
+
+  it('prefill заполняет редактируемые сигналы из detail', () => {
+    const c = fixture.componentInstance;
+    expect(c.price()).toBe('100');         // detailStub.price = 100
+    expect(c.description()).toBe('d');
+    expect(c.isMaid()).toBe(false);
   });
 
   it('бегунок: addrPath реконструируется, leaf = полный адрес при public_location_id=null', async () => {

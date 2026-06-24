@@ -110,3 +110,81 @@
   gap: 12px;
   padding: 48px;
 }
+
+// ─── Таб «Параметры» (ep-*) ──────────────────────────────────────────────────
+
+.edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ep-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+
+  span {
+    color: var(--text-color-muted);
+    font-size: 12px;
+  }
+
+  input {
+    padding: 8px 10px;
+    border: 1px solid var(--extra-border-color);
+    border-radius: 6px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 14px;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.ep-note {
+  color: var(--text-color-muted);
+  font-size: 11px;
+}
+
+.ep-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ep-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.ep-check-label {
+  font-size: 14px;
+}
+
+.ep-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ep-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--extra-border-color);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 13px;
+  cursor: pointer;
+
+  &.sel {
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+    color: #fff;
+  }
+}
