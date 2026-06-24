@@ -109,7 +109,8 @@ CREATE TRIGGER trg_property_comments_count
 - Удалённый топ-комментарий, **у которого есть ответы**, отдавать с тумбстоун-телом (`deleted_at` не NULL,
   `body=NULL`), чтобы ответы остались читаемы; удалённый без ответов — не отдавать.
 - `author_name` ← `users.full_name`; `author_avatar` ← `user_settings.photo_url` (часто NULL → фолбэк инициалы на клиенте).
-- `is_mine` клиент вычисляет сам (`user_id === currentUserId`).
+- `is_mine boolean` — отдаёт сама RPC (`c.user_id = auth.uid()`); клиенту не нужен `currentUserId`.
+- `deleted_at` — отдаём для рендера тумбстоуна; у тумбстоуна `body = NULL`.
 
 ### 3.2 `add_property_comment(p_property_id uuid, p_body text, p_parent_id uuid DEFAULT NULL, p_is_private boolean DEFAULT false)`
 
