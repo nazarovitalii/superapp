@@ -1,0 +1,715 @@
+@use '../../../styles/_globals.scss' as *;
+
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.add-wrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--s2) var(--s) var(--s4);
+}
+
+// Колонка мастера — шире и крупнее, чтобы лучше читалось
+.add-col {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--s4);
+}
+
+// ─── Прогресс шагов (нумерация) ──────────────────────────────────────────
+.steps-row {
+  display: flex;
+  gap: var(--s2);
+  justify-content: center;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color-muted);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &.active {
+    color: var(--palette-primary-contrast-500, #fff);
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+
+  &.done {
+    color: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Блок шага — крупный, в стиле блока sidebar задачи ───────────────────
+.block {
+  border: 1px solid transparent;
+  border-radius: var(--card-border-radius);
+  background: var(--task-detail-bg);
+  box-shadow: var(--task-detail-shadow);
+  font-size: 15px;
+  color: var(--text-color);
+
+  @include mq(xs, max) {
+    box-shadow: none;
+    border-color: var(--extra-border-color);
+  }
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  margin: 0 var(--s3);
+  font-size: 17px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--extra-border-color);
+
+  mat-icon {
+    margin-right: var(--s);
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--text-color-muted);
+  }
+}
+
+.block-title {
+  flex: 1;
+}
+
+.block-step-no {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-color-muted);
+}
+
+.block-content {
+  margin: var(--s2) var(--s3) var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+// ─── Поля ────────────────────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s);
+}
+
+.field-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+// Серая звёздочка у обязательных полей (не красная — не алерт, просто маркер)
+.req-star {
+  color: var(--text-color-muted, #9e9e9e);
+  margin-left: 2px;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: calc(var(--s) + 2px) var(--s2);
+  font-size: 15px;
+  color: var(--text-color);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  outline: none;
+  resize: none;
+
+  &:focus {
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Чипы выбора ─────────────────────────────────────────────────────────
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s);
+}
+
+.chip {
+  padding: 8px 16px;
+  font-size: 15px;
+  color: var(--text-color);
+  background: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: 20px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--c-primary);
+  }
+
+  &.sel {
+    color: var(--palette-primary-contrast-500, #fff);
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Локация ─────────────────────────────────────────────────────────────
+.loc-selected {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  padding: var(--s2);
+  background: var(--bg);
+  border: 1px solid var(--c-primary);
+  border-radius: var(--card-border-radius);
+
+  span {
+    flex: 1;
+    font-size: 15px;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--c-primary);
+  }
+}
+
+.loc-clear {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-color-muted);
+  display: flex;
+}
+
+.loc-hint {
+  font-size: 14px;
+  color: var(--text-color-muted);
+}
+
+.loc-dropdown {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+}
+
+.loc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s) var(--s2);
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--extra-border-color);
+  background: var(--bg);
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--bg-lighter, var(--bg));
+  }
+}
+
+.loc-name {
+  font-size: 15px;
+  color: var(--text-color);
+}
+
+.loc-sub {
+  font-size: 14px;
+  color: var(--text-color-muted);
+}
+
+.loc-level {
+  opacity: 0.7;
+}
+
+// Логотип девелопера в автокомплите — фиксированный маленький thumbnail (B7 fix)
+.dev-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+// ─── Каскад адреса ───────────────────────────────────────────────────────
+.addr-trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-half);
+  font-size: 14px;
+  color: var(--text-color-muted);
+
+  &.addr-trail--full {
+    margin-top: var(--s);
+  }
+}
+
+.addr-crumb {
+  display: inline-flex;
+  align-items: center;
+
+  &:not(:last-of-type)::after {
+    content: '›';
+    margin-left: var(--s-half);
+    opacity: 0.6;
+  }
+}
+
+.lease-row {
+  display: flex;
+  gap: var(--s);
+
+  input,
+  select {
+    width: 100%;
+  }
+}
+
+// Селекты «Занято до» (месяц/год) — стиль текстовых полей формы + кастомная стрелка-chevron
+.lease-row select {
+  padding: calc(var(--s) + 2px) var(--s2);
+  padding-right: var(--s5); // место под стрелку справа
+  font-size: 15px;
+  color: var(--text-color);
+  background-color: var(--bg);
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  outline: none;
+  cursor: pointer;
+  appearance: none; // убрать нативную стрелку браузера
+  -webkit-appearance: none;
+  // кастомная стрелка-chevron (серый SVG; статический цвет ок для светлой и тёмной тем)
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239e9e9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s2) center;
+
+  &:focus {
+    border-color: var(--c-primary);
+  }
+}
+
+// ─── Бегунок приватности адреса (B5: кастомный трек) ────────────────────
+// Метка «Что видят коллеги» — по центру (S1).
+.reveal-label {
+  display: block;
+  text-align: center;
+}
+
+// Контейнер бегунка — позиционирование для абсолютных дочерних (S2/S3).
+// touch-action: none — запрещает браузерный скролл при тач-drag по треку.
+// cursor: grab — подсказка, что бегунок перетаскиваемый.
+.reveal {
+  position: relative;
+  width: 100%;
+  // Нижний отступ: место для точек (они выходят за трек).
+  padding-bottom: 20px;
+  // CSS-переменная --n задаётся из шаблона ([style.--n]).
+  touch-action: none; // тач-drag не должен скроллить страницу
+  cursor: grab;
+  user-select: none; // не выделять текст при drag
+
+  // Во время перетаскивания: курсор grabbing
+  &.dragging {
+    cursor: grabbing;
+  }
+}
+
+// Слова-уровни: flex, каждый занимает 1/N (S3). FB-2: подписи до 2 строк вместо
+// обрезки в одну. Футпринт сохранён прежним (min-height 30 + margin 10 = 40px),
+// чтобы не сдвигать абсолютную геометрию трека/точек/ручки ниже.
+.reveal-ticks {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  font-size: 12px;
+  min-height: 30px; // резерв под 2 строки → уровни выровнены по верху
+  margin-bottom: 10px; // 30 + 10 = прежние 40px до трека
+}
+
+.reveal-tick {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 2px; // воздух между колонками
+  text-align: center;
+  color: var(--text-color-muted);
+  opacity: 0.5;
+  // FB-2: перенос до 2 строк (длинные имена читаются); >2 строк — ellipsis + title-тултип.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.2;
+  overflow-wrap: anywhere; // длинное одно слово тоже переносится
+
+  &.on {
+    color: var(--c-primary);
+    opacity: 1;
+    font-weight: 600;
+  }
+
+  &.muted {
+    text-decoration: line-through;
+    opacity: 0.35;
+  }
+}
+
+// Трек: тонкая линия от центра первого до центра последнего слова (S2).
+// left/right = 0.5/N * 100% = calc(50% / var(--n)).
+.reveal-track {
+  position: absolute;
+  top: 40px; // под словами (font ~13px + margin-bottom 24px)
+  left: calc(50% / var(--n));
+  right: calc(50% / var(--n));
+  height: 3px;
+  background: var(--text-color-muted);
+  opacity: 0.25;
+  border-radius: 2px;
+}
+
+// Залитая часть трека (до выбранного уровня).
+.reveal-track-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--c-primary);
+  border-radius: 2px;
+  opacity: 1;
+}
+
+// Круглые точки — по одной на уровень, позиция = (i+0.5)/N*100% (S3).
+.reveal-dot {
+  position: absolute;
+  top: 33px; // центр точки совпадает с центром трека (трек top:40px, h:3px → mid=41.5px; точка h:16px → top=41.5-8=33.5)
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--text-color-muted);
+  background: var(--bg-app, #fff);
+  transform: translateX(-50%);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+
+  &.on {
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+
+  &.active {
+    width: 16px;
+    height: 16px;
+    top: 31px; // скорректировать под больший диаметр
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 30%, transparent);
+  }
+
+  &.muted {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:disabled {
+    pointer-events: none;
+  }
+}
+
+// Видимая ручка-бегунок: крупнее точки, с тенью — визуальный thumb для drag.
+// Позиционируется на активном уровне (left задаётся из шаблона).
+.reveal-thumb {
+  position: absolute;
+  top: 28px; // центр thumb совпадает с центром трека (трек top:40px, h:3px → mid=41.5px; thumb h:24px → top=41.5-12=29.5)
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 3px solid var(--bg-app, #fff);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--c-primary) 40%, transparent);
+  transform: translateX(-50%);
+  pointer-events: none; // клики проходят сквозь thumb к .reveal и к .reveal-dot
+  transition: left 0.1s ease;
+
+  // Во время drag: тень крупнее (контейнер получит .dragging)
+  .dragging & {
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--c-primary) 50%, transparent);
+  }
+}
+
+// Подпись под треком — по центру.
+.reveal-note {
+  text-align: center;
+}
+
+// ─── Фото ────────────────────────────────────────────────────────────────
+.photo-add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s);
+  padding: var(--s) var(--s2);
+  border: 1px dashed var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  cursor: pointer;
+  color: var(--text-color-muted);
+  width: fit-content;
+
+  &:hover {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--s);
+}
+
+.photo-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--extra-border-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.photo-main {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: var(--c-primary);
+  color: var(--palette-primary-contrast-500, #fff);
+}
+
+.photo-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Кнопка «Сделать главным» — звёздочка в левом нижнем углу (не-первое фото)
+.photo-make-main {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--c-primary);
+  }
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// ─── CDK DragDrop ────────────────────────────────────────────────────────
+// Ячейка перетаскивается — показываем курсор grab.
+.photo-grid .photo-cell {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// Превью при перетаскивании сохраняет размер ячейки.
+.cdk-drag-preview {
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  aspect-ratio: 1;
+  width: 96px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// Место-заглушка при перетаскивании.
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+// Анимация возврата на место.
+.cdk-drag-animating {
+  transition: transform 200ms ease;
+}
+
+// ─── Building info ───────────────────────────────────────────────────────
+.info-card {
+  border: 1px solid var(--extra-border-color);
+  border-radius: var(--card-border-radius);
+  padding: var(--s2);
+  background: var(--bg);
+}
+
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s);
+  font-weight: 600;
+  margin-bottom: var(--s);
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--text-color-muted);
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s);
+
+  div {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+
+    span {
+      color: var(--text-color-muted);
+    }
+  }
+}
+
+// ─── Тоглы ───────────────────────────────────────────────────────────────
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: var(--text-color);
+}
+
+// Вариант B: метка слева фикс. ширина, чекбоксы в вертикальную колонку
+.check-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.check-label {
+  min-width: 148px; // шире самой длинной метки «Hotel Apartment»
+  font-size: 15px;
+}
+
+.note {
+  font-size: 14px;
+  color: var(--text-color-muted);
+  margin: 0;
+}
+
+// ─── Ошибка и навигация ──────────────────────────────────────────────────
+.add-error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-half);
+  font-size: 14px;
+  color: var(--c-warn, #e53935);
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.add-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s);
+}
