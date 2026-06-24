@@ -70,7 +70,19 @@ signal 'bell.changed'            -- WSS, только триггер на refetc
 ```
 Имя фильтра + «N непросмотренных всего» — сторона superApp из `get_saved_filters` (`name`, `unseen_count`).
 
+## Ответы superApp на B1 / K2 / K4 (2026-06-24)
+
+**B1 — триггеров на `filter_matches` в бандле 009–012 НЕТ.** Бандл вешает триггеры на:
+`properties` (`properties_insert_match`, `properties_activate_match`, `properties_price_drop_match`, FOR EACH ROW),
+`saved_filters` (`saved_filters_insert_match`, FOR EACH ROW),
+`match_jobs` (`match_jobs_notify`, FOR EACH STATEMENT → `pg_notify('match_jobs','')`).
+Пайплайн: properties/saved_filters → `match_jobs` (очередь) → воркер → пишет `filter_matches`. Notify — на `match_jobs`, не на результатах.
+→ **016 без конфликта имён.** Рекомендация: `AFTER INSERT ON filter_matches FOR EACH STATEMENT → pg_notify('bell_changed','')` на **отдельном канале** (не `match_jobs`); folding пустым payload как в `notify_match_jobs`.
+
+**K2 — `get_bell` джойнит display-поля сам (не N+1 на клиенте).** В `properties` нет `title`/`thumb_url`/`location_label` (title композитный, thumb из `property_photos`, location — join). `get_bell` строит их так же, как `get_feed`. `filter_name`/`unseen_count` — отдельно из `get_saved_filters`.
+
+**K4 — поток НЕ фильтруется по `user_seen_listings` (v1).** `get_bell` = лог событий, гасится bell-курсором. `user_seen_listings` уже отражён в `unseen_count` из `get_saved_filters`. Двойной фильтр = те же грабли двойного «seen» (Рамка №0).
+
 ## Открытые к подтверждению владельцем/realtime
-- §7 имя триггера 016 (конфликт с 009–012?).
 - §8 кто и когда заводит `GOTRUE_JWT_SECRET` в Coolify.
 - §9 финальный WSS-хост/сабдомен.
