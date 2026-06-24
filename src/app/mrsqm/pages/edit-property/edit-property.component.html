@@ -306,7 +306,7 @@
                 <span class="field-label">Оригинальная цена (необязательно)</span>
                 <input
                   [ngModel]="originalPrice()"
-                  (ngModelChange)="originalPrice.set($event)"
+                  (ngModelChange)="onOriginalPriceInput($event)"
                   [disabled]="originalPriceLocked()"
                   inputmode="numeric"
                   placeholder="напр. 1,400,000"

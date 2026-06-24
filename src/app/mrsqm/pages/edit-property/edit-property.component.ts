@@ -465,7 +465,10 @@ export class EditPropertyPageComponent {
     this.listingType.set(d.listing_type ?? 'pocket');
     this.visibility.set(d.visibility ?? 'public');
     // publicLocationId — computed из бегунка (Task 4B); здесь НЕ трогаем.
-    this.originalPrice.set(d.original_price != null ? String(d.original_price) : '');
+    // OP форматируем с разделителями (как основную цену) для единообразия.
+    this.originalPrice.set(
+      d.original_price != null ? Number(d.original_price).toLocaleString('en-US') : '',
+    );
     this.description.set(d.description ?? '');
   }
 
@@ -479,5 +482,11 @@ export class EditPropertyPageComponent {
   onPriceInput(val: string): void {
     const digits = val.replace(/\D/g, '');
     this.price.set(digits ? Number(digits).toLocaleString('en-US') : '');
+  }
+
+  // Оригинальная цена — тот же форматтер с разделителями, что и у основной цены.
+  onOriginalPriceInput(val: string): void {
+    const digits = val.replace(/\D/g, '');
+    this.originalPrice.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
 }

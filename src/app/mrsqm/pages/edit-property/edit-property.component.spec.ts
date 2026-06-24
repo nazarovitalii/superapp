@@ -167,6 +167,14 @@ describe('EditPropertyPageComponent', () => {
     expect(fixture.componentInstance.saveLabel()).toBe('Сохранить');
   });
 
+  it('onOriginalPriceInput форматирует OP с разделителями', () => {
+    const c = fixture.componentInstance;
+    c.onOriginalPriceInput('1400000');
+    expect(c.originalPrice()).toBe('1,400,000');
+    c.onOriginalPriceInput('');
+    expect(c.originalPrice()).toBe('');
+  });
+
   it('deleteExisting зовёт сервис и перечитывает фото', async () => {
     const c = fixture.componentInstance;
     const svc = TestBed.inject(PropertyPhotoService);
