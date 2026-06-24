@@ -127,12 +127,14 @@ RETURN true;
 GRANT EXECUTE ON FUNCTION public.delete_property(uuid) TO authenticated;
 ```
 
-**(d) Durable-чистка Storage:**
+**(d) Durable-чистка Storage (по префиксу объекта):**
 
-- `CREATE TABLE storage_cleanup_queue (id bigserial PK, storage_path text NOT NULL, enqueued_at timestamptz DEFAULT now(), attempts int DEFAULT 0)`.
-- Триггер `AFTER DELETE ON property_photos` → `INSERT INTO storage_cleanup_queue (storage_path) VALUES (OLD.<path-колонка>)`. Ловит и каскад от удаления листинга, и будущее поштучное удаление фото — один механизм на все осиротевшие файлы.
-- **pg_cron-дренер** (раз в минуту): берёт пачку путей → `pg_net` HTTP DELETE к Storage API (`/storage/v1/object/<bucket>/<path>`, service-role key из **Supabase Vault**) → при 200 удаляет строку очереди, иначе `attempts++` (ретрай). Идемпотентно, переживает краш = **0 сирот**.
-- **Предпосылка (проверить на гейте):** `pg_net` + `pg_cron` включены; service-key в Vault; имя bucket'а фото; точное имя path-колонки в `property_photos`. Если `pg_net` недоступен на self-hosted — дренер уходит в инструкцию создателю (edge-function/внешний крон), но очередь и триггер остаются наши.
+> Реальная схема: `property_photos` хранит `full_url`/`thumb_url` (публичные URL), **колонки пути нет**. Все файлы объекта лежат под общим префиксом `{property_id}/` в бакете `property_photos` (`{id}/0_full.webp`, `{id}/0_thumb.webp`, `{id}/fp_0_full.webp`…). Поэтому чистим **по префиксу объекта**, а не по пути каждого фото (иначе пришлось бы парсить URL обратно в путь — костыль).
+
+- `CREATE TABLE storage_cleanup_queue (id bigserial PK, prefix text NOT NULL, enqueued_at timestamptz DEFAULT now(), attempts int DEFAULT 0, last_error text)`.
+- Триггер `AFTER DELETE ON properties` → `INSERT INTO storage_cleanup_queue (prefix) VALUES (OLD.id::text || '/')`. Срабатывает при любом удалении объекта (через `delete_property` или иначе).
+- **pg_cron-дренер** (раз в минуту), функция `drain_storage_cleanup_queue()`: для каждого префикса берёт ключи объектов из локальной `storage.objects` (`WHERE bucket_id='property_photos' AND name LIKE prefix || '%'`) → один `pg_net` HTTP DELETE к Storage API (`/storage/v1/object/property_photos`, тело `{prefixes:[<ключи>]}`, service-role key из **Supabase Vault**) → при 2xx удаляет строку очереди, иначе `attempts++`, `last_error` (ретрай). Если ключей нет (объект без фото) — сразу снимает из очереди. Идемпотентно, переживает краш = **0 сирот**.
+- **Предпосылка (проверить на гейте):** `pg_net` + `pg_cron` включены; service-role key в Vault (узнать имя секрета); доступ DEFINER-функции к схеме `storage`. Если `pg_net` недоступен на self-hosted — дренер уходит в инструкцию создателю (edge-function/внешний крон), но очередь и триггер остаются наши.
 
 ## 3. Фронт — зона действий (вариант B)
 
