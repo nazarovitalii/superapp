@@ -214,4 +214,16 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-WPM1: edit_property + патч get_property (Фаза A WP-M) — ROLLBACK-смоук в проде
+
+**Дата:** 2026-06-24 · **Где:** прод (миграция применена транзакционно; смоук в `BEGIN…ROLLBACK`).
+**Что проверяли:** новую RPC `edit_property` (whitelist, owner-check, статус/цена/immutability) + аддитивный патч `get_property` (отдаёт `public_location_id`).
+- **Владелец, active-объект** (`5f6a3c58…`, owner `8db1f713…`): `edit_property(price=2100000, 'smoke')` → вернул `'active'`; `price` 2.0M→2.1M; `previous_price=2000000`, `price_changed_at` и `last_actualized_at` выставлены ✅
+- **Immutability:** `bedrooms` остались `2` (не в сигнатуре — изменить невозможно) ✅
+- **Чужой** (`sub=000…0`): `edit_property(...)` → `ERROR: property not found or not owned by current user` ✅
+- **Патч чтения:** `get_property(…) ? 'public_location_id'` от владельца → `t` (ключ присутствует); ссылки `v_result->>'public_location_path'` не затронуты (якорь `'public_location_path', CASE` — одно вхождение) ✅
+**Вывод:** ✅ Фаза A применена и проверена. `update_property`/`republish_property` пока живы (дроп — Фаза B после деплоя фронта). DDL-логика корректна; данные не изменены (ROLLBACK).
+
+---
+
 _Других тестов пока нет._
