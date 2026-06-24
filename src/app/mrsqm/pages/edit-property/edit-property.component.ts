@@ -13,6 +13,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
+import { moveItemInArray } from '../../../util/move-item-in-array';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
@@ -37,6 +39,8 @@ type EditTab = 'params' | 'description' | 'photos';
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    CdkDropList,
+    CdkDrag,
   ],
   templateUrl: './edit-property.component.html',
   styleUrl: './edit-property.component.scss',
@@ -116,6 +120,85 @@ export class EditPropertyPageComponent {
   readonly originalPrice = signal<string>('');
   readonly description = signal<string>('');
   // ВНИМАНИЕ: publicLocationId НЕ объявляем здесь — это computed из бегунка (Task 4B).
+
+  // ─── Таб «Фото» (Task 7) ────────────────────────────────────────────────────
+  // Новые фото для добавления (стейджинг; загрузка — в save() Task 8).
+  readonly newPhotos = signal<File[]>([]);
+  readonly newPreviews = signal<string[]>([]);
+  // Признак выполнения операции с фото (удаление/перестановка).
+  readonly photosBusy = signal(false);
+
+  // Только галерейные фото (без floor_plan).
+  readonly galleryPhotos = computed(() =>
+    this.photos().filter((p) => p.photo_type === 'gallery'),
+  );
+
+  // Добавление новых файлов в стейдж (не загружаем — только превью).
+  onAddPhotos(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const list = input.files;
+    if (!list || !list.length) return;
+    const added = Array.from(list);
+    this.newPhotos.set([...this.newPhotos(), ...added]);
+    this.newPreviews.set([
+      ...this.newPreviews(),
+      ...added.map((f) => URL.createObjectURL(f)),
+    ]);
+    input.value = '';
+  }
+
+  // Удалить стейджированное новое фото (без обращения к сервису).
+  removeNewPhoto(i: number): void {
+    const url = this.newPreviews()[i];
+    if (url) URL.revokeObjectURL(url);
+    this.newPhotos.set(this.newPhotos().filter((_, idx) => idx !== i));
+    this.newPreviews.set(this.newPreviews().filter((_, idx) => idx !== i));
+  }
+
+  // Перестановка существующих фото галереи (CDK). Пишем в БД сразу через reorder.
+  async dropExisting(event: CdkDragDrop<PropertyPhoto[]>): Promise<void> {
+    const { previousIndex, currentIndex } = event;
+    if (previousIndex === currentIndex) return;
+    const gallery = moveItemInArray(this.galleryPhotos(), previousIndex, currentIndex);
+    const others = this.photos().filter((p) => p.photo_type !== 'gallery');
+    this.photos.set([...gallery, ...others]);
+    const id = this.detail()?.id;
+    if (!id) return;
+    this.photosBusy.set(true);
+    try {
+      await this._photoService.reorder(
+        id,
+        'gallery',
+        gallery.map((p) => p.full_url),
+      );
+    } finally {
+      this.photosBusy.set(false);
+    }
+  }
+
+  // Сделать главным: переместить на позицию 0 и записать порядок.
+  makeMain(i: number): void {
+    if (i === 0) return;
+    void this.dropExisting({ previousIndex: i, currentIndex: 0 } as CdkDragDrop<
+      PropertyPhoto[]
+    >);
+  }
+
+  // Удалить существующее фото из БД и Storage, перечитать список.
+  async deleteExisting(photo: PropertyPhoto): Promise<void> {
+    const id = this.detail()?.id;
+    if (!id) return;
+    this.photosBusy.set(true);
+    try {
+      await this._photoService.deletePhoto(id, {
+        full_url: photo.full_url,
+        thumb_url: photo.thumb_url,
+      });
+      this.photos.set(await this._photoService.getPhotos(id));
+    } finally {
+      this.photosBusy.set(false);
+    }
+  }
 
   // OP заблокирован, если в БД уже задана original_price (серверный guard дублирует).
   readonly originalPriceLocked = computed(() => this.detail()?.original_price != null);

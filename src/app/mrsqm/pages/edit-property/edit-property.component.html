@@ -374,7 +374,91 @@
             (input)="description.set($any($event.target).value)"></textarea>
         </label>
       } @else {
-        <!-- Task 7 -->
+        <!-- Таб «Фото»: существующие (drag-reorder, удаление, «Главное») + добавить новые -->
+
+        <!-- Индикатор загрузки операции -->
+        @if (photosBusy()) {
+          <div class="ep-photo-busy">
+            <mat-spinner diameter="24"></mat-spinner>
+          </div>
+        }
+
+        <!-- Существующие фото галереи -->
+        <div class="ep-field">
+          <span>Фотографии галереи</span>
+          @if (galleryPhotos().length) {
+            <div
+              class="photo-grid"
+              cdkDropList
+              cdkDropListOrientation="horizontal"
+              (cdkDropListDropped)="dropExisting($event)"
+            >
+              @for (photo of galleryPhotos(); track photo.full_url; let i = $index) {
+                <div class="photo-cell" cdkDrag>
+                  <img [src]="photo.thumb_url" alt="фото" />
+                  @if (i === 0) {
+                    <span class="photo-main">Главное</span>
+                  }
+                  @if (i > 0) {
+                    <button
+                      type="button"
+                      class="photo-make-main"
+                      (click)="makeMain(i)"
+                      title="Сделать главным"
+                    >
+                      <mat-icon>star</mat-icon>
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="photo-del"
+                    (click)="deleteExisting(photo)"
+                    aria-label="Удалить фото"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <p class="ep-note">Перетащите для изменения порядка. Первое фото — главное.</p>
+          } @else {
+            <p class="ep-note">Фотографий нет</p>
+          }
+        </div>
+
+        <!-- Добавить новые фото (стейдж; загрузка при сохранении) -->
+        <div class="ep-field">
+          <span>Добавить новые фото</span>
+          <label class="photo-add">
+            <mat-icon>add_photo_alternate</mat-icon>
+            <span>Выбрать файлы</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              (change)="onAddPhotos($event)"
+            />
+          </label>
+          @if (newPreviews().length) {
+            <div class="photo-grid">
+              @for (src of newPreviews(); track src; let i = $index) {
+                <div class="photo-cell">
+                  <img [src]="src" alt="новое фото" />
+                  <button
+                    type="button"
+                    class="photo-del"
+                    (click)="removeNewPhoto(i)"
+                    aria-label="Убрать"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <p class="ep-note">Фото будут загружены при сохранении.</p>
+          }
+        </div>
       }
     </section>
 

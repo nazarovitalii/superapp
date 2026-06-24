@@ -81,7 +81,15 @@ describe('EditPropertyPageComponent', () => {
               }),
           },
         },
-        { provide: PropertyPhotoService, useValue: { getPhotos: () => Promise.resolve([]) } },
+        {
+          provide: PropertyPhotoService,
+          useValue: {
+            getPhotos: () => Promise.resolve([]),
+            deletePhoto: () => Promise.resolve(undefined),
+            reorder: () => Promise.resolve(undefined),
+            uploadAndAttach: () => Promise.resolve(undefined),
+          },
+        },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(EditPropertyPageComponent);
@@ -123,5 +131,14 @@ describe('EditPropertyPageComponent', () => {
     fixture.detectChanges();
     const ta: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
     expect(ta.value).toBe('d');
+  });
+
+  it('deleteExisting зовёт сервис и перечитывает фото', async () => {
+    const c = fixture.componentInstance;
+    const svc = TestBed.inject(PropertyPhotoService) as any;
+    spyOn(svc, 'deletePhoto').and.resolveTo(undefined);
+    spyOn(svc, 'getPhotos').and.resolveTo([]);
+    await c.deleteExisting({ full_url: 'f', thumb_url: 't', order_index: 0, photo_type: 'gallery' });
+    expect(svc.deletePhoto).toHaveBeenCalledWith('p1', jasmine.objectContaining({ full_url: 'f' }));
   });
 });

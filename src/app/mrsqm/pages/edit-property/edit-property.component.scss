@@ -188,3 +188,134 @@
     color: #fff;
   }
 }
+
+// ─── Таб «Фото» ─────────────────────────────────────────────────────────────
+
+.ep-photo-busy {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+}
+
+// Сетка фото (галерея, новые превью)
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.photo-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--extra-border-color);
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// Бейдж «Главное» на первом фото
+.photo-main {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  background: var(--c-primary);
+  color: #fff;
+}
+
+// Кнопка «Сделать главным» (звёздочка в левом нижнем углу)
+.photo-make-main {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 45%);
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--c-primary);
+  }
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Кнопка удаления (крестик в правом верхнем углу)
+.photo-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// CDK drag preview сохраняет размер ячейки
+.cdk-drag-preview {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
+  aspect-ratio: 1;
+}
+
+// Кнопка добавления фото
+.photo-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px dashed var(--extra-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-color-muted);
+  width: fit-content;
+  margin-top: 4px;
+
+  &:hover {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
