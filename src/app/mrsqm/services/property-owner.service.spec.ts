@@ -5,11 +5,12 @@ import { MrsqmSupabaseService } from './supabase.service';
 class FakeSupabase {
   calls: { fn: string; params?: Record<string, unknown> }[] = [];
   shouldReject = false;
+  rpcResult: unknown = true;
 
   async rpc<T>(fn: string, params?: Record<string, unknown>): Promise<T> {
     this.calls.push({ fn, params });
     if (this.shouldReject) throw new Error('rpc error');
-    return true as T;
+    return this.rpcResult as T;
   }
 }
 
@@ -84,5 +85,41 @@ describe('PropertyOwnerService', () => {
     const before = svc.changedTick();
     await svc.updateProperty('p4', 100000, null);
     expect(svc.changedTick()).toBe(before + 1);
+  });
+
+  it('renewProperty шлёт id', async () => {
+    await svc.renewProperty('p1');
+    expect(fake.calls[0]).toEqual({
+      fn: 'renew_property',
+      params: { p_property_id: 'p1' },
+    });
+  });
+
+  it('republishProperty шлёт цену+описание и возвращает новый статус', async () => {
+    fake.rpcResult = 'pending_review';
+    const status = await svc.republishProperty('p1', 999, 'desc');
+    expect(fake.calls[0]).toEqual({
+      fn: 'republish_property',
+      params: { p_property_id: 'p1', p_price: 999, p_description: 'desc' },
+    });
+    expect(status).toBe('pending_review');
+  });
+
+  it('deleteProperty шлёт id', async () => {
+    await svc.deleteProperty('p1');
+    expect(fake.calls[0]).toEqual({
+      fn: 'delete_property',
+      params: { p_property_id: 'p1' },
+    });
+  });
+
+  it('changedTick растёт после renew/republish/delete, НЕ растёт при ошибке', async () => {
+    const b1 = svc.changedTick();
+    await svc.renewProperty('p');
+    expect(svc.changedTick()).toBe(b1 + 1);
+    fake.shouldReject = true;
+    const b2 = svc.changedTick();
+    await expectAsync(svc.deleteProperty('p')).toBeRejected();
+    expect(svc.changedTick()).toBe(b2);
   });
 });

@@ -253,6 +253,31 @@ export const PROPERTY_STATUS_LABELS: Record<PropertyStatus, string> = {
   archived_withdrawn: 'Снят',
 };
 
+// Действия владельца над объектом (управляются статусом).
+export type OwnerAction = 'edit' | 'actualize' | 'archive' | 'renew' | 'delete';
+
+// Тон баннера статуса (вариант B). Цвета — токены темы (success/warning/danger).
+export type BannerTone = 'success' | 'warning' | 'error' | 'neutral';
+export const PROPERTY_STATUS_BANNER_TONE: Record<PropertyStatus, BannerTone> = {
+  active: 'success',
+  pending_review: 'warning',
+  rejected: 'error',
+  expired: 'neutral',
+  archived_sold: 'neutral',
+  archived_withdrawn: 'neutral',
+};
+
+// Набор кнопок по статусу. 'edit' для active = «Изменить» (update_property);
+// 'edit' для rejected/withdrawn = «Редактировать» (republish_property) — ветка в saveEdit.
+export const OWNER_ACTIONS_BY_STATUS: Record<PropertyStatus, OwnerAction[]> = {
+  active: ['edit', 'actualize', 'archive'],
+  pending_review: ['archive'],
+  rejected: ['edit', 'archive'],
+  expired: ['renew', 'archive'],
+  archived_sold: ['delete'],
+  archived_withdrawn: ['edit', 'delete'],
+};
+
 export interface PropertyFeedItem {
   id: string;
   owner_id: string;
@@ -419,6 +444,8 @@ export interface PropertyDetail {
   agent: PropertyAgent | null;
   // Проект из location_developers (слой 2b); null = локация не привязана к девелоперу.
   project: PropertyProject | null;
+  // Причина отказа модератора (только при status='rejected'); null для остальных статусов.
+  rejection_reason: string | null;
   // Ошибка доступа: get_property возвращает { error, property_id } вместо объекта.
   error?: string;
 }

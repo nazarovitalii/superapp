@@ -44,4 +44,32 @@ export class PropertyOwnerService {
     });
     this.changedTick.update((n) => n + 1);
   }
+
+  // Продление просроченного объекта (expired→active).
+  async renewProperty(propertyId: string): Promise<void> {
+    await this._supabase.rpc<boolean>('renew_property', { p_property_id: propertyId });
+    this.changedTick.update((n) => n + 1);
+  }
+
+  // Переопубликация отклонённого/снятого: правка цены+описания + смена статуса.
+  // Возвращает итоговый статус (серверная истина), клиент его не пересчитывает.
+  async republishProperty(
+    propertyId: string,
+    price: number,
+    description: string | null,
+  ): Promise<string> {
+    const status = await this._supabase.rpc<string>('republish_property', {
+      p_property_id: propertyId,
+      p_price: price,
+      p_description: description,
+    });
+    this.changedTick.update((n) => n + 1);
+    return status;
+  }
+
+  // Полное удаление объекта (только из архива). Чистка Storage — серверная.
+  async deleteProperty(propertyId: string): Promise<void> {
+    await this._supabase.rpc<boolean>('delete_property', { p_property_id: propertyId });
+    this.changedTick.update((n) => n + 1);
+  }
 }
