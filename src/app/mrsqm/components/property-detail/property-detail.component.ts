@@ -7,6 +7,7 @@ import {
   signal,
   computed,
   effect,
+  untracked,
   OnDestroy,
   ViewChild,
   ElementRef,
@@ -115,6 +116,18 @@ export class PropertyDetailComponent implements OnDestroy {
     effect(() => {
       const id = this.property().id;
       void this.loadProperty(id);
+    });
+
+    // После действий владельца (правка через окно редактирования, актуализация, архив)
+    // перечитываем открытую карточку: id объекта не меняется → первый effect не сработает,
+    // и панель показывала бы снапшот до изменения (раньше требовался reload страницы).
+    // Зависим ТОЛЬКО от changedTick — id берём untracked, чтобы не дублировать первый effect.
+    // t=0 — стартовое значение, пропускаем (деталь уже грузится выше).
+    effect(() => {
+      const t = this._ownerService.changedTick();
+      if (t > 0) {
+        void this.loadProperty(untracked(() => this.property().id));
+      }
     });
   }
 

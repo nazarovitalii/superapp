@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal, WritableSignal } from '@angular/core';
 import { PropertyDetailComponent } from './property-detail.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
@@ -192,6 +193,10 @@ const makeComponent = (
     (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
     (ownerSvc.editProperty as jasmine.Spy).and.resolveTo('active');
   }
+  // changedTick — сигнал (не метод): createSpyObj его не создаёт. Компонент читает его
+  // в эффекте рефетча, поэтому фейк обязан его иметь.
+  (ownerSvc as unknown as { changedTick: WritableSignal<number> }).changedTick =
+    signal(0);
 
   const providers: unknown[] = [
     { provide: MrsqmSupabaseService, useValue: supa },
@@ -323,6 +328,21 @@ describe('PropertyDetailComponent', () => {
     supa.rpcResult = detail({ is_owner: true });
     await comp.loadProperty();
     expect(comp.isOwner()).toBe(true);
+  });
+
+  it('бамп changedTick перечитывает открытый объект (рефетч после правки владельца, без reload)', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ id: 'p1' });
+    // Флуш стартового эффекта (property → loadProperty один раз), чтобы дальше
+    // повторный вызов был атрибутирован именно бампу тика (id объекта не меняется).
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const loadSpy = spyOn(comp, 'loadProperty').and.resolveTo(undefined);
+    const owner = TestBed.inject(PropertyOwnerService);
+    owner.changedTick.update((n) => n + 1);
+    fixture.detectChanges(); // флуш эффекта рефетча
+    expect(loadSpy).toHaveBeenCalled();
   });
 
   it('goEdit() навигирует на /mrsqm/edit/:id', async () => {
