@@ -111,6 +111,8 @@ export class FeedPageComponent {
   readonly hasMore = signal(false);
   // id объектов в избранном (для иконки-закладки).
   readonly savedIds = signal<Set<string>>(new Set());
+  // Текущий юзер — для CD-1: у своих объектов закладку «в избранное» не показываем.
+  readonly currentUserId = computed(() => this._auth.currentUser()?.id ?? null);
 
   get selectedPropertyId(): string | null {
     return this._panels.selectedProperty()?.id ?? null;

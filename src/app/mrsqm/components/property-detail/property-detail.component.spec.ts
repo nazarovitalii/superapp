@@ -432,7 +432,7 @@ describe('PropertyDetailComponent', () => {
     await comp.loadProperty();
     await fixture.whenStable();
     fixture.detectChanges();
-    const actions = fixture.nativeElement.querySelector('.owner-actions');
+    const actions = fixture.nativeElement.querySelector('.owner-panel');
     expect(actions).not.toBeNull();
     // active → кнопка «Изменить» (по матрице LM; «Редактировать» — у rejected/withdrawn).
     expect(actions.textContent).toContain('Изменить');

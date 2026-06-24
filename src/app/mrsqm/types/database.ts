@@ -446,6 +446,8 @@ export interface PropertyDetail {
   project: PropertyProject | null;
   // Причина отказа модератора (только при status='rejected'); null для остальных статусов.
   rejection_reason: string | null;
+  // Дата истечения объявления (ось истечения LM); показывается в шапке статуса «Активно до …».
+  expires_at: string | null;
   // Ошибка доступа: get_property возвращает { error, property_id } вместо объекта.
   error?: string;
 }

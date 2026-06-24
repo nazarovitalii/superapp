@@ -107,16 +107,19 @@
 
     <!-- Выезжающие кнопки при ховере — как task-hover-controls в инбоксе -->
     <div class="hover-controls">
-      <button
-        mat-icon-button
-        class="ico-btn"
-        [class.is-saved]="isSaved()"
-        (click)="saveClick.emit(); $event.stopPropagation()"
-        [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
-        [title]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
-      >
-        <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-      </button>
+      <!-- CD-1: закладку «в избранное» прячем у своих объектов -->
+      @if (!isOwnItem()) {
+        <button
+          mat-icon-button
+          class="ico-btn"
+          [class.is-saved]="isSaved()"
+          (click)="saveClick.emit(); $event.stopPropagation()"
+          [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+          [title]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+        >
+          <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+        </button>
+      }
       <button
         mat-icon-button
         class="ico-btn"

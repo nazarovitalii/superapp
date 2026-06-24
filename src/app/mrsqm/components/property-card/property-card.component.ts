@@ -27,6 +27,8 @@ export class PropertyCardComponent {
   // Стадия 1: новый/непросмотренный объект — жёлтая полоска по левому ребру (hot-path: только класс).
   readonly isUnseen = input(false);
   readonly isSaved = input(false);
+  // Свой объект (CD-1): закладку «в избранное» не показываем — свой объект не лайкают.
+  readonly isOwnItem = input(false);
   // Чекбокс множественного выбора (как done-toggle в инбоксе).
   readonly isSelected = input(false);
   // V-10: показывать публичный адрес (true = не-My охват; false = My Inventory → полный).

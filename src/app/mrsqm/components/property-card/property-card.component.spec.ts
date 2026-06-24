@@ -71,6 +71,19 @@ describe('PropertyCardComponent — hover-controls DOM', () => {
     expect(bookmarkBtn).not.toBeUndefined();
   });
 
+  it('CD-1: при isOwnItem=true закладка «в избранное» скрыта', () => {
+    const fixture = makeFixture();
+    fixture.componentRef.setInput('isOwnItem', true);
+    fixture.detectChanges();
+    const buttons = fixture.nativeElement.querySelectorAll(
+      '.hover-controls button',
+    ) as NodeListOf<HTMLButtonElement>;
+    const bookmarkBtn = Array.from(buttons).find((b) =>
+      b.querySelector('mat-icon')?.textContent?.trim().startsWith('bookmark'),
+    );
+    expect(bookmarkBtn).toBeUndefined();
+  });
+
   it('кнопка закладки имеет aria-label «В избранное» когда isSaved=false', () => {
     const fixture = makeFixture();
     fixture.componentRef.setInput('isSaved', false);

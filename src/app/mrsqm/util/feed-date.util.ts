@@ -94,3 +94,30 @@ export const formatDetailDate = (
   const shortYear = String(dateYear).slice(-2);
   return `${dateDay} ${monthName} ${shortYear}`;
 };
+
+// Месяцы в родительном падеже (для «20 июля 2026»).
+const _MONTHS_RU_GEN = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
+
+/**
+ * Длинная дата на русском: «20 июля 2026» (для шапки статуса «Активно до …»).
+ * null/undefined/невалид → ''.
+ */
+export const formatLongDateRu = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+  return `${date.getDate()} ${_MONTHS_RU_GEN[date.getMonth()]} ${date.getFullYear()}`;
+};

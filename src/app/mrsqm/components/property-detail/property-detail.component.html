@@ -156,20 +156,127 @@
         </div>
       }
 
-      <!-- Ряд кнопок-пилюль под фото: избранное + поднять вверх (только владельцу) -->
-      <div class="action-pills">
-        <button
-          type="button"
-          class="fav-btn"
-          [class.is-saved]="isSaved()"
-          (click)="toggleSaved()"
-        >
-          <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-          {{ isSaved() ? 'In Favourites' : 'Add to Favourites' }}
-        </button>
-      </div>
+      <!-- Ряд кнопок-пилюль под фото: избранное. Свой объект (isOwner) в избранное не добавляют → скрыто (CD-1). -->
+      @if (!isOwner()) {
+        <div class="action-pills">
+          <button
+            type="button"
+            class="fav-btn"
+            [class.is-saved]="isSaved()"
+            (click)="toggleSaved()"
+          >
+            <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+            {{ isSaved() ? 'In Favourites' : 'Add to Favourites' }}
+          </button>
+        </div>
+      }
 
       <div class="detail-body">
+        <!-- ── Управление своим объектом (is_owner) — owner-панель наверху (CD-2/3) ── -->
+        @if (isOwner()) {
+          <div class="owner-panel" [class]="'tone-' + bannerTone()">
+            <!-- Шапка статуса: иконка тона + статус (для активного — «Активно до …») -->
+            <div class="owner-panel-head">
+              <mat-icon>{{ statusIcon() }}</mat-icon>
+              <span class="owner-panel-status">
+                @if (detail()?.status === 'active' && expiryDate()) {
+                  Активно до {{ expiryDate() }}
+                } @else {
+                  {{ statusLabel() }}
+                }
+              </span>
+            </div>
+            @if (detail()?.status === 'rejected' && detail()?.rejection_reason) {
+              <p class="owner-panel-reason">Причина: {{ detail()?.rejection_reason }}</p>
+            }
+            @if (isEditing()) {
+              <div class="owner-edit">
+                <label class="owner-field">
+                  <span>Цена</span>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    [value]="editPrice()"
+                    (input)="editPrice.set($any($event.target).value)"
+                  />
+                </label>
+                <label class="owner-field">
+                  <span>Описание</span>
+                  <textarea
+                    rows="3"
+                    [value]="editDescription()"
+                    (input)="editDescription.set($any($event.target).value)"
+                  ></textarea>
+                </label>
+                <div class="owner-edit-buttons">
+                  <button mat-stroked-button (click)="cancelEdit()" [disabled]="ownerBusy()">
+                    Отмена
+                  </button>
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="saveEdit()"
+                    [disabled]="ownerBusy()"
+                  >
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="owner-panel-actions">
+                @if (ownerActions().includes('edit')) {
+                  <button mat-stroked-button (click)="startEdit()" [disabled]="ownerBusy()">
+                    <mat-icon>edit</mat-icon
+                    >{{ detail()?.status === 'active' ? 'Изменить' : 'Редактировать' }}
+                  </button>
+                }
+                @if (ownerActions().includes('actualize')) {
+                  <button mat-stroked-button (click)="actualize()" [disabled]="ownerBusy()">
+                    <mat-icon>arrow_upward</mat-icon>Поднять вверх
+                  </button>
+                }
+                @if (ownerActions().includes('renew')) {
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="renew()"
+                    [disabled]="ownerBusy()"
+                  >
+                    <mat-icon>autorenew</mat-icon>Продлить (+30 дней)
+                  </button>
+                }
+                @if (ownerActions().includes('archive')) {
+                  <button
+                    mat-stroked-button
+                    [matMenuTriggerFor]="archiveMenu"
+                    [disabled]="ownerBusy()"
+                  >
+                    <mat-icon>inventory_2</mat-icon>Архивировать
+                  </button>
+                  <mat-menu #archiveMenu="matMenu">
+                    <button mat-menu-item (click)="confirmArchive('archived_sold')">
+                      Продан
+                    </button>
+                    <button mat-menu-item (click)="confirmArchive('archived_withdrawn')">
+                      Снять с публикации
+                    </button>
+                  </mat-menu>
+                }
+                @if (ownerActions().includes('delete')) {
+                  <button
+                    mat-stroked-button
+                    class="danger-btn is-delete"
+                    (click)="confirmDelete()"
+                    [disabled]="ownerBusy()"
+                  >
+                    <mat-icon>delete_forever</mat-icon>Удалить
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+
         <!-- ── 2. Цена и тип сделки ──────────────────────────────────────── -->
         <div class="price-row">
           <span class="price-main">
@@ -502,127 +609,6 @@
           </div>
         }
 
-        <!-- ── Управление своим объектом (is_owner) ──────────────────────── -->
-        @if (isOwner()) {
-          <div class="owner-actions">
-            <!-- Баннер статуса -->
-            <div
-              class="status-banner"
-              [class]="'tone-' + bannerTone()"
-            >
-              <mat-icon>{{
-                detail()?.status === 'rejected' ? 'error_outline' : 'info'
-              }}</mat-icon>
-              <span class="status-banner-label">{{ statusLabel() }}</span>
-            </div>
-            @if (detail()?.status === 'rejected' && detail()?.rejection_reason) {
-              <p class="rejection-reason">Причина: {{ detail()?.rejection_reason }}</p>
-            }
-            @if (isEditing()) {
-              <div class="owner-edit">
-                <label class="owner-field">
-                  <span>Цена</span>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    [value]="editPrice()"
-                    (input)="editPrice.set($any($event.target).value)"
-                  />
-                </label>
-                <label class="owner-field">
-                  <span>Описание</span>
-                  <textarea
-                    rows="3"
-                    [value]="editDescription()"
-                    (input)="editDescription.set($any($event.target).value)"
-                  ></textarea>
-                </label>
-                <div class="owner-edit-buttons">
-                  <button
-                    mat-stroked-button
-                    (click)="cancelEdit()"
-                    [disabled]="ownerBusy()"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    mat-flat-button
-                    color="primary"
-                    (click)="saveEdit()"
-                    [disabled]="ownerBusy()"
-                  >
-                    Сохранить
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <div class="owner-buttons">
-                @if (ownerActions().includes('edit')) {
-                  <button
-                    mat-stroked-button
-                    (click)="startEdit()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>edit</mat-icon
-                    >{{ detail()?.status === 'active' ? 'Изменить' : 'Редактировать' }}
-                  </button>
-                }
-                @if (ownerActions().includes('actualize')) {
-                  <button
-                    mat-stroked-button
-                    (click)="actualize()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>arrow_upward</mat-icon>Поднять вверх
-                  </button>
-                }
-                @if (ownerActions().includes('renew')) {
-                  <button
-                    mat-flat-button
-                    color="primary"
-                    (click)="renew()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>autorenew</mat-icon>Продлить (+30 дней)
-                  </button>
-                }
-                @if (ownerActions().includes('archive')) {
-                  <button
-                    mat-stroked-button
-                    [matMenuTriggerFor]="archiveMenu"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>inventory_2</mat-icon>Архивировать
-                  </button>
-                  <mat-menu #archiveMenu="matMenu">
-                    <button
-                      mat-menu-item
-                      (click)="confirmArchive('archived_sold')"
-                    >
-                      Продан
-                    </button>
-                    <button
-                      mat-menu-item
-                      (click)="confirmArchive('archived_withdrawn')"
-                    >
-                      Снять с публикации
-                    </button>
-                  </mat-menu>
-                }
-                @if (ownerActions().includes('delete')) {
-                  <button
-                    mat-stroked-button
-                    class="danger-btn"
-                    (click)="confirmDelete()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>delete_forever</mat-icon>Удалить
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
       </div>
     </div>
   }

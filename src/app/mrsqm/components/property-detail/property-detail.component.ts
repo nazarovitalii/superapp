@@ -31,7 +31,7 @@ import {
   PROPERTY_STATUS_BANNER_TONE,
   PROPERTY_STATUS_LABELS,
 } from '../../types/database';
-import { formatDetailDate } from '../../util/feed-date.util';
+import { formatDetailDate, formatLongDateRu } from '../../util/feed-date.util';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
@@ -393,6 +393,17 @@ export class PropertyDetailComponent implements OnDestroy {
   readonly bannerTone = computed(() => {
     const s = this.detail()?.status;
     return s ? PROPERTY_STATUS_BANNER_TONE[s] : 'neutral';
+  });
+
+  // Дата истечения активного объявления для шапки «Активно до 20 июля 2026» ('' если нет).
+  readonly expiryDate = computed(() => formatLongDateRu(this.detail()?.expires_at));
+
+  // Иконка шапки статуса: отклонён → ошибка, активен → галочка, прочее → инфо.
+  readonly statusIcon = computed(() => {
+    const s = this.detail()?.status;
+    if (s === 'rejected') return 'error_outline';
+    if (s === 'active') return 'check_circle';
+    return 'info';
   });
 
   // Набор кнопок действий, доступных владельцу для текущего статуса.

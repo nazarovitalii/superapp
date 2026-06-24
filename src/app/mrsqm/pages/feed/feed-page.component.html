@@ -421,6 +421,7 @@
         [property]="p"
         [isActive]="selectedPropertyId === p.id"
         [isSaved]="savedIds().has(p.id)"
+        [isOwnItem]="p.owner_id === currentUserId()"
         [isSelected]="selection.selectedIds().has(p.id)"
         [isUnseen]="p.is_unseen"
         [showPublicAddress]="filter.scope() !== 'my'"

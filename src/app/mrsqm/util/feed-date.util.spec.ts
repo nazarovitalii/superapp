@@ -1,4 +1,4 @@
-import { formatDetailDate, formatFeedDate } from './feed-date.util';
+import { formatDetailDate, formatFeedDate, formatLongDateRu } from './feed-date.util';
 
 /**
  * Даты строятся через локальный конструктор new Date(Y, M, D, h, m),
@@ -132,5 +132,23 @@ describe('formatDetailDate', () => {
   it('прошлый год → "D MonthLong YY"', () => {
     const iso = new Date(2024, 0, 5, 10, 0).toISOString();
     expect(formatDetailDate(iso, now)).toBe('5 January 24');
+  });
+});
+
+describe('formatLongDateRu', () => {
+  it('возвращает "" для null/undefined/невалид', () => {
+    expect(formatLongDateRu(null)).toBe('');
+    expect(formatLongDateRu(undefined)).toBe('');
+    expect(formatLongDateRu('не дата')).toBe('');
+  });
+
+  it('форматирует «20 июля 2026» (день + месяц в род. падеже + год)', () => {
+    const iso = new Date(2026, 6, 20, 10, 0).toISOString(); // месяц 6 = июль
+    expect(formatLongDateRu(iso)).toBe('20 июля 2026');
+  });
+
+  it('январь → «5 января 2026»', () => {
+    const iso = new Date(2026, 0, 5, 10, 0).toISOString();
+    expect(formatLongDateRu(iso)).toBe('5 января 2026');
   });
 });
