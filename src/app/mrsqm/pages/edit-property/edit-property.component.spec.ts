@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EditPropertyPageComponent } from './edit-property.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
+import { PropertyOwnerService } from '../../services/property-owner.service';
+import { SnackService } from '../../../core/snack/snack.service';
 
 describe('EditPropertyPageComponent', () => {
   let fixture: ComponentFixture<EditPropertyPageComponent>;
@@ -48,6 +50,7 @@ describe('EditPropertyPageComponent', () => {
       imports: [EditPropertyPageComponent],
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'p1' } } } },
+        { provide: Router, useValue: { navigateByUrl: () => Promise.resolve(true) } },
         {
           provide: MrsqmSupabaseService,
           useValue: { rpc: () => Promise.resolve(detailStub) },
@@ -90,6 +93,11 @@ describe('EditPropertyPageComponent', () => {
             uploadAndAttach: () => Promise.resolve(undefined),
           },
         },
+        {
+          provide: PropertyOwnerService,
+          useValue: { editProperty: () => Promise.resolve('active') },
+        },
+        { provide: SnackService, useValue: { open: () => {} } },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(EditPropertyPageComponent);
@@ -140,5 +148,17 @@ describe('EditPropertyPageComponent', () => {
     spyOn(svc, 'getPhotos').and.resolveTo([]);
     await c.deleteExisting({ full_url: 'f', thumb_url: 't', order_index: 0, photo_type: 'gallery' });
     expect(svc.deletePhoto).toHaveBeenCalledWith('p1', jasmine.objectContaining({ full_url: 'f' }));
+  });
+
+  it('save() собирает payload и зовёт editProperty', async () => {
+    const c = fixture.componentInstance;
+    const owner = TestBed.inject(PropertyOwnerService);
+    const spy = spyOn(owner, 'editProperty').and.resolveTo('active');
+    c.price.set('150');
+    await c.save();
+    expect(spy).toHaveBeenCalled();
+    const payload = spy.calls.mostRecent().args[0];
+    expect(payload.propertyId).toBe('p1');
+    expect(payload.price).toBe(150);
   });
 });

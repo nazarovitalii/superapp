@@ -29,14 +29,6 @@ describe('PropertyOwnerService', () => {
     svc = TestBed.inject(PropertyOwnerService);
   });
 
-  it('updateProperty шлёт цену и описание', async () => {
-    await svc.updateProperty('p1', 500000, 'desc');
-    expect(fake.calls[0]).toEqual({
-      fn: 'update_property',
-      params: { p_property_id: 'p1', p_price: 500000, p_description: 'desc' },
-    });
-  });
-
   it('actualizeProperty шлёт id объекта', async () => {
     await svc.actualizeProperty('p1');
     expect(fake.calls[0]).toEqual({
@@ -81,28 +73,12 @@ describe('PropertyOwnerService', () => {
     expect(svc.changedTick()).toBe(before);
   });
 
-  it('changedTick увеличивается после успешного редактирования', async () => {
-    const before = svc.changedTick();
-    await svc.updateProperty('p4', 100000, null);
-    expect(svc.changedTick()).toBe(before + 1);
-  });
-
   it('renewProperty шлёт id', async () => {
     await svc.renewProperty('p1');
     expect(fake.calls[0]).toEqual({
       fn: 'renew_property',
       params: { p_property_id: 'p1' },
     });
-  });
-
-  it('republishProperty шлёт цену+описание и возвращает новый статус', async () => {
-    fake.rpcResult = 'pending_review';
-    const status = await svc.republishProperty('p1', 999, 'desc');
-    expect(fake.calls[0]).toEqual({
-      fn: 'republish_property',
-      params: { p_property_id: 'p1', p_price: 999, p_description: 'desc' },
-    });
-    expect(status).toBe('pending_review');
   });
 
   it('deleteProperty шлёт id', async () => {

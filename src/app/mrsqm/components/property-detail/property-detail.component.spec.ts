@@ -8,6 +8,7 @@ import { SavedPropertiesService } from '../../services/saved-properties.service'
 import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import {
   FilterOptions,
@@ -178,20 +179,18 @@ const makeComponent = (
   const ownerSvc =
     ownerSvcOverride ??
     jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
   if (!ownerSvcOverride) {
-    (ownerSvc.updateProperty as jasmine.Spy).and.resolveTo(undefined);
     (ownerSvc.actualizeProperty as jasmine.Spy).and.resolveTo(undefined);
     (ownerSvc.archiveProperty as jasmine.Spy).and.resolveTo(undefined);
     (ownerSvc.renewProperty as jasmine.Spy).and.resolveTo(undefined);
-    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('active');
     (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.editProperty as jasmine.Spy).and.resolveTo('active');
   }
 
   const providers: unknown[] = [
@@ -202,6 +201,7 @@ const makeComponent = (
     { provide: SnackService, useValue: snack },
     { provide: SeenTrackingService, useValue: seen },
     { provide: PropertyOwnerService, useValue: ownerSvc },
+    { provide: Router, useValue: { navigateByUrl: () => Promise.resolve(true) } },
   ];
   if (dialogOverride) {
     providers.push({ provide: MatDialog, useValue: dialogOverride });
@@ -325,28 +325,23 @@ describe('PropertyDetailComponent', () => {
     expect(comp.isOwner()).toBe(true);
   });
 
-  it('saveEdit обновляет цену и описание в detail', async () => {
+  it('goEdit() навигирует на /mrsqm/edit/:id', async () => {
     const { comp, supa } = makeComponent();
-    supa.rpcResult = detail({ is_owner: true });
+    supa.rpcResult = detail({ id: 'p1', is_owner: true });
     await comp.loadProperty();
-    comp.startEdit();
-    comp.editPrice.set('750000');
-    comp.editDescription.set('обновлённое описание');
-    await comp.saveEdit();
-    expect(comp.detail()?.price).toBe(750_000);
-    expect(comp.detail()?.description).toBe('обновлённое описание');
-    expect(comp.isEditing()).toBe(false);
+    const routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    const navSpy = spyOn(routerSpy, 'navigateByUrl').and.resolveTo(true);
+    comp.goEdit();
+    expect(navSpy).toHaveBeenCalledWith('/mrsqm/edit/p1');
   });
 
-  it('saveEdit отклоняет некорректную цену и показывает снек', async () => {
-    const { comp, supa, snack } = makeComponent();
-    supa.rpcResult = detail({ is_owner: true });
-    await comp.loadProperty();
-    comp.startEdit();
-    comp.editPrice.set('abc');
-    await comp.saveEdit();
-    expect(comp.isEditing()).toBe(true);
-    expect((snack.lastParams as { msg: string }).msg).toBe('Укажите корректную цену');
+  it('goEdit() не навигирует без detail', () => {
+    const { comp } = makeComponent();
+    const routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    const navSpy = spyOn(routerSpy, 'navigateByUrl').and.resolveTo(true);
+    comp.detail.set(null);
+    comp.goEdit();
+    expect(navSpy).not.toHaveBeenCalled();
   });
 
   it('archive меняет статус в detail', async () => {
@@ -825,12 +820,11 @@ describe('PropertyDetailComponent', () => {
 
   it('ownerActions() возвращает набор по статусу', () => {
     const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
     const { comp } = makeComponent(ownerSvc);
     comp.detail.set({ ...baseDetail, status: 'expired' });
@@ -841,12 +835,11 @@ describe('PropertyDetailComponent', () => {
 
   it('bannerTone() мапит статус в тон', () => {
     const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
     const { comp } = makeComponent(ownerSvc);
     comp.detail.set({ ...baseDetail, status: 'rejected' });
@@ -855,55 +848,13 @@ describe('PropertyDetailComponent', () => {
     expect(comp.bannerTone()).toBe('success');
   });
 
-  it('saveEdit() для active зовёт updateProperty', async () => {
-    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
-      'actualizeProperty',
-      'archiveProperty',
-      'renewProperty',
-      'republishProperty',
-      'deleteProperty',
-    ]);
-    (ownerSvc.updateProperty as jasmine.Spy).and.resolveTo(undefined);
-    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('active');
-    const { comp } = makeComponent(ownerSvc);
-    comp.detail.set({ ...baseDetail, status: 'active' });
-    comp.startEdit();
-    comp.editPrice.set('500000');
-    comp.editDescription.set('x');
-    await comp.saveEdit();
-    expect(ownerSvc.updateProperty).toHaveBeenCalled();
-    expect(ownerSvc.republishProperty).not.toHaveBeenCalled();
-  });
-
-  it('saveEdit() для rejected зовёт republishProperty и применяет возвращённый статус', async () => {
-    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
-      'actualizeProperty',
-      'archiveProperty',
-      'renewProperty',
-      'republishProperty',
-      'deleteProperty',
-    ]);
-    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('pending_review');
-    const { comp } = makeComponent(ownerSvc);
-    comp.detail.set({ ...baseDetail, status: 'rejected' });
-    comp.startEdit();
-    comp.editPrice.set('500000');
-    comp.editDescription.set('x');
-    await comp.saveEdit();
-    expect(ownerSvc.republishProperty).toHaveBeenCalled();
-    expect(comp.detail()?.status).toBe('pending_review');
-  });
-
   it('renew() зовёт renewProperty и ставит active', async () => {
     const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
     (ownerSvc.renewProperty as jasmine.Spy).and.resolveTo(undefined);
     const { comp } = makeComponent(ownerSvc);
@@ -915,12 +866,11 @@ describe('PropertyDetailComponent', () => {
 
   it('confirmDelete() при подтверждении зовёт deleteProperty и эмитит closed', async () => {
     const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
     (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
 
@@ -942,12 +892,11 @@ describe('PropertyDetailComponent', () => {
 
   it('confirmDelete() при отказе НЕ удаляет', async () => {
     const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
-      'updateProperty',
       'actualizeProperty',
       'archiveProperty',
       'renewProperty',
-      'republishProperty',
       'deleteProperty',
+      'editProperty',
     ]);
     (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
 

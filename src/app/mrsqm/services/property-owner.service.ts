@@ -43,20 +43,6 @@ export class PropertyOwnerService {
   // Бампается только после успешного RPC; ошибка — бампа нет.
   readonly changedTick = signal(0);
 
-  // Редактирование: только цена и описание.
-  async updateProperty(
-    propertyId: string,
-    price: number,
-    description: string | null,
-  ): Promise<void> {
-    await this._supabase.rpc<boolean>('update_property', {
-      p_property_id: propertyId,
-      p_price: price,
-      p_description: description,
-    });
-    this.changedTick.update((n) => n + 1);
-  }
-
   // Актуализация: поднять объект в ленте (last_actualized_at = now()).
   async actualizeProperty(propertyId: string): Promise<void> {
     await this._supabase.rpc<boolean>('actualize_property', {
@@ -78,22 +64,6 @@ export class PropertyOwnerService {
   async renewProperty(propertyId: string): Promise<void> {
     await this._supabase.rpc<boolean>('renew_property', { p_property_id: propertyId });
     this.changedTick.update((n) => n + 1);
-  }
-
-  // Переопубликация отклонённого/снятого: правка цены+описания + смена статуса.
-  // Возвращает итоговый статус (серверная истина), клиент его не пересчитывает.
-  async republishProperty(
-    propertyId: string,
-    price: number,
-    description: string | null,
-  ): Promise<string> {
-    const status = await this._supabase.rpc<string>('republish_property', {
-      p_property_id: propertyId,
-      p_price: price,
-      p_description: description,
-    });
-    this.changedTick.update((n) => n + 1);
-    return status;
   }
 
   // Полное редактирование (WP-M): заменяет узкие updateProperty/republishProperty.

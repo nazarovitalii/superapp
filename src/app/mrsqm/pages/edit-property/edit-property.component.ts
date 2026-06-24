@@ -18,6 +18,7 @@ import { moveItemInArray } from '../../../util/move-item-in-array';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
+import { PropertyOwnerService } from '../../services/property-owner.service';
 import {
   FilterOptions,
   LocationBreadcrumbItem,
@@ -26,6 +27,8 @@ import {
 } from '../../types/database';
 import { typeFieldsFor, TypeFields } from '../add-property/property-type-fields';
 import { revealIndexFromFraction } from '../add-property/add-property-page.component';
+import { SnackService } from '../../../core/snack/snack.service';
+import { SnackType } from '../../../core/snack/snack.model';
 
 type EditTab = 'params' | 'description' | 'photos';
 
@@ -51,6 +54,8 @@ export class EditPropertyPageComponent {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _createService = inject(PropertyCreateService);
   private readonly _photoService = inject(PropertyPhotoService);
+  private readonly _owner = inject(PropertyOwnerService);
+  private readonly _snack = inject(SnackService);
 
   readonly detail = signal<PropertyDetail | null>(null);
   readonly options = signal<FilterOptions | null>(null);
@@ -204,6 +209,91 @@ export class EditPropertyPageComponent {
   readonly originalPriceLocked = computed(() => this.detail()?.original_price != null);
   // Флаг аренды — для отображения полей периода/lease.
   readonly isRent = computed(() => this.detail()?.deal_type === 'rent');
+
+  // Флаг выполнения операции сохранения.
+  readonly saving = signal(false);
+
+  // Текст кнопки: active → «Сохранить»; rejected/withdrawn → «Отправить на проверку».
+  readonly saveLabel = computed(() => {
+    const s = this.detail()?.status;
+    return s === 'active' ? 'Сохранить' : 'Отправить на проверку';
+  });
+
+  /** Показать снек с общим конфигом (низ-лево, стиль ленты — как в property-detail). */
+  private _notify(msg: string, type: SnackType): void {
+    this._snack.open({
+      msg,
+      type,
+      isSkipTranslate: true,
+      config: {
+        horizontalPosition: 'left',
+        verticalPosition: 'bottom',
+        panelClass: 'mrsqm-snack',
+      },
+    });
+  }
+
+  /** Сохранить изменения объекта: загрузка новых фото → обновление полей → навигация. */
+  async save(): Promise<void> {
+    const d = this.detail();
+    if (!d || this.saving()) return;
+    const num = (v: string): number | null => {
+      const digits = v.replace(/[^\d.]/g, '');
+      return digits ? Number(digits) : null;
+    };
+    const price = num(this.price());
+    if (!price || price <= 0) {
+      this._notify('Укажите корректную цену', 'ERROR');
+      return;
+    }
+    const tf = this.fields();
+    this.saving.set(true);
+    try {
+      // 1) Новые фото — до сохранения полей (нужен только id, он уже есть).
+      if (this.newPhotos().length) {
+        await this._photoService.uploadAndAttach(d.id, this.newPhotos(), []);
+        this.newPhotos.set([]);
+        this.newPreviews.set([]);
+        this.photos.set(await this._photoService.getPhotos(d.id));
+      }
+      // 2) Поля (whitelist). Неприменимые по типу — null (как в add-property).
+      const status = await this._owner.editProperty({
+        propertyId: d.id,
+        price,
+        description: this.description().trim() || null,
+        isMaid: tf.maid ? this.isMaid() : false,
+        isStudy: tf.maid ? this.isStudy() : false,
+        isHotelPool: tf.hotelPool ? this.isHotelPool() : false,
+        isVastu: tf.vastu ? this.isVastu() : false,
+        areaSqft: tf.bua ? num(this.areaSqft()) : null,
+        plotSqft: tf.plot ? num(this.plotSqft()) : null,
+        floorLevelId: tf.floorLevel ? this.floorLevelId() : null,
+        floorNumber: num(this.floorNumber()),
+        floorsInUnitId: tf.floorsInUnit ? this.floorsInUnitId() : null,
+        viewIds: tf.views && this.viewIds().length ? this.viewIds() : null,
+        positionIds:
+          tf.positions && this.positionIds().length ? this.positionIds() : null,
+        amenityIds: tf.amenities && this.amenityIds().length ? this.amenityIds() : null,
+        furnished: tf.furnished ? this.furnished() : null,
+        pricePeriod: this.isRent() ? this.pricePeriod() : null,
+        occupancyStatus: this.occupancyStatus() || null,
+        leaseUntil: this.leaseUntil(),
+        listingType: this.listingType(),
+        visibility: this.visibility(),
+        publicLocationId: this.publicLocationId(),
+        originalPrice: this.originalPriceLocked() ? null : num(this.originalPrice()),
+      });
+      this._notify(
+        status === 'pending_review' ? 'Объект отправлен на проверку' : 'Сохранено',
+        'SUCCESS',
+      );
+      await this._router.navigateByUrl('/mrsqm/feed');
+    } catch {
+      this._notify('Не удалось сохранить', 'ERROR');
+    } finally {
+      this.saving.set(false);
+    }
+  }
 
   // Опции floors_in_unit зависят от типа объекта.
   readonly floorsInUnitOptions = computed(() => {

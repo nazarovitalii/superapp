@@ -462,6 +462,12 @@
       }
     </section>
 
-    <!-- футер кнопок «Сохранить»/«Отмена» — Task 8 -->
+    <!-- Футер: кнопки отмены и сохранения -->
+    <footer class="edit-footer">
+      <button mat-stroked-button (click)="cancel()" [disabled]="saving()">Отмена</button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
+        {{ saveLabel() }}
+      </button>
+    </footer>
   </div>
 }

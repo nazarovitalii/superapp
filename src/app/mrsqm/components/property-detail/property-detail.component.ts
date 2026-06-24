@@ -14,6 +14,7 @@ import {
   afterNextRender,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -26,7 +27,6 @@ import {
   PropertyFeedItem,
   PropertyPhoto,
   PropertyProject,
-  PropertyStatus,
   OWNER_ACTIONS_BY_STATUS,
   PROPERTY_STATUS_BANNER_TONE,
   PROPERTY_STATUS_LABELS,
@@ -73,6 +73,7 @@ export class PropertyDetailComponent implements OnDestroy {
   private readonly _injector = inject(Injector);
   private readonly _seen = inject(SeenTrackingService);
   private readonly _dialog = inject(MatDialog);
+  private readonly _router = inject(Router);
 
   @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
   @ViewChild('lightboxMain') private _lightboxMainEl?: ElementRef<HTMLElement>;
@@ -413,9 +414,6 @@ export class PropertyDetailComponent implements OnDestroy {
   });
 
   readonly ownerBusy = signal(false);
-  readonly isEditing = signal(false);
-  readonly editPrice = signal('');
-  readonly editDescription = signal('');
 
   /** Помощник: показать снек-сообщение с общим конфигом (низ-лево, стиль ленты). */
   private _notify(msg: string, type: SnackType, ico?: string): void {
@@ -432,53 +430,10 @@ export class PropertyDetailComponent implements OnDestroy {
     });
   }
 
-  startEdit(): void {
-    const d = this.detail();
-    this.editPrice.set(d ? String(d.price) : '');
-    this.editDescription.set(d?.description ?? '');
-    this.isEditing.set(true);
-  }
-
-  cancelEdit(): void {
-    this.isEditing.set(false);
-  }
-
-  async saveEdit(): Promise<void> {
-    const d = this.detail();
-    if (!d) return;
-    const price = Number(String(this.editPrice()).replace(/[^\d.]/g, ''));
-    if (!price || price <= 0) {
-      this._notify('Укажите корректную цену', 'ERROR');
-      return;
-    }
-    const description = this.editDescription().trim() || null;
-    this.ownerBusy.set(true);
-    try {
-      const isRepublish = d.status === 'rejected' || d.status === 'archived_withdrawn';
-      if (isRepublish) {
-        const newStatus = await this._ownerService.republishProperty(
-          d.id,
-          price,
-          description,
-        );
-        this.detail.set({
-          ...d,
-          price,
-          description,
-          status: newStatus as PropertyStatus,
-        });
-        this._notify('Объект отправлен на публикацию', 'SUCCESS');
-      } else {
-        await this._ownerService.updateProperty(d.id, price, description);
-        this.detail.set({ ...d, price, description });
-        this._notify('Сохранено', 'SUCCESS');
-      }
-      this.isEditing.set(false);
-    } catch {
-      this._notify('Не удалось сохранить', 'ERROR');
-    } finally {
-      this.ownerBusy.set(false);
-    }
+  /** Переход на страницу редактирования своего объекта. */
+  goEdit(): void {
+    const id = this.detail()?.id;
+    if (id) void this._router.navigateByUrl(`/mrsqm/edit/${id}`);
   }
 
   async actualize(): Promise<void> {

@@ -192,49 +192,11 @@
             @if (detail()?.status === 'rejected' && detail()?.rejection_reason) {
               <p class="owner-panel-reason">Причина: {{ detail()?.rejection_reason }}</p>
             }
-            @if (isEditing()) {
-              <div class="owner-edit">
-                <label class="owner-field">
-                  <span>Цена</span>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    [value]="editPrice()"
-                    (input)="editPrice.set($any($event.target).value)"
-                  />
-                </label>
-                <label class="owner-field">
-                  <span>Описание</span>
-                  <textarea
-                    rows="3"
-                    [value]="editDescription()"
-                    (input)="editDescription.set($any($event.target).value)"
-                  ></textarea>
-                </label>
-                <div class="owner-edit-buttons">
-                  <button
-                    mat-stroked-button
-                    (click)="cancelEdit()"
-                    [disabled]="ownerBusy()"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    mat-flat-button
-                    color="primary"
-                    (click)="saveEdit()"
-                    [disabled]="ownerBusy()"
-                  >
-                    Сохранить
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <div class="owner-panel-actions">
+            <div class="owner-panel-actions">
                 @if (ownerActions().includes('edit')) {
                   <button
                     mat-stroked-button
-                    (click)="startEdit()"
+                    (click)="goEdit()"
                     [disabled]="ownerBusy()"
                   >
                     <mat-icon>edit</mat-icon
@@ -294,7 +256,6 @@
                   </button>
                 }
               </div>
-            }
           </div>
         }
 
