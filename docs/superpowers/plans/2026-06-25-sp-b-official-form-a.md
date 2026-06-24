@@ -97,12 +97,19 @@ BEGIN
     RAISE EXCEPTION 'not owner or property not found';
   END IF;
 
+  -- Прежний текущий Form A → 'replaced' (история 1:много; чек допускает active/expired/replaced).
+  UPDATE public.property_form_a
+     SET status = 'replaced'
+   WHERE property_id = p_property_id AND status = 'active';
+
+  -- Новый Form A — текущий ('active' = lifecycle, НЕ модерация). Модерация = approved_at/at/note
+  -- (NULL approved_at = «на проверке»); ставит Админка. Official всегда → properties.pending_review.
   INSERT INTO public.property_form_a
     (property_id, file_url, contract_number, listing_start, listing_end,
      pdf_password, status, uploaded_by, uploaded_at)
   VALUES
     (p_property_id, p_file_url, p_contract_number, p_listing_start, p_listing_end,
-     p_pdf_password, 'pending', auth.uid(), now())
+     p_pdf_password, 'active', auth.uid(), now())
   RETURNING id INTO v_id;
 
   UPDATE public.properties
@@ -118,7 +125,7 @@ REVOKE ALL ON FUNCTION public.upsert_property_form_a(uuid,text,text,date,date,te
 GRANT EXECUTE ON FUNCTION public.upsert_property_form_a(uuid,text,text,date,date,text,boolean) TO authenticated;
 ```
 
-> ⚠️ Перед написанием шага 2 свериться с `property_form_a_status_check` (введение: `bash .claude/skills/migrate/tools/psql.sh "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname='property_form_a_status_check';"`) — убедиться, что `'pending'` допустим; если нет — использовать допустимое начальное значение из чека.
+> ✅ Чек проверен на проде: `property_form_a_status_check = status IN ('active','expired','replaced')` — это **жизненный цикл** Form A, НЕ модерация. Поэтому новый Form A вставляем как `'active'`, прежний `active` → `'replaced'`. Модерация — через `approved_at`/`approved_by`/`moderation_note` (NULL approved_at = «на проверке»), ставит Админка. `'pending'` НЕ допустим — не использовать.
 
 - [ ] **Step 3: Патч `get_property` (staleness-proof, тело из ЖИВОЙ БД)**
 
@@ -128,20 +135,22 @@ GRANT EXECUTE ON FUNCTION public.upsert_property_form_a(uuid,text,text,date,date
   ```sql
   'form_a', (
     SELECT jsonb_build_object(
-      'file_url',       fa.file_url,
-      'contract_number',fa.contract_number,
-      'listing_start',  fa.listing_start,
-      'listing_end',    fa.listing_end,
-      'status',         fa.status,
-      'pdf_password',   CASE WHEN <is_owner_expr> THEN fa.pdf_password ELSE NULL END
+      'file_url',        fa.file_url,
+      'contract_number', fa.contract_number,
+      'listing_start',   fa.listing_start,
+      'listing_end',     fa.listing_end,
+      'status',          fa.status,            -- lifecycle: active/expired/replaced
+      'approved_at',     fa.approved_at,       -- NULL = на проверке (модерация)
+      'moderation_note', fa.moderation_note,   -- причина отклонения, если есть
+      'pdf_password',    CASE WHEN (p.owner_id = v_current_user_id) THEN fa.pdf_password ELSE NULL END
     )
     FROM public.property_form_a fa
-    WHERE fa.property_id = p.id
+    WHERE fa.property_id = p.id AND fa.status = 'active'
     ORDER BY fa.uploaded_at DESC
     LIMIT 1
   ),
   ```
-  где `<is_owner_expr>` — то же выражение владельца, что уже считается в `get_property` (найти в живом теле; обычно `p.owner_id = auth.uid()` или переменная `v_is_owner`).
+  где выражение владельца в живом теле `get_property` = **`(p.owner_id = v_current_user_id)`** (подтверждено интроспекцией). Якоря для staleness-proof replace: `is_exclusive` — после строки `'is_vastu',            p.is_vastu,`; `form_a` — перед `'developer_name_ref',  d.name,` (обе уникальны в живом теле). DO-блок с guard «якорь не найден».
 - **title_deed-ключи НЕ трогаем** (Фаза A их оставляет).
 - `;` после `$function$` добавить вручную. ROLLBACK-смоук обязателен.
 
