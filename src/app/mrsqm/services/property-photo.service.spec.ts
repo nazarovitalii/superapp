@@ -56,6 +56,8 @@ describe('PropertyPhotoService (delete/reorder)', () => {
     expect(tableUpdate).toHaveBeenCalledTimes(2);
     expect(tableUpdate.calls.argsFor(0)[0]).toEqual({ order_index: 0 });
     expect(tableUpdate.calls.argsFor(1)[0]).toEqual({ order_index: 1 });
+    // фильтр по photo_type обязателен — не должен трогать чужой тип
+    expect(eqSpy).toHaveBeenCalledWith('photo_type', 'gallery');
   });
 });
 

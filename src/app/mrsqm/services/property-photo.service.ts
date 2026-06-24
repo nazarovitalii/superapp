@@ -104,6 +104,7 @@ export class PropertyPhotoService {
         .from('property_photos')
         .update({ order_index: i })
         .eq('property_id', propertyId)
+        .eq('photo_type', photoType)
         .eq('full_url', orderedFullUrls[i]);
       if (error) throw error;
     }
