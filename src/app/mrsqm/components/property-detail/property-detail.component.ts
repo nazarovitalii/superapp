@@ -21,10 +21,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
   FilterOptionId,
   FilterOptions,
+  OwnerAction,
   PropertyDetail,
   PropertyFeedItem,
   PropertyPhoto,
   PropertyProject,
+  PropertyStatus,
+  OWNER_ACTIONS_BY_STATUS,
+  PROPERTY_STATUS_BANNER_TONE,
   PROPERTY_STATUS_LABELS,
 } from '../../types/database';
 import { formatDetailDate } from '../../util/feed-date.util';
@@ -39,6 +43,9 @@ import { SavedPropertiesService } from '../../services/saved-properties.service'
 import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogConfirmComponent } from '../../../ui/dialog-confirm/dialog-confirm.component';
+import { firstValueFrom } from 'rxjs';
 import Swiper from 'swiper';
 import { Navigation, Thumbs } from 'swiper/modules';
 
@@ -65,6 +72,7 @@ export class PropertyDetailComponent implements OnDestroy {
   private readonly _snack = inject(SnackService);
   private readonly _injector = inject(Injector);
   private readonly _seen = inject(SeenTrackingService);
+  private readonly _dialog = inject(MatDialog);
 
   @ViewChild('lightboxDialog') private _lightboxDialogEl?: ElementRef<HTMLDialogElement>;
   @ViewChild('lightboxMain') private _lightboxMainEl?: ElementRef<HTMLElement>;
@@ -380,6 +388,19 @@ export class PropertyDetailComponent implements OnDestroy {
     const s = this.detail()?.status;
     return s ? (PROPERTY_STATUS_LABELS[s] ?? s) : '';
   });
+
+  // Тон баннера статуса (ошибка/предупреждение/успех/нейтраль) — для владельца.
+  readonly bannerTone = computed(() => {
+    const s = this.detail()?.status;
+    return s ? PROPERTY_STATUS_BANNER_TONE[s] : 'neutral';
+  });
+
+  // Набор кнопок действий, доступных владельцу для текущего статуса.
+  readonly ownerActions = computed((): OwnerAction[] => {
+    const s = this.detail()?.status;
+    return s ? OWNER_ACTIONS_BY_STATUS[s] : [];
+  });
+
   readonly ownerBusy = signal(false);
   readonly isEditing = signal(false);
   readonly editPrice = signal('');
@@ -422,10 +443,26 @@ export class PropertyDetailComponent implements OnDestroy {
     const description = this.editDescription().trim() || null;
     this.ownerBusy.set(true);
     try {
-      await this._ownerService.updateProperty(d.id, price, description);
-      this.detail.set({ ...d, price, description });
+      const isRepublish = d.status === 'rejected' || d.status === 'archived_withdrawn';
+      if (isRepublish) {
+        const newStatus = await this._ownerService.republishProperty(
+          d.id,
+          price,
+          description,
+        );
+        this.detail.set({
+          ...d,
+          price,
+          description,
+          status: newStatus as PropertyStatus,
+        });
+        this._notify('Объект отправлен на публикацию', 'SUCCESS');
+      } else {
+        await this._ownerService.updateProperty(d.id, price, description);
+        this.detail.set({ ...d, price, description });
+        this._notify('Сохранено', 'SUCCESS');
+      }
       this.isEditing.set(false);
-      this._notify('Сохранено', 'SUCCESS');
     } catch {
       this._notify('Не удалось сохранить', 'ERROR');
     } finally {
@@ -461,6 +498,70 @@ export class PropertyDetailComponent implements OnDestroy {
       );
     } catch {
       this._notify('Не удалось изменить статус', 'ERROR');
+    } finally {
+      this.ownerBusy.set(false);
+    }
+  }
+
+  /** Продлить истёкший объект ещё на 30 дней (статус expired → active). */
+  async renew(): Promise<void> {
+    const d = this.detail();
+    if (!d) return;
+    this.ownerBusy.set(true);
+    try {
+      await this._ownerService.renewProperty(d.id);
+      this.detail.set({ ...d, status: 'active' });
+      this._notify('Объект продлён на 30 дней', 'SUCCESS', 'autorenew');
+    } catch {
+      this._notify('Не удалось продлить', 'ERROR');
+    } finally {
+      this.ownerBusy.set(false);
+    }
+  }
+
+  /** Снять с публикации / отметить проданным с диалогом подтверждения. */
+  async confirmArchive(status: ArchiveStatus): Promise<void> {
+    const msg =
+      status === 'archived_sold'
+        ? {
+            title: 'Отметить объект как проданный?',
+            message: 'Он уйдёт из активной выдачи.',
+            okTxt: 'Отметить проданным',
+          }
+        : { title: 'Снять объект с публикации?', message: '', okTxt: 'Снять' };
+    const ok = await firstValueFrom(
+      this._dialog
+        .open(DialogConfirmComponent, { data: { ...msg, titleIcon: 'inventory_2' } })
+        .afterClosed(),
+    );
+    if (ok) await this.archive(status);
+  }
+
+  /** Безвозвратно удалить объект с диалогом подтверждения. */
+  async confirmDelete(): Promise<void> {
+    const d = this.detail();
+    if (!d) return;
+    const ok = await firstValueFrom(
+      this._dialog
+        .open(DialogConfirmComponent, {
+          data: {
+            title: 'Удалить объект навсегда?',
+            message:
+              'Объект и все его следы будут стёрты безвозвратно: фотографии, история цены, совпадения с фильтрами. Это действие нельзя отменить.',
+            okTxt: 'Удалить навсегда',
+            titleIcon: 'delete_forever',
+          },
+        })
+        .afterClosed(),
+    );
+    if (!ok) return;
+    this.ownerBusy.set(true);
+    try {
+      await this._ownerService.deleteProperty(d.id);
+      this._notify('Объект удалён', 'SUCCESS');
+      this.closed.emit();
+    } catch {
+      this._notify('Не удалось удалить', 'ERROR');
     } finally {
       this.ownerBusy.set(false);
     }

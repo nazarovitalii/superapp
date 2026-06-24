@@ -3,9 +3,12 @@ import { PropertyDetailComponent } from './property-detail.component';
 import { MrsqmSupabaseService } from '../../services/supabase.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyCreateService } from '../../services/property-create.service';
+import { PropertyOwnerService } from '../../services/property-owner.service';
 import { SavedPropertiesService } from '../../services/saved-properties.service';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import {
   FilterOptions,
   PropertyDetail,
@@ -117,7 +120,37 @@ const detail = (over: Partial<PropertyDetail> = {}): PropertyDetail =>
     ...over,
   }) as PropertyDetail;
 
-const makeComponent = (): {
+// ─── Минимальный PropertyDetail для тестов LM Task 7 ────────────────────────
+const baseDetail: PropertyDetail = {
+  id: 'p1',
+  owner_id: 'u1',
+  listing_type: 'official',
+  deal_type: 'sale',
+  price: 900_000,
+  previous_price: null,
+  price_currency: 'AED',
+  bedrooms: 2,
+  bathrooms: 2,
+  is_maid: false,
+  area_sqft: 1200,
+  view_ids: [],
+  commission_included: false,
+  location_full_path: 'Dubai > Marina',
+  developer_name_ref: null,
+  developer_logo_url: null,
+  views_count: 0,
+  last_actualized_at: new Date().toISOString(),
+  is_network: false,
+  is_owner: true,
+  status: 'active',
+  rejection_reason: null,
+  agent: null,
+} as unknown as PropertyDetail;
+
+const makeComponent = (
+  ownerSvcOverride?: jasmine.SpyObj<PropertyOwnerService>,
+  dialogOverride?: jasmine.SpyObj<MatDialog>,
+): {
   comp: PropertyDetailComponent;
   fixture: ComponentFixture<PropertyDetailComponent>;
   supa: FakeSupabase;
@@ -140,16 +173,45 @@ const makeComponent = (): {
   seen.recordContact.and.resolveTo(undefined);
   seen.recordView.and.resolveTo(undefined);
   seen.markShown.and.resolveTo(undefined);
+
+  // По умолчанию ownerSvc — заглушка, не требующая реального сервиса.
+  const ownerSvc =
+    ownerSvcOverride ??
+    jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+  if (!ownerSvcOverride) {
+    (ownerSvc.updateProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.actualizeProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.archiveProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.renewProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('active');
+    (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+  }
+
+  const providers: unknown[] = [
+    { provide: MrsqmSupabaseService, useValue: supa },
+    { provide: PropertyPhotoService, useValue: photos },
+    { provide: PropertyCreateService, useValue: create },
+    { provide: SavedPropertiesService, useValue: saved },
+    { provide: SnackService, useValue: snack },
+    { provide: SeenTrackingService, useValue: seen },
+    { provide: PropertyOwnerService, useValue: ownerSvc },
+  ];
+  if (dialogOverride) {
+    providers.push({ provide: MatDialog, useValue: dialogOverride });
+  }
+
   TestBed.configureTestingModule({
     imports: [PropertyDetailComponent],
-    providers: [
-      { provide: MrsqmSupabaseService, useValue: supa },
-      { provide: PropertyPhotoService, useValue: photos },
-      { provide: PropertyCreateService, useValue: create },
-      { provide: SavedPropertiesService, useValue: saved },
-      { provide: SnackService, useValue: snack },
-      { provide: SeenTrackingService, useValue: seen },
-    ],
+    providers: providers as Parameters<
+      typeof TestBed.configureTestingModule
+    >[0]['providers'],
   });
   const fixture = TestBed.createComponent(PropertyDetailComponent);
   fixture.componentRef.setInput('property', feedItem());
@@ -756,5 +818,148 @@ describe('PropertyDetailComponent', () => {
     await Promise.resolve();
 
     expect(callCount).toBe(1);
+  });
+
+  // ─── LM Task 7: логика баннера, кнопки, renew, confirmDelete ─────────────────
+
+  it('ownerActions() возвращает набор по статусу', () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    const { comp } = makeComponent(ownerSvc);
+    comp.detail.set({ ...baseDetail, status: 'expired' });
+    expect(comp.ownerActions()).toEqual(['renew', 'archive']);
+    comp.detail.set({ ...baseDetail, status: 'archived_sold' });
+    expect(comp.ownerActions()).toEqual(['delete']);
+  });
+
+  it('bannerTone() мапит статус в тон', () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    const { comp } = makeComponent(ownerSvc);
+    comp.detail.set({ ...baseDetail, status: 'rejected' });
+    expect(comp.bannerTone()).toBe('error');
+    comp.detail.set({ ...baseDetail, status: 'active' });
+    expect(comp.bannerTone()).toBe('success');
+  });
+
+  it('saveEdit() для active зовёт updateProperty', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    (ownerSvc.updateProperty as jasmine.Spy).and.resolveTo(undefined);
+    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('active');
+    const { comp } = makeComponent(ownerSvc);
+    comp.detail.set({ ...baseDetail, status: 'active' });
+    comp.startEdit();
+    comp.editPrice.set('500000');
+    comp.editDescription.set('x');
+    await comp.saveEdit();
+    expect(ownerSvc.updateProperty).toHaveBeenCalled();
+    expect(ownerSvc.republishProperty).not.toHaveBeenCalled();
+  });
+
+  it('saveEdit() для rejected зовёт republishProperty и применяет возвращённый статус', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    (ownerSvc.republishProperty as jasmine.Spy).and.resolveTo('pending_review');
+    const { comp } = makeComponent(ownerSvc);
+    comp.detail.set({ ...baseDetail, status: 'rejected' });
+    comp.startEdit();
+    comp.editPrice.set('500000');
+    comp.editDescription.set('x');
+    await comp.saveEdit();
+    expect(ownerSvc.republishProperty).toHaveBeenCalled();
+    expect(comp.detail()?.status).toBe('pending_review');
+  });
+
+  it('renew() зовёт renewProperty и ставит active', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    (ownerSvc.renewProperty as jasmine.Spy).and.resolveTo(undefined);
+    const { comp } = makeComponent(ownerSvc);
+    comp.detail.set({ ...baseDetail, status: 'expired' });
+    await comp.renew();
+    expect(ownerSvc.renewProperty).toHaveBeenCalledWith(baseDetail.id);
+    expect(comp.detail()?.status).toBe('active');
+  });
+
+  it('confirmDelete() при подтверждении зовёт deleteProperty и эмитит closed', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+
+    const dialogRefSpy = jasmine.createSpyObj<MatDialogRef<unknown>>('MatDialogRef', [
+      'afterClosed',
+    ]);
+    dialogRefSpy.afterClosed.and.returnValue(of(true));
+    const dialogSpy = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
+    (dialogSpy.open as jasmine.Spy).and.returnValue(dialogRefSpy);
+
+    const { comp } = makeComponent(ownerSvc, dialogSpy);
+    const closedSpy = jasmine.createSpy();
+    comp.closed.subscribe(closedSpy);
+    comp.detail.set({ ...baseDetail, status: 'archived_sold' });
+    await comp.confirmDelete();
+    expect(ownerSvc.deleteProperty).toHaveBeenCalledWith(baseDetail.id);
+    expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('confirmDelete() при отказе НЕ удаляет', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'updateProperty',
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'republishProperty',
+      'deleteProperty',
+    ]);
+    (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+
+    const dialogRefSpy = jasmine.createSpyObj<MatDialogRef<unknown>>('MatDialogRef', [
+      'afterClosed',
+    ]);
+    dialogRefSpy.afterClosed.and.returnValue(of(false));
+    const dialogSpy = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
+    (dialogSpy.open as jasmine.Spy).and.returnValue(dialogRefSpy);
+
+    const { comp } = makeComponent(ownerSvc, dialogSpy);
+    comp.detail.set({ ...baseDetail, status: 'archived_sold' });
+    await comp.confirmDelete();
+    expect(ownerSvc.deleteProperty).not.toHaveBeenCalled();
   });
 });
