@@ -1,516 +1,562 @@
 @if (isLoading()) {
-  <div class="edit-loading"><mat-spinner diameter="32"></mat-spinner></div>
+  <div class="loading"><mat-spinner [diameter]="28"></mat-spinner></div>
 } @else if (loadError()) {
-  <div class="edit-error">
-    <mat-icon>error_outline</mat-icon>
-    <p>{{ loadError() }}</p>
-    <button
-      mat-stroked-button
-      (click)="cancel()"
-    >
-      Назад
-    </button>
+  <div class="add-wrap">
+    <div class="add-col">
+      <div class="add-error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ loadError() }}</span>
+      </div>
+      <div class="add-nav">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="cancel()"
+        >
+          Назад
+        </button>
+      </div>
+    </div>
   </div>
 } @else {
-  <div class="edit-page">
-    <!-- Read-only шапка: контекст объекта, правке не подлежит -->
-    <header class="edit-header">
-      <span class="edit-header-path">{{ headerPath() }}</span>
-
-      <!-- Бегунок приватности адреса (виден только если есть что двигать) -->
-      @if (canSlide()) {
-        <div class="reveal-slider">
-          <p class="reveal-label">
-            @if (publicLocationId() === null) {
-              Полный адрес виден коллегам
-            } @else {
-              Адрес виден коллегам до уровня: <strong>{{ revealLabel() }}</strong>
-            }
-          </p>
+  <div class="add-wrap">
+    <div class="add-col">
+      <!-- Прогресс шагов с нумерацией -->
+      <div class="steps-row">
+        @for (s of steps; track s; let i = $index) {
           <div
-            #revealEl
-            class="reveal-track"
-            (pointerdown)="onRevealPointerDown($event)"
-            (pointermove)="onRevealPointerMove($event)"
-            (pointerup)="onRevealPointerUpOrCancel()"
-            (pointercancel)="onRevealPointerUpOrCancel()"
+            class="step-dot"
+            [class.active]="i === step()"
+            [class.done]="i < step()"
           >
-            @for (item of addrPath(); track item.id; let i = $index) {
-              <button
-                class="reveal-dot"
-                [class.active]="i <= revealIndex()"
-                [class.disabled]="i < communityIndex()"
-                (click)="selectReveal(i)"
-                [attr.aria-label]="item.name"
-              ></button>
+            @if (i < step()) {
+              <mat-icon>check</mat-icon>
+            } @else {
+              {{ i + 1 }}
             }
-            <div
-              class="reveal-thumb"
-              [style.left.%]="
-                addrPath().length > 1
-                  ? (revealIndex() / (addrPath().length - 1)) * 100
-                  : 100
-              "
-            ></div>
           </div>
+        }
+      </div>
+
+      <section class="block">
+        <div class="block-header">
+          <mat-icon>{{ stepIcons[step()] }}</mat-icon>
+          <span class="block-title">{{ steps[step()] }}</span>
+          <span class="block-step-no">Шаг {{ step() + 1 }} / {{ steps.length }}</span>
         </div>
-      }
-    </header>
 
-    <nav class="edit-tabs">
-      <button
-        [class.active]="tab() === 'params'"
-        (click)="setTab('params')"
-      >
-        Параметры
-      </button>
-      <button
-        [class.active]="tab() === 'description'"
-        (click)="setTab('description')"
-      >
-        Описание
-      </button>
-      <button
-        [class.active]="tab() === 'photos'"
-        (click)="setTab('photos')"
-      >
-        Фото
-      </button>
-    </nav>
-
-    <section class="edit-body">
-      @if (tab() === 'params') {
-        <!-- Чекбоксы: Maid/Study/Hotel/Vastu (по типу объекта) -->
-        @if (fields().maid || fields().hotelPool || fields().vastu) {
-          <div class="ep-check-group">
-            @if (fields().maid) {
-              <label class="ep-check-row">
-                <span class="ep-check-label">Maid room</span>
-                <input
-                  type="checkbox"
-                  [ngModel]="isMaid()"
-                  (ngModelChange)="isMaid.set($event)"
-                />
-              </label>
-              <label class="ep-check-row">
-                <span class="ep-check-label">Study room</span>
-                <input
-                  type="checkbox"
-                  [ngModel]="isStudy()"
-                  (ngModelChange)="isStudy.set($event)"
-                />
-              </label>
-            }
-            @if (fields().hotelPool) {
-              <label class="ep-check-row">
-                <span class="ep-check-label">Hotel Apartment</span>
-                <input
-                  type="checkbox"
-                  [ngModel]="isHotelPool()"
-                  (ngModelChange)="isHotelPool.set($event)"
-                />
-              </label>
-            }
-            @if (fields().vastu) {
-              <label class="ep-check-row">
-                <span class="ep-check-label">Vastu Compliant</span>
-                <input
-                  type="checkbox"
-                  [ngModel]="isVastu()"
-                  (ngModelChange)="isVastu.set($event)"
-                />
-              </label>
-            }
-          </div>
-        }
-
-        <!-- BUA -->
-        @if (fields().bua) {
-          <label class="ep-field">
-            <span>Площадь BUA, sqft</span>
-            <input
-              type="text"
-              inputmode="numeric"
-              [ngModel]="areaSqft()"
-              (ngModelChange)="areaSqft.set($event)"
-              placeholder="напр. 1200"
-            />
-          </label>
-        }
-
-        <!-- Plot -->
-        @if (fields().plot) {
-          <label class="ep-field">
-            <span>Площадь участка (Plot), sqft</span>
-            <input
-              type="text"
-              inputmode="numeric"
-              [ngModel]="plotSqft()"
-              (ngModelChange)="plotSqft.set($event)"
-              placeholder="напр. 3500"
-            />
-          </label>
-        }
-
-        <!-- Этажность (floor_level_id) -->
-        @if (fields().floorLevel && options()?.floor_levels?.length) {
-          <div class="ep-field">
-            <span>Этажность</span>
-            <div class="ep-chips">
-              @for (fl of options()!.floor_levels; track fl.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="floorLevelId() === fl.id"
-                  (click)="floorLevelId.set(fl.id)"
-                >
-                  {{ fl.label_en }}
-                </button>
-              }
+        <div class="block-content">
+          <!-- ШАГ 1: Адрес (read-only) + бегунок + параметры -->
+          @if (step() === 0) {
+            <div class="field">
+              <span class="field-label">Адрес</span>
+              <div class="loc-selected">
+                <mat-icon>place</mat-icon>
+                <span>{{ headerPath() }}</span>
+              </div>
             </div>
-          </div>
-        }
 
-        <!-- Levels (floors_in_unit) -->
-        @if (fields().floorsInUnit && floorsInUnitOptions().length) {
-          <div class="ep-field">
-            <span>Levels</span>
-            <div class="ep-chips">
-              @for (fu of floorsInUnitOptions(); track fu.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="floorsInUnitId() === fu.id"
-                  (click)="floorsInUnitId.set(fu.id)"
-                >
-                  {{ fu.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Виды из окна -->
-        @if (fields().views && options()?.views?.length) {
-          <div class="ep-field">
-            <span>Вид из окна</span>
-            <div class="ep-chips">
-              @for (v of options()!.views; track v.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="viewIds().includes(v.id)"
-                  (click)="toggleId(viewIds, v.id)"
-                >
-                  {{ v.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Расположение (positions) -->
-        @if (fields().positions && options()?.positions?.length) {
-          <div class="ep-field">
-            <span>Расположение</span>
-            <div class="ep-chips">
-              @for (p of options()!.positions; track p.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="positionIds().includes(p.id)"
-                  (click)="toggleId(positionIds, p.id)"
-                >
-                  {{ p.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Удобства (amenities) -->
-        @if (fields().amenities && options()?.amenities?.length) {
-          <div class="ep-field">
-            <span>Удобства</span>
-            <div class="ep-chips">
-              @for (a of options()!.amenities; track a.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="amenityIds().includes(a.id)"
-                  (click)="toggleId(amenityIds, a.id)"
-                >
-                  {{ a.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Меблировка -->
-        @if (fields().furnished && options()?.furnished_options?.length) {
-          <div class="ep-field">
-            <span>Мебель</span>
-            <div class="ep-chips">
-              @for (fo of options()!.furnished_options; track fo.id) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="furnished() === fo.value"
-                  (click)="furnished.set(fo.value)"
-                >
-                  {{ fo.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Цена -->
-        <label class="ep-field">
-          <span>Цена (AED)</span>
-          <input
-            type="text"
-            inputmode="numeric"
-            [value]="price()"
-            (input)="onPriceInput($any($event.target).value)"
-          />
-        </label>
-
-        <!-- Оригинальная цена (только sale; заблокирована если уже задана) -->
-        @if (detail()?.deal_type === 'sale') {
-          <label class="ep-field">
-            <span>Оригинальная цена</span>
-            <input
-              type="text"
-              inputmode="numeric"
-              [value]="originalPrice()"
-              [disabled]="originalPriceLocked()"
-              (input)="originalPrice.set($any($event.target).value)"
-            />
-            @if (originalPriceLocked()) {
-              <small class="ep-note">Изменить нельзя — задана при создании</small>
-            }
-          </label>
-        }
-
-        <!-- Период оплаты (только аренда) -->
-        @if (isRent() && options()?.price_periods?.length) {
-          <div class="ep-field">
-            <span>Период оплаты</span>
-            <div class="ep-chips">
-              @for (p of options()!.price_periods; track p.value) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="pricePeriod() === p.value"
-                  (click)="pricePeriod.set(p.value)"
-                >
-                  {{ p.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Занятость -->
-        @if (options()?.occupancy_options?.length) {
-          <div class="ep-field">
-            <span>Занятость</span>
-            <div class="ep-chips">
-              @for (o of options()!.occupancy_options; track o.value) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="occupancyStatus() === o.value"
-                  (click)="occupancyStatus.set(o.value)"
-                >
-                  {{ o.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Занято до (lease_until) -->
-        @if (occupancyStatus() === 'occupied') {
-          <label class="ep-field">
-            <span>Занято до (необязательно)</span>
-            <input
-              type="month"
-              [ngModel]="leaseUntil()"
-              (ngModelChange)="leaseUntil.set($event)"
-            />
-          </label>
-        }
-
-        <!-- Тип листинга -->
-        @if (options()?.listing_types?.length) {
-          <div class="ep-field">
-            <span>Тип листинга</span>
-            <div class="ep-chips">
-              @for (l of options()!.listing_types; track l.value) {
-                <button
-                  type="button"
-                  class="ep-chip"
-                  [class.sel]="listingType() === l.value"
-                  (click)="listingType.set(l.value)"
-                >
-                  {{ l.label_en }}
-                </button>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Видимость -->
-        <div class="ep-field">
-          <span>Видимость</span>
-          <div class="ep-chips">
-            <button
-              type="button"
-              class="ep-chip"
-              [class.sel]="visibility() === 'public'"
-              (click)="visibility.set('public')"
-            >
-              Все агенты
-            </button>
-            <button
-              type="button"
-              class="ep-chip"
-              [class.sel]="visibility() === 'network'"
-              (click)="visibility.set('network')"
-            >
-              Только моя сеть
-            </button>
-          </div>
-        </div>
-      } @else if (tab() === 'description') {
-        <label class="ep-field ep-field--full">
-          <span>Описание</span>
-          <textarea
-            rows="8"
-            [value]="description()"
-            (input)="description.set($any($event.target).value)"
-          ></textarea>
-        </label>
-      } @else {
-        <!-- Таб «Фото»: существующие (drag-reorder, удаление, «Главное») + добавить новые -->
-
-        <!-- Индикатор загрузки операции -->
-        @if (photosBusy()) {
-          <div class="ep-photo-busy">
-            <mat-spinner diameter="24"></mat-spinner>
-          </div>
-        }
-
-        <!-- Существующие фото галереи -->
-        <div class="ep-field">
-          <span>Фотографии галереи</span>
-          @if (galleryPhotos().length) {
-            <div
-              class="photo-grid"
-              cdkDropList
-              cdkDropListOrientation="horizontal"
-              (cdkDropListDropped)="dropExisting($event)"
-            >
-              @for (photo of galleryPhotos(); track photo.full_url; let i = $index) {
+            <!-- Бегунок приватности адреса (виден только если есть что двигать) -->
+            @if (canSlide()) {
+              <div class="field reveal-field">
+                <span class="field-label reveal-label">Что видят коллеги</span>
                 <div
-                  class="photo-cell"
-                  cdkDrag
+                  #revealEl
+                  class="reveal"
+                  [class.dragging]="isDragging()"
+                  [style.--n]="addrPath().length"
+                  (pointerdown)="onRevealPointerDown($event)"
+                  (pointermove)="onRevealPointerMove($event)"
+                  (pointerup)="onRevealPointerUpOrCancel()"
+                  (pointercancel)="onRevealPointerUpOrCancel()"
                 >
-                  <img
-                    [src]="photo.thumb_url"
-                    alt="фото"
-                  />
-                  @if (i === 0) {
-                    <span class="photo-main">Главное</span>
-                  }
-                  @if (i > 0) {
+                  <div class="reveal-ticks">
+                    @for (p of addrPath(); track p.id; let i = $index) {
+                      <span
+                        class="reveal-tick"
+                        [class.muted]="i < communityIndex()"
+                        [class.on]="i <= revealIndex()"
+                        [title]="p.name"
+                      >
+                        {{ p.name }}
+                      </span>
+                    }
+                  </div>
+                  <div class="reveal-track">
+                    <div
+                      class="reveal-track-fill"
+                      [style.right.%]="
+                        (1 - (revealIndex() + 0.5) / addrPath().length) * 100
+                      "
+                    ></div>
+                  </div>
+                  @for (p of addrPath(); track p.id; let i = $index) {
                     <button
                       type="button"
-                      class="photo-make-main"
-                      (click)="makeMain(i)"
-                      title="Сделать главным"
+                      class="reveal-dot"
+                      [class.muted]="i < communityIndex()"
+                      [class.on]="i <= revealIndex()"
+                      [class.active]="i === revealIndex()"
+                      [style.left.%]="((i + 0.5) / addrPath().length) * 100"
+                      [disabled]="i < communityIndex()"
+                      (click)="selectReveal(i)"
+                      [attr.aria-label]="p.name"
+                    ></button>
+                  }
+                  <div
+                    class="reveal-thumb"
+                    [style.left.%]="((revealIndex() + 0.5) / addrPath().length) * 100"
+                    aria-hidden="true"
+                  ></div>
+                </div>
+                <p class="note reveal-note">
+                  В ленте всем (и вам) показывается: <b>{{ revealLabel() }}</b
+                  >. Точный адрес виден только вам. Ниже комьюнити скрыть нельзя.
+                </p>
+              </div>
+            }
+
+            <!-- Чекбоксы: Maid/Study/Hotel/Vastu (по типу объекта) -->
+            @if (fields().maid || fields().hotelPool || fields().vastu) {
+              <div class="field">
+                <div class="check-group">
+                  @if (fields().maid) {
+                    <label class="check-row">
+                      <span class="check-label">Maid room</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isMaid()"
+                        (ngModelChange)="isMaid.set($event)"
+                      />
+                    </label>
+                    <label class="check-row">
+                      <span class="check-label">Study room</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isStudy()"
+                        (ngModelChange)="isStudy.set($event)"
+                      />
+                    </label>
+                  }
+                  @if (fields().hotelPool) {
+                    <label class="check-row">
+                      <span class="check-label">Hotel Apartment</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isHotelPool()"
+                        (ngModelChange)="isHotelPool.set($event)"
+                      />
+                    </label>
+                  }
+                  @if (fields().vastu) {
+                    <label class="check-row">
+                      <span class="check-label">Vastu Compliant</span>
+                      <input
+                        type="checkbox"
+                        [ngModel]="isVastu()"
+                        (ngModelChange)="isVastu.set($event)"
+                      />
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().bua) {
+              <div class="field">
+                <span class="field-label">Площадь BUA, sqft</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [ngModel]="areaSqft()"
+                  (ngModelChange)="areaSqft.set($event)"
+                  placeholder="напр. 1200"
+                />
+              </div>
+            }
+            @if (fields().plot) {
+              <div class="field">
+                <span class="field-label">Площадь участка (Plot), sqft</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [ngModel]="plotSqft()"
+                  (ngModelChange)="plotSqft.set($event)"
+                  placeholder="напр. 3500"
+                />
+              </div>
+            }
+            @if (fields().floorLevel && options()?.floor_levels?.length) {
+              <div class="field">
+                <span class="field-label">Этажность</span>
+                <div class="chips">
+                  @for (fl of options()!.floor_levels; track fl.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="floorLevelId() === fl.id"
+                      (click)="floorLevelId.set(fl.id)"
                     >
-                      <mat-icon>star</mat-icon>
+                      {{ fl.label_en }}
                     </button>
                   }
-                  <button
-                    type="button"
-                    class="photo-del"
-                    (click)="deleteExisting(photo)"
-                    aria-label="Удалить фото"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
                 </div>
+              </div>
+            }
+            @if (fields().floorsInUnit && floorsInUnitOptions().length) {
+              <div class="field">
+                <span class="field-label">Levels</span>
+                <div class="chips">
+                  @for (fu of floorsInUnitOptions(); track fu.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="floorsInUnitId() === fu.id"
+                      (click)="floorsInUnitId.set(fu.id)"
+                    >
+                      {{ fu.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().views && options()?.views?.length) {
+              <div class="field">
+                <span class="field-label">Вид из окна</span>
+                <div class="chips">
+                  @for (v of options()!.views; track v.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="viewIds().includes(v.id)"
+                      (click)="toggleId(viewIds, v.id)"
+                    >
+                      {{ v.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().positions && options()?.positions?.length) {
+              <div class="field">
+                <span class="field-label">Расположение</span>
+                <div class="chips">
+                  @for (p of options()!.positions; track p.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="positionIds().includes(p.id)"
+                      (click)="toggleId(positionIds, p.id)"
+                    >
+                      {{ p.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().amenities && options()?.amenities?.length) {
+              <div class="field">
+                <span class="field-label">Удобства</span>
+                <div class="chips">
+                  @for (a of options()!.amenities; track a.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="amenityIds().includes(a.id)"
+                      (click)="toggleId(amenityIds, a.id)"
+                    >
+                      {{ a.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (fields().furnished && options()?.furnished_options?.length) {
+              <div class="field">
+                <span class="field-label">Мебель</span>
+                <div class="chips">
+                  @for (fo of options()!.furnished_options; track fo.id) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="furnished() === fo.value"
+                      (click)="furnished.set(fo.value)"
+                    >
+                      {{ fo.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- ШАГ 2: Цена и состояние -->
+          @if (step() === 1) {
+            <div class="field">
+              <span class="field-label">Цена, AED</span>
+              <input
+                [ngModel]="price()"
+                (ngModelChange)="onPriceInput($event)"
+                inputmode="numeric"
+                placeholder="напр. 1,200,000"
+              />
+            </div>
+
+            @if (detail()?.deal_type === 'sale') {
+              <div class="field">
+                <span class="field-label">Оригинальная цена (необязательно)</span>
+                <input
+                  [ngModel]="originalPrice()"
+                  (ngModelChange)="originalPrice.set($event)"
+                  [disabled]="originalPriceLocked()"
+                  inputmode="numeric"
+                  placeholder="напр. 1,400,000"
+                />
+                @if (originalPriceLocked()) {
+                  <p class="note">Изменить нельзя — задана при создании.</p>
+                }
+              </div>
+            }
+            @if (isRent() && options()?.price_periods?.length) {
+              <div class="field">
+                <span class="field-label">Период оплаты</span>
+                <div class="chips">
+                  @for (p of options()!.price_periods; track p.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="pricePeriod() === p.value"
+                      (click)="pricePeriod.set(p.value)"
+                    >
+                      {{ p.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (options()?.occupancy_options?.length) {
+              <div class="field">
+                <span class="field-label">Занятость</span>
+                <div class="chips">
+                  @for (o of options()!.occupancy_options; track o.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="occupancyStatus() === o.value"
+                      (click)="occupancyStatus.set(o.value)"
+                    >
+                      {{ o.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (occupancyStatus() === 'occupied') {
+              <div class="field">
+                <span class="field-label">Занято до (необязательно)</span>
+                <input
+                  type="month"
+                  [ngModel]="leaseUntil()"
+                  (ngModelChange)="leaseUntil.set($event)"
+                />
+              </div>
+            }
+
+            <div class="field">
+              <span class="field-label">Видимость</span>
+              <div class="chips">
+                <button
+                  type="button"
+                  class="chip"
+                  [class.sel]="visibility() === 'public'"
+                  (click)="visibility.set('public')"
+                >
+                  Все агенты
+                </button>
+                <button
+                  type="button"
+                  class="chip"
+                  [class.sel]="visibility() === 'network'"
+                  (click)="visibility.set('network')"
+                >
+                  Только моя сеть
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- ШАГ 3: Листинг -->
+          @if (step() === 2) {
+            @if (options()?.listing_types?.length) {
+              <div class="field">
+                <span class="field-label">Тип листинга</span>
+                <div class="chips">
+                  @for (l of options()!.listing_types; track l.value) {
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.sel]="listingType() === l.value"
+                      (click)="listingType.set(l.value)"
+                    >
+                      {{ l.label_en }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- ШАГ 4: Описание -->
+          @if (step() === 3) {
+            <div class="field">
+              <span class="field-label">Описание</span>
+              <textarea
+                rows="5"
+                [value]="description()"
+                (input)="description.set($any($event.target).value)"
+                placeholder="Опишите объект…"
+              ></textarea>
+            </div>
+          }
+
+          <!-- ШАГ 5: Фото -->
+          @if (step() === 4) {
+            @if (photosBusy()) {
+              <div class="loading"><mat-spinner [diameter]="24"></mat-spinner></div>
+            }
+
+            <div class="field">
+              <span class="field-label">Фотографии галереи</span>
+              @if (galleryPhotos().length) {
+                <div
+                  class="photo-grid"
+                  cdkDropList
+                  cdkDropListOrientation="horizontal"
+                  (cdkDropListDropped)="dropExisting($event)"
+                >
+                  @for (photo of galleryPhotos(); track photo.full_url; let i = $index) {
+                    <div
+                      class="photo-cell"
+                      cdkDrag
+                    >
+                      <img
+                        [src]="photo.thumb_url"
+                        alt="фото"
+                      />
+                      @if (i === 0) {
+                        <span class="photo-main">Главное</span>
+                      }
+                      @if (i > 0) {
+                        <button
+                          type="button"
+                          class="photo-make-main"
+                          (click)="makeMain(i)"
+                          title="Сделать главным"
+                        >
+                          <mat-icon>star</mat-icon>
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="photo-del"
+                        (click)="deleteExisting(photo)"
+                        aria-label="Удалить фото"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <p class="note">
+                  Перетащите для изменения порядка. Первое фото — главное.
+                </p>
+              } @else {
+                <p class="note">Фотографий нет</p>
               }
             </div>
-            <p class="ep-note">
-              Перетащите для изменения порядка. Первое фото — главное.
-            </p>
-          } @else {
-            <p class="ep-note">Фотографий нет</p>
+
+            <div class="field">
+              <span class="field-label">Добавить новые фото</span>
+              <label class="photo-add">
+                <mat-icon>add_photo_alternate</mat-icon>
+                <span>Выбрать файлы</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  (change)="onAddPhotos($event)"
+                />
+              </label>
+              @if (newPreviews().length) {
+                <div class="photo-grid">
+                  @for (src of newPreviews(); track src; let i = $index) {
+                    <div class="photo-cell">
+                      <img
+                        [src]="src"
+                        alt="новое фото"
+                      />
+                      <button
+                        type="button"
+                        class="photo-del"
+                        (click)="removeNewPhoto(i)"
+                        aria-label="Убрать"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+                <p class="note">Фото будут загружены при сохранении.</p>
+              }
+            </div>
           }
         </div>
+      </section>
 
-        <!-- Добавить новые фото (стейдж; загрузка при сохранении) -->
-        <div class="ep-field">
-          <span>Добавить новые фото</span>
-          <label class="photo-add">
-            <mat-icon>add_photo_alternate</mat-icon>
-            <span>Выбрать файлы</span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              (change)="onAddPhotos($event)"
-            />
-          </label>
-          @if (newPreviews().length) {
-            <div class="photo-grid">
-              @for (src of newPreviews(); track src; let i = $index) {
-                <div class="photo-cell">
-                  <img
-                    [src]="src"
-                    alt="новое фото"
-                  />
-                  <button
-                    type="button"
-                    class="photo-del"
-                    (click)="removeNewPhoto(i)"
-                    aria-label="Убрать"
-                  >
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              }
-            </div>
-            <p class="ep-note">Фото будут загружены при сохранении.</p>
-          }
+      @if (error()) {
+        <div class="add-error">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ error() }}</span>
         </div>
       }
-    </section>
 
-    <!-- Футер: кнопки отмены и сохранения -->
-    <footer class="edit-footer">
-      <button
-        mat-stroked-button
-        (click)="cancel()"
-        [disabled]="saving()"
-      >
-        Отмена
-      </button>
-      <button
-        mat-flat-button
-        color="primary"
-        (click)="save()"
-        [disabled]="saving()"
-      >
-        {{ saveLabel() }}
-      </button>
-    </footer>
+      <div class="add-nav">
+        @if (step() > 0) {
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="prev()"
+          >
+            Назад
+          </button>
+        } @else {
+          <span></span>
+        }
+        @if (step() < steps.length - 1) {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="next()"
+          >
+            Далее
+          </button>
+        } @else {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="saving()"
+            (click)="save()"
+          >
+            @if (saving()) {
+              <mat-spinner [diameter]="20"></mat-spinner>
+            } @else {
+              {{ saveLabel() }}
+            }
+          </button>
+        }
+      </div>
+    </div>
   </div>
 }

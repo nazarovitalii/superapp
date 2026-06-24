@@ -22,7 +22,6 @@ describe('EditPropertyPageComponent', () => {
     description: 'd',
     location_id: 'leaf',
     public_location_id: null,
-    // Поля для теста prefill (Task 5)
     is_maid: false,
     is_study: false,
     is_hotel_pool: false,
@@ -109,45 +108,69 @@ describe('EditPropertyPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('грузит деталь и стартует на табе params', () => {
+  it('грузит деталь и стартует на шаге 0', () => {
     const c = fixture.componentInstance;
     expect(c.detail()?.id).toBe('p1');
-    expect(c.tab()).toBe('params');
+    expect(c.step()).toBe(0);
+    expect(c.steps.length).toBe(5);
   });
 
-  it('setTab переключает таб', () => {
-    fixture.componentInstance.setTab('photos');
-    expect(fixture.componentInstance.tab()).toBe('photos');
+  it('next() с шага 0 переходит на шаг 1', () => {
+    const c = fixture.componentInstance;
+    c.next();
+    expect(c.step()).toBe(1);
+  });
+
+  it('prev() со шага 0 не уходит в минус', () => {
+    const c = fixture.componentInstance;
+    c.prev();
+    expect(c.step()).toBe(0);
+  });
+
+  it('next() на шаге цены блокирует пустую цену и пропускает корректную', () => {
+    const c = fixture.componentInstance;
+    c.next(); // → шаг 1 (Цена и состояние)
+    expect(c.step()).toBe(1);
+    c.price.set('');
+    c.next();
+    expect(c.step()).toBe(1); // остался — валидация не пустила
+    expect(c.error()).toBeTruthy();
+    c.price.set('150');
+    c.next();
+    expect(c.step()).toBe(2);
+    expect(c.error()).toBeNull();
   });
 
   it('prefill заполняет редактируемые сигналы из detail', () => {
     const c = fixture.componentInstance;
-    expect(c.price()).toBe('100'); // detailStub.price = 100
+    expect(c.price()).toBe('100');
     expect(c.description()).toBe('d');
     expect(c.isMaid()).toBe(false);
   });
 
   it('бегунок: addrPath реконструируется, leaf = полный адрес при public_location_id=null', async () => {
     const c = fixture.componentInstance;
-    // locationInfo застаблен выше; ждём реконструкции
     await fixture.whenStable();
     expect(c.addrPath().length).toBeGreaterThan(0);
-    // public_location_id null → revealIndex = leaf → publicLocationId null
     expect(c.publicLocationId()).toBeNull();
   });
 
-  it('таб «Описание» биндит сигнал description', () => {
+  it('шаг «Описание» (index 3) биндит сигнал description', () => {
     const c = fixture.componentInstance;
-    c.setTab('description');
+    c.step.set(3);
     fixture.detectChanges();
     const ta: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
     expect(ta.value).toBe('d');
   });
 
+  it('saveLabel = «Сохранить» для active', () => {
+    expect(fixture.componentInstance.saveLabel()).toBe('Сохранить');
+  });
+
   it('deleteExisting зовёт сервис и перечитывает фото', async () => {
     const c = fixture.componentInstance;
-    const svc = TestBed.inject(PropertyPhotoService) as any;
-    spyOn(svc, 'deletePhoto').and.resolveTo(undefined);
+    const svc = TestBed.inject(PropertyPhotoService);
+    const delSpy = spyOn(svc, 'deletePhoto').and.resolveTo(undefined);
     spyOn(svc, 'getPhotos').and.resolveTo([]);
     await c.deleteExisting({
       full_url: 'f',
@@ -155,7 +178,7 @@ describe('EditPropertyPageComponent', () => {
       order_index: 0,
       photo_type: 'gallery',
     });
-    expect(svc.deletePhoto).toHaveBeenCalledWith(
+    expect(delSpy).toHaveBeenCalledWith(
       'p1',
       jasmine.objectContaining({ full_url: 'f' }),
     );

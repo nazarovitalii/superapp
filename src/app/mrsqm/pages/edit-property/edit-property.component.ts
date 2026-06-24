@@ -30,7 +30,21 @@ import { revealIndexFromFraction } from '../add-property/reveal-slider.util';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 
-type EditTab = 'params' | 'description' | 'photos';
+// 5 шагов окна редактирования (группировка создателя).
+const STEPS = [
+  'Адрес и параметры',
+  'Цена и состояние',
+  'Листинг',
+  'Описание',
+  'Фото',
+] as const;
+const STEP_ICONS = [
+  'place',
+  'payments',
+  'verified',
+  'description',
+  'photo_library',
+] as const;
 
 @Component({
   selector: 'mrsqm-edit-property-page',
@@ -62,7 +76,10 @@ export class EditPropertyPageComponent {
   readonly photos = signal<PropertyPhoto[]>([]);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
-  readonly tab = signal<EditTab>('params');
+  readonly steps = STEPS;
+  readonly stepIcons = STEP_ICONS;
+  readonly step = signal(0);
+  readonly error = signal<string | null>(null);
 
   // value unit_type объекта → ключ конфига полей таба «Параметры».
   private readonly _unitTypeValue = computed<string | null>(() => {
@@ -344,8 +361,30 @@ export class EditPropertyPageComponent {
     void this._load();
   }
 
-  setTab(t: EditTab): void {
-    this.tab.set(t);
+  // Валидация текущего шага. Цена обязательна на шаге «Цена и состояние» (index 1);
+  // остальные поля префиллятся из объекта → необязательны.
+  private _validateStep(): string | null {
+    if (this.step() === 1) {
+      const digits = this.price().replace(/[^\d.]/g, '');
+      const p = digits ? Number(digits) : 0;
+      if (!p || p <= 0) return 'Укажите корректную цену';
+    }
+    return null;
+  }
+
+  next(): void {
+    const err = this._validateStep();
+    if (err) {
+      this.error.set(err);
+      return;
+    }
+    this.error.set(null);
+    this.step.update((s) => Math.min(s + 1, STEPS.length - 1));
+  }
+
+  prev(): void {
+    this.error.set(null);
+    this.step.update((s) => Math.max(s - 1, 0));
   }
 
   cancel(): void {
