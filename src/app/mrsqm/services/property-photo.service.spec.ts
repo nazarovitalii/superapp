@@ -3,6 +3,62 @@ import { PropertyPhotoService } from './property-photo.service';
 import { MrsqmSupabaseService } from './supabase.service';
 import { PropertyPhoto } from '../types/database';
 
+// ─── Тесты deletePhoto + reorder (Task 2) ────────────────────────────────────
+
+describe('PropertyPhotoService (delete/reorder)', () => {
+  let service: PropertyPhotoService;
+  let storageRemove: jasmine.Spy;
+  let tableDelete: jasmine.Spy;
+  let tableUpdate: jasmine.Spy;
+  let eqSpy: jasmine.Spy;
+
+  beforeEach(() => {
+    storageRemove = jasmine.createSpy('remove').and.resolveTo({ error: null });
+    // .from('property_photos').delete().eq().eq() и .update().eq().eq() — цепочки
+    eqSpy = jasmine.createSpy('eq');
+    const chain = { eq: eqSpy };
+    eqSpy.and.returnValue({ ...chain, then: undefined });
+    tableDelete = jasmine.createSpy('delete').and.returnValue(chain);
+    tableUpdate = jasmine.createSpy('update').and.returnValue(chain);
+
+    const supabaseStub = {
+      client: {
+        storage: { from: () => ({ remove: storageRemove }) },
+        from: () => ({ delete: tableDelete, update: tableUpdate }),
+      },
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        PropertyPhotoService,
+        { provide: MrsqmSupabaseService, useValue: supabaseStub },
+      ],
+    });
+    service = TestBed.inject(PropertyPhotoService);
+  });
+
+  it('deletePhoto удаляет оба ключа из Storage', async () => {
+    const base = 'https://x/storage/v1/object/public/property_photos/';
+    await service.deletePhoto('p1', {
+      full_url: `${base}p1/0_full.webp`,
+      thumb_url: `${base}p1/0_thumb.webp`,
+    });
+    expect(storageRemove).toHaveBeenCalledWith(['p1/0_full.webp', 'p1/0_thumb.webp']);
+    expect(tableDelete).toHaveBeenCalled();
+  });
+
+  it('reorder обновляет order_index по позиции в массиве', async () => {
+    const base = 'https://x/storage/v1/object/public/property_photos/';
+    await service.reorder('p1', 'gallery', [
+      `${base}p1/2_full.webp`,
+      `${base}p1/0_full.webp`,
+    ]);
+    // два UPDATE: первый url → order_index 0, второй → 1
+    expect(tableUpdate).toHaveBeenCalledTimes(2);
+    expect(tableUpdate.calls.argsFor(0)[0]).toEqual({ order_index: 0 });
+    expect(tableUpdate.calls.argsFor(1)[0]).toEqual({ order_index: 1 });
+  });
+});
+
 // ─── Заглушка Supabase-клиента ───────────────────────────────────────────────
 class FakeQuery {
   private _data: unknown[] = [];

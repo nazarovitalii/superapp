@@ -71,6 +71,44 @@ export class PropertyPhotoService {
     if (error) throw error;
   }
 
+  // Точечное удаление одного фото: из Storage (full+thumb) и строки в property_photos.
+  // НЕ через storage_cleanup_queue — та для полного удаления объекта.
+  // Ключ строки в БД — по full_url (уникален). Storage-DELETE защищён политикой
+  // property_photos_modify (владелец папки); строку чистим прямым DELETE (как uploadAndAttach — INSERT).
+  async deletePhoto(
+    propertyId: string,
+    photo: { full_url: string; thumb_url: string },
+  ): Promise<void> {
+    const keys = [this._storageKey(photo.full_url), this._storageKey(photo.thumb_url)];
+    const { error: storageErr } = await this._supabase.client.storage
+      .from(BUCKET)
+      .remove(keys);
+    if (storageErr) throw storageErr;
+    const { error } = await this._supabase.client
+      .from('property_photos')
+      .delete()
+      .eq('property_id', propertyId)
+      .eq('full_url', photo.full_url);
+    if (error) throw error;
+  }
+
+  // Перестановка: order_index = позиция в orderedFullUrls, в рамках одного photo_type.
+  // Галерея и floor_plan нумеруются независимо (каждый со своего 0).
+  async reorder(
+    propertyId: string,
+    photoType: 'gallery' | 'floor_plan',
+    orderedFullUrls: string[],
+  ): Promise<void> {
+    for (let i = 0; i < orderedFullUrls.length; i++) {
+      const { error } = await this._supabase.client
+        .from('property_photos')
+        .update({ order_index: i })
+        .eq('property_id', propertyId)
+        .eq('full_url', orderedFullUrls[i]);
+      if (error) throw error;
+    }
+  }
+
   // Фото объекта для карточки: gallery (сначала) + floor_plan (в конце).
   // Нельзя сортировать глобально по order_index — у floor_plan свой счётчик с 0.
   // Поэтому: тянем оба типа без серверной сортировки, затем JS-сортировка:
@@ -89,6 +127,13 @@ export class PropertyPhotoService {
       return rank + (p.order_index ?? 0);
     };
     return (data as PropertyPhoto[]).sort((a, b) => sortKey(a) - sortKey(b));
+  }
+
+  // Ключ бакета из публичного URL: .../property_photos/<propertyId>/<file> → <propertyId>/<file>.
+  private _storageKey(url: string): string {
+    const marker = `/${BUCKET}/`;
+    const idx = url.indexOf(marker);
+    return idx >= 0 ? url.slice(idx + marker.length) : url;
   }
 
   private async _upload(path: string, blob: Blob): Promise<string> {
