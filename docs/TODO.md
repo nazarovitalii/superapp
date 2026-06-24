@@ -328,8 +328,12 @@
 ### WP-M — редактирование листинга — ✅ РЕАЛИЗОВАНО 2026-06-24 (Subagent-Driven)
 
 > Standalone `pages/edit-property/` + роут `/mrsqm/edit/:id`. RPC `edit_property` (whitelist, SECURITY DEFINER,
-> неизменяемые поля не в сигнатуре). 3 таба (Параметры/Описание/Фото) + read-only адрес с бегунком приватности.
-> Спека: `specs/2026-06-24-wp-m-edit-listing-design.md` · План: `plans/2026-06-24-wp-m-edit-listing.md`.
+> неизменяемые поля не в сигнатуре).
+> **UI переделан 2026-06-24 (SP-A, задеплоен):** v1 (свои `ep-*`/таб-бар) забракован создателем (бегунок сломан) →
+> переписан в **линейный мастер 5 шагов 1:1 с формой добавления** (общий SCSS-партиал `pages/_property-form.scss`,
+> бегунок `.reveal` дословно из add). Логика (save/префилл/бегунок/фото) сохранена. Спека: `specs/2026-06-24-edit-redo-wizard-design.md` · План: `plans/2026-06-24-edit-redo-wizard.md` (SDD, opus-ревью 0 critical).
+> Дальше: SP-B (Official/Form A поля) → SP-C (движок сценариев публикации, кнопки по статусу, «Поднять наверх» для active).
+> Спека v1: `specs/2026-06-24-wp-m-edit-listing-design.md` · План v1: `plans/2026-06-24-wp-m-edit-listing.md`.
 > Серверная история: edit_property + патчи get_property (public_location_id, original_price) применены Фазой A;
 > photo-RLS (`photos_update`/`photos_delete`) + Фаза B (DROP update_property/republish_property) — DDL-гейт перед/после деплоя.
 > Все поля WP-M1..M13 реализованы (M8: original_price read-only если задана; M13: фото add/delete/reorder через Storage).
