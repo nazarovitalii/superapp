@@ -193,69 +193,69 @@
               <p class="owner-panel-reason">Причина: {{ detail()?.rejection_reason }}</p>
             }
             <div class="owner-panel-actions">
-                @if (ownerActions().includes('edit')) {
+              @if (ownerActions().includes('edit')) {
+                <button
+                  mat-stroked-button
+                  (click)="goEdit()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>edit</mat-icon
+                  >{{ detail()?.status === 'active' ? 'Изменить' : 'Редактировать' }}
+                </button>
+              }
+              @if (ownerActions().includes('actualize')) {
+                <button
+                  mat-stroked-button
+                  (click)="actualize()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>arrow_upward</mat-icon>Поднять вверх
+                </button>
+              }
+              @if (ownerActions().includes('renew')) {
+                <button
+                  mat-flat-button
+                  color="primary"
+                  (click)="renew()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>autorenew</mat-icon>Продлить (+30 дней)
+                </button>
+              }
+              @if (ownerActions().includes('archive')) {
+                <button
+                  mat-stroked-button
+                  [matMenuTriggerFor]="archiveMenu"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>inventory_2</mat-icon>Архивировать
+                </button>
+                <mat-menu #archiveMenu="matMenu">
                   <button
-                    mat-stroked-button
-                    (click)="goEdit()"
-                    [disabled]="ownerBusy()"
+                    mat-menu-item
+                    (click)="confirmArchive('archived_sold')"
                   >
-                    <mat-icon>edit</mat-icon
-                    >{{ detail()?.status === 'active' ? 'Изменить' : 'Редактировать' }}
+                    Продан
                   </button>
-                }
-                @if (ownerActions().includes('actualize')) {
                   <button
-                    mat-stroked-button
-                    (click)="actualize()"
-                    [disabled]="ownerBusy()"
+                    mat-menu-item
+                    (click)="confirmArchive('archived_withdrawn')"
                   >
-                    <mat-icon>arrow_upward</mat-icon>Поднять вверх
+                    Снять с публикации
                   </button>
-                }
-                @if (ownerActions().includes('renew')) {
-                  <button
-                    mat-flat-button
-                    color="primary"
-                    (click)="renew()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>autorenew</mat-icon>Продлить (+30 дней)
-                  </button>
-                }
-                @if (ownerActions().includes('archive')) {
-                  <button
-                    mat-stroked-button
-                    [matMenuTriggerFor]="archiveMenu"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>inventory_2</mat-icon>Архивировать
-                  </button>
-                  <mat-menu #archiveMenu="matMenu">
-                    <button
-                      mat-menu-item
-                      (click)="confirmArchive('archived_sold')"
-                    >
-                      Продан
-                    </button>
-                    <button
-                      mat-menu-item
-                      (click)="confirmArchive('archived_withdrawn')"
-                    >
-                      Снять с публикации
-                    </button>
-                  </mat-menu>
-                }
-                @if (ownerActions().includes('delete')) {
-                  <button
-                    mat-stroked-button
-                    class="danger-btn is-delete"
-                    (click)="confirmDelete()"
-                    [disabled]="ownerBusy()"
-                  >
-                    <mat-icon>delete_forever</mat-icon>Удалить
-                  </button>
-                }
-              </div>
+                </mat-menu>
+              }
+              @if (ownerActions().includes('delete')) {
+                <button
+                  mat-stroked-button
+                  class="danger-btn is-delete"
+                  (click)="confirmDelete()"
+                  [disabled]="ownerBusy()"
+                >
+                  <mat-icon>delete_forever</mat-icon>Удалить
+                </button>
+              }
+            </div>
           </div>
         }
 

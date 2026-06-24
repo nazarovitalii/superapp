@@ -267,8 +267,8 @@ export const PROPERTY_STATUS_BANNER_TONE: Record<PropertyStatus, BannerTone> = {
   archived_withdrawn: 'neutral',
 };
 
-// Набор кнопок по статусу. 'edit' для active = «Изменить» (update_property);
-// 'edit' для rejected/withdrawn = «Редактировать» (republish_property) — ветка в saveEdit.
+// Набор кнопок по статусу. 'edit' для active = «Изменить»; для rejected/withdrawn =
+// «Редактировать» — обе ведут на /mrsqm/edit/:id (WP-M, RPC edit_property).
 export const OWNER_ACTIONS_BY_STATUS: Record<PropertyStatus, OwnerAction[]> = {
   active: ['edit', 'actualize', 'archive'],
   pending_review: ['archive'],

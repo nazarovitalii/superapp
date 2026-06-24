@@ -728,3 +728,60 @@
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                                                                                                                   |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                                                                                                                   |
 | ⚠️ docs?    | —     | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md                                                                                                                                                                                   |
+| `5f3fbaa51` | 13:40 | docs(todo): обновить статусы завершённых задач (LM-1…6, SC-1…6, SC-8, R5, FB-1/2, API-5 → ✅) |
+| `d5d778441` | 14:35 | docs(f13): спека комментариев к объектам — модель, 4 RPC, RLS-backstop, тред-UI |
+| `03be3cb66` | 14:54 | docs(todo): захват фидбэка CD-1/2/3 — карточка: избранное/статус/кнопки |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `e85728c5c` | 15:21 | feat(card): owner-панель наверх + редизайн (статус «Активно до …»+кнопки); избранное скрыто у своих (CD-1/2/3) |
+| `eeaf38c9e` | 15:21 | docs(todo): CD-1/2/3 выполнены (owner-панель + избранное у своих) |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `4ec8ba8a3` | 15:35 | style(card): prettier-формат owner-панели (multi-line атрибуты) |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `c350c8b99` | 15:43 | docs: переписка + резюме дня 2026-06-24 (CD карточка задеплоена; F-13 спека+план) |
+| `3a157f901` | 16:53 | docs(todo): WP-M детализация — редактирование листинга (следующая задача, поля от создателя) |
+| `fd199f5c8` | 17:28 | docs(tests): T-LM5 — delete_property + Storage-дренер (вариант B) подтверждены в проде |
+| `3c253ed68` | 17:50 | docs(wp-m): спека редактирования листинга — 3 таба, edit_property whitelist, фото |
+| `b2ac35198` | 18:01 | docs(wp-m): обновить статусы TODO/tabs + continuation prompt |
+| `484c1f706` | 18:38 | migrate(wp-m): edit_property + get_property.public_location_id (Фаза A) применён + T-WPM1 |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `b55eab76c` | 18:41 | feat(mrsqm): PropertyPhotoService.deletePhoto + reorder для редактирования фото |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `07756c294` | 18:46 | fix(mrsqm): reorder фильтрует по photo_type (ревью Task 2) |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `c8bb54a5f` | 18:50 | feat(mrsqm): PropertyOwnerService.editProperty + EditPropertyPayload |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `d4d36df95` | 18:56 | feat(mrsqm): scaffold edit-property (роут, шапка, 3 таба, загрузка через get_property) |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `ac6f78d6c` | 19:04 | feat(mrsqm): таб «Параметры» edit-property — prefill + биндинги по типу |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `8877c23b0` | 19:09 | feat(mrsqm): таб «Описание» edit-property |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `d33f4703d` | 19:13 | feat(mrsqm): таб «Фото» edit-property — список/удаление/reorder/добавление |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| `2efd33c78` | 19:23 | feat(mrsqm): save edit-property + навигация из карточки; убран инлайн-редактор |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |
+| ⚠️ docs? | — | Изменился src/app/mrsqm/ — проверь docs/README.md / architecture.md / tabs.md |

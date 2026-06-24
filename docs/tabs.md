@@ -188,10 +188,11 @@ TODO: district через `search_locations` (API-2).
   **WhatsApp** + **Telegram** только если контакт != null (Pro или в сети), иначе
   заглушка «Доступно на Pro»
 - **Статистика** — «Обновлено N дней назад» + `views_count`
-- **Управление своим объектом** (только при `is_owner`): три кнопки **вне блоков, центрированы
-  внизу** карточки — **Редактировать** (цена+описание, inline-форма → `update_property`),
-  **Актуализировать** (`actualize_property`), **Архивировать** (Продан/Снят → `archive_property`).
-  3 SECURITY DEFINER RPC, миграция `applied/2026-06-16-property-owner-actions.sql`
+- **Управление своим объектом** (только при `is_owner`): owner-панель наверху карточки —
+  **Изменить/Редактировать** (→ навигация на `/mrsqm/edit/:id`, полноценное окно WP-M),
+  **Актуализировать** (`actualize_property`), **Архивировать** (Продан/Снят → `archive_property`),
+  **Продлить** (expired → `renew_property`), **Удалить** (архив → `delete_property`).
+  Старый inline-редактор цены/описания убран (WP-M). SECURITY DEFINER RPC.
 - Клик по фото → **полноэкранный лайтбокс Swiper.js** (миниатюры + стрелки)
 - Бейдж агента **не показывается** (вне MVP)
 - `track_view(p_property_id)` — fire and forget при открытии
@@ -370,24 +371,25 @@ _Бейдж / баллы / score — НЕ показываем (вне MVP)._
 
 ---
 
-## Редактировать объект — `/mrsqm/edit/:id` _(спека утверждена, реализация следующая)_
+## Редактировать объект — `/mrsqm/edit/:id` _(реализовано, WP-M)_
 
 **Спека:** `docs/superpowers/specs/2026-06-24-wp-m-edit-listing-design.md`
-**Статус:** спека утверждена 2026-06-24, план и реализация — следующий этап.
+**План:** `docs/superpowers/plans/2026-06-24-wp-m-edit-listing.md`
+**Статус:** реализовано 2026-06-24 (Subagent-Driven). Standalone-компонент `pages/edit-property/`.
 
-Страница редактирования своего объекта. Открывается по «Изменить» (active) или «Редактировать» (rejected/withdrawn) из owner-панели. Guard: только владелец.
+Страница редактирования своего объекта. Открывается по «Изменить» (active) или «Редактировать» (rejected/withdrawn) из owner-панели карточки. Загрузка значений — через `get_property`; доступ — только владелец (`is_owner` + серверный owner-check).
+
+**Сверху read-only шапка:** полный адрес + **бегунок приватности** (можно менять — `public_location_id`; адрес неизменяем).
 
 **3 таба:**
 
-1. **Параметры** — whitelist-поля: Maid/Study/Hotel/Vastu, BUA+Plot, этажность, виды, расположение, удобства, мебель, цена (original read-only если задана), занятость, тип листинга, видимость.
+1. **Параметры** — whitelist-поля по типу объекта (`property-type-fields.ts`): Maid/Study/Hotel/Vastu, BUA+Plot, этажность, виды, расположение, удобства, мебель, цена (`original_price` read-only если задана), занятость+lease, тип листинга, видимость.
 2. **Описание** — textarea.
-3. **Фото** — галерея существующих (удалить/переставить/главное) + добавить новые + планировка.
-
-**Сверху read-only шапка:** категория · сделка · полный адрес (серым).
+3. **Фото** — галерея существующих (удалить/переставить/главное — пишется в БД сразу) + добавить новые (загружаются при «Сохранить»).
 
 **Кнопки:** «Сохранить» (active → остаётся active + актуализируется); «Отправить на проверку» (rejected/withdrawn → pending_review).
 
-**Сервер:** RPC `edit_property` (whitelist, SECURITY DEFINER, owner-check). Неизменяемые поля (beds/baths/category/location/original_price если задана) — физически не в сигнатуре. Заменяет старые `update_property` + `republish_property`. Миграция — с явного «да» создателя.
+**Сервер:** RPC `edit_property` (whitelist, SECURITY DEFINER, owner-check; `applied/2026-06-24-wp-m-edit-property.sql`). Неизменяемые поля (beds/baths/category/unit_type/sub_type/deal/location/owner/status/original_price-если-задана) — **физически не в сигнатуре** (защита от devtools). Цена → история (`previous_price`/`price_changed_at`); `area_sqm`/`plot_sqm` выводит сервер. Заменяет старые `update_property` + `republish_property` (дроп — Фаза B после деплоя). Фото-операции требуют RLS-политик `photos_update`/`photos_delete` (`applied/2026-06-24-wp-m-photo-rls.sql`).
 
 ---
 

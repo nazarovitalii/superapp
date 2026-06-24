@@ -4,7 +4,12 @@
   <div class="edit-error">
     <mat-icon>error_outline</mat-icon>
     <p>{{ loadError() }}</p>
-    <button mat-stroked-button (click)="cancel()">Назад</button>
+    <button
+      mat-stroked-button
+      (click)="cancel()"
+    >
+      Назад
+    </button>
   </div>
 } @else {
   <div class="edit-page">
@@ -53,11 +58,24 @@
     </header>
 
     <nav class="edit-tabs">
-      <button [class.active]="tab() === 'params'" (click)="setTab('params')">Параметры</button>
-      <button [class.active]="tab() === 'description'" (click)="setTab('description')">
+      <button
+        [class.active]="tab() === 'params'"
+        (click)="setTab('params')"
+      >
+        Параметры
+      </button>
+      <button
+        [class.active]="tab() === 'description'"
+        (click)="setTab('description')"
+      >
         Описание
       </button>
-      <button [class.active]="tab() === 'photos'" (click)="setTab('photos')">Фото</button>
+      <button
+        [class.active]="tab() === 'photos'"
+        (click)="setTab('photos')"
+      >
+        Фото
+      </button>
     </nav>
 
     <section class="edit-body">
@@ -370,8 +388,11 @@
       } @else if (tab() === 'description') {
         <label class="ep-field ep-field--full">
           <span>Описание</span>
-          <textarea rows="8" [value]="description()"
-            (input)="description.set($any($event.target).value)"></textarea>
+          <textarea
+            rows="8"
+            [value]="description()"
+            (input)="description.set($any($event.target).value)"
+          ></textarea>
         </label>
       } @else {
         <!-- Таб «Фото»: существующие (drag-reorder, удаление, «Главное») + добавить новые -->
@@ -394,8 +415,14 @@
               (cdkDropListDropped)="dropExisting($event)"
             >
               @for (photo of galleryPhotos(); track photo.full_url; let i = $index) {
-                <div class="photo-cell" cdkDrag>
-                  <img [src]="photo.thumb_url" alt="фото" />
+                <div
+                  class="photo-cell"
+                  cdkDrag
+                >
+                  <img
+                    [src]="photo.thumb_url"
+                    alt="фото"
+                  />
                   @if (i === 0) {
                     <span class="photo-main">Главное</span>
                   }
@@ -420,7 +447,9 @@
                 </div>
               }
             </div>
-            <p class="ep-note">Перетащите для изменения порядка. Первое фото — главное.</p>
+            <p class="ep-note">
+              Перетащите для изменения порядка. Первое фото — главное.
+            </p>
           } @else {
             <p class="ep-note">Фотографий нет</p>
           }
@@ -444,7 +473,10 @@
             <div class="photo-grid">
               @for (src of newPreviews(); track src; let i = $index) {
                 <div class="photo-cell">
-                  <img [src]="src" alt="новое фото" />
+                  <img
+                    [src]="src"
+                    alt="новое фото"
+                  />
                   <button
                     type="button"
                     class="photo-del"
@@ -464,8 +496,19 @@
 
     <!-- Футер: кнопки отмены и сохранения -->
     <footer class="edit-footer">
-      <button mat-stroked-button (click)="cancel()" [disabled]="saving()">Отмена</button>
-      <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
+      <button
+        mat-stroked-button
+        (click)="cancel()"
+        [disabled]="saving()"
+      >
+        Отмена
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="save()"
+        [disabled]="saving()"
+      >
         {{ saveLabel() }}
       </button>
     </footer>

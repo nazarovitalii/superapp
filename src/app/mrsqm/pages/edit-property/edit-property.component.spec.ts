@@ -49,7 +49,10 @@ describe('EditPropertyPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [EditPropertyPageComponent],
       providers: [
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'p1' } } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: () => 'p1' } } },
+        },
         { provide: Router, useValue: { navigateByUrl: () => Promise.resolve(true) } },
         {
           provide: MrsqmSupabaseService,
@@ -119,7 +122,7 @@ describe('EditPropertyPageComponent', () => {
 
   it('prefill заполняет редактируемые сигналы из detail', () => {
     const c = fixture.componentInstance;
-    expect(c.price()).toBe('100');         // detailStub.price = 100
+    expect(c.price()).toBe('100'); // detailStub.price = 100
     expect(c.description()).toBe('d');
     expect(c.isMaid()).toBe(false);
   });
@@ -146,8 +149,16 @@ describe('EditPropertyPageComponent', () => {
     const svc = TestBed.inject(PropertyPhotoService) as any;
     spyOn(svc, 'deletePhoto').and.resolveTo(undefined);
     spyOn(svc, 'getPhotos').and.resolveTo([]);
-    await c.deleteExisting({ full_url: 'f', thumb_url: 't', order_index: 0, photo_type: 'gallery' });
-    expect(svc.deletePhoto).toHaveBeenCalledWith('p1', jasmine.objectContaining({ full_url: 'f' }));
+    await c.deleteExisting({
+      full_url: 'f',
+      thumb_url: 't',
+      order_index: 0,
+      photo_type: 'gallery',
+    });
+    expect(svc.deletePhoto).toHaveBeenCalledWith(
+      'p1',
+      jasmine.objectContaining({ full_url: 'f' }),
+    );
   });
 
   it('save() собирает payload и зовёт editProperty', async () => {
