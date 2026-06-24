@@ -1,0 +1,112 @@
+.edit-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.edit-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-header-path {
+  color: var(--text-color-muted);
+  font-size: 13px;
+}
+
+// ─── Бегунок приватности адреса ─────────────────────────────────────────────
+
+.reveal-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reveal-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-color-muted);
+}
+
+.reveal-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 24px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reveal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--c-primary);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+
+  &.active {
+    background: var(--c-primary);
+  }
+
+  &.disabled {
+    border-color: var(--text-color-muted);
+    cursor: default;
+  }
+}
+
+.reveal-thumb {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 2px solid var(--bg-color);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 20%);
+  z-index: 2;
+}
+
+// ─── Табы ────────────────────────────────────────────────────────────────────
+
+.edit-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--extra-border-color);
+
+  button {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-color-muted);
+    font-size: 14px;
+
+    &.active {
+      color: var(--text-color);
+      border-bottom: 2px solid var(--c-primary);
+    }
+  }
+}
+
+// ─── Состояния загрузки/ошибки ───────────────────────────────────────────────
+
+.edit-loading,
+.edit-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px;
+}

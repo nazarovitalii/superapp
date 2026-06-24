@@ -157,6 +157,15 @@ export const APP_ROUTES: Routes = [
     canActivate: [mrsqmAuthGuard],
   },
   {
+    path: 'mrsqm/edit/:id',
+    loadComponent: () =>
+      import('./mrsqm/pages/edit-property/edit-property.component').then(
+        (m) => m.EditPropertyPageComponent,
+      ),
+    data: { page: 'mrsqm-edit', title: 'Редактировать объект', icon: 'edit' },
+    canActivate: [mrsqmAuthGuard],
+  },
+  {
     path: 'mrsqm/network',
     loadComponent: () =>
       import('./mrsqm/pages/stub/stub-page.component').then((m) => m.StubPageComponent),

@@ -437,6 +437,8 @@ export interface PropertyDetail {
   location_full_path: string | null;
   // Уровень адреса, раскрытый публично (бегунок); null = полный адрес скрыт.
   public_location_path: string | null;
+  // Узел адреса, раскрытый публично (id); null = полный адрес. Источник позиции бегунка.
+  public_location_id: string | null;
   // Флаг Vastu — суффикс «+vastu» к числу спален.
   is_vastu: boolean | null;
   is_network: boolean;

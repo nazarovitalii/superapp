@@ -1,0 +1,75 @@
+@if (isLoading()) {
+  <div class="edit-loading"><mat-spinner diameter="32"></mat-spinner></div>
+} @else if (loadError()) {
+  <div class="edit-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ loadError() }}</p>
+    <button mat-stroked-button (click)="cancel()">Назад</button>
+  </div>
+} @else {
+  <div class="edit-page">
+    <!-- Read-only шапка: контекст объекта, правке не подлежит -->
+    <header class="edit-header">
+      <span class="edit-header-path">{{ headerPath() }}</span>
+
+      <!-- Бегунок приватности адреса (виден только если есть что двигать) -->
+      @if (canSlide()) {
+        <div class="reveal-slider">
+          <p class="reveal-label">
+            @if (publicLocationId() === null) {
+              Полный адрес виден коллегам
+            } @else {
+              Адрес виден коллегам до уровня: <strong>{{ revealLabel() }}</strong>
+            }
+          </p>
+          <div
+            #revealEl
+            class="reveal-track"
+            (pointerdown)="onRevealPointerDown($event)"
+            (pointermove)="onRevealPointerMove($event)"
+            (pointerup)="onRevealPointerUpOrCancel()"
+            (pointercancel)="onRevealPointerUpOrCancel()"
+          >
+            @for (item of addrPath(); track item.id; let i = $index) {
+              <button
+                class="reveal-dot"
+                [class.active]="i <= revealIndex()"
+                [class.disabled]="i < communityIndex()"
+                (click)="selectReveal(i)"
+                [attr.aria-label]="item.name"
+              ></button>
+            }
+            <div
+              class="reveal-thumb"
+              [style.left.%]="
+                addrPath().length > 1
+                  ? (revealIndex() / (addrPath().length - 1)) * 100
+                  : 100
+              "
+            ></div>
+          </div>
+        </div>
+      }
+    </header>
+
+    <nav class="edit-tabs">
+      <button [class.active]="tab() === 'params'" (click)="setTab('params')">Параметры</button>
+      <button [class.active]="tab() === 'description'" (click)="setTab('description')">
+        Описание
+      </button>
+      <button [class.active]="tab() === 'photos'" (click)="setTab('photos')">Фото</button>
+    </nav>
+
+    <section class="edit-body">
+      @if (tab() === 'params') {
+        <!-- Task 5 -->
+      } @else if (tab() === 'description') {
+        <!-- Task 6 -->
+      } @else {
+        <!-- Task 7 -->
+      }
+    </section>
+
+    <!-- футер кнопок «Сохранить»/«Отмена» — Task 8 -->
+  </div>
+}
