@@ -33,6 +33,7 @@ export interface EditPropertyPayload {
   visibility: string | null;
   publicLocationId: string | null;
   originalPrice: number | null;
+  isExclusive: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -93,6 +94,7 @@ export class PropertyOwnerService {
       p_visibility: p.visibility,
       p_public_location_id: p.publicLocationId,
       p_original_price: p.originalPrice,
+      p_is_exclusive: p.isExclusive,
     });
     this.changedTick.update((n) => n + 1);
     return status;

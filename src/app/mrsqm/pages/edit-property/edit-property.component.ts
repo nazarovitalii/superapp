@@ -29,6 +29,7 @@ import { typeFieldsFor, TypeFields } from '../add-property/property-type-fields'
 import { revealIndexFromFraction } from '../add-property/reveal-slider.util';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
+import { PropertyFormAService } from '../../services/property-form-a.service';
 
 // 5 шагов окна редактирования (группировка создателя).
 const STEPS = [
@@ -70,6 +71,7 @@ export class EditPropertyPageComponent {
   private readonly _photoService = inject(PropertyPhotoService);
   private readonly _owner = inject(PropertyOwnerService);
   private readonly _snack = inject(SnackService);
+  private readonly _formA = inject(PropertyFormAService);
 
   readonly detail = signal<PropertyDetail | null>(null);
   readonly options = signal<FilterOptions | null>(null);
@@ -142,6 +144,15 @@ export class EditPropertyPageComponent {
   readonly originalPrice = signal<string>('');
   readonly description = signal<string>('');
   // ВНИМАНИЕ: publicLocationId НЕ объявляем здесь — это computed из бегунка (Task 4B).
+
+  // ─── Form A (SP-C1) ─────────────────────────────────────────────────────────
+  readonly contractNumber = signal<string>('');
+  readonly contractStart = signal<string>('');
+  readonly contractEnd = signal<string>('');
+  readonly isExclusive = signal<boolean>(false);
+  readonly formAFile = signal<File | null>(null);
+  readonly formAFileName = signal<string>('');
+  readonly formAPassword = signal<string>('');
 
   // ─── Таб «Фото» (Task 7) ────────────────────────────────────────────────────
   // Новые фото для добавления (стейджинг; загрузка — в save() Task 8).
@@ -265,6 +276,24 @@ export class EditPropertyPageComponent {
     }
     const tf = this.fields();
     this.saving.set(true);
+    // Валидация: при подаче нового Form A (или Pocket→Official) ВСЕ поля обязательны.
+    const submittingFormA =
+      this.listingType() === 'official' &&
+      (this.formAFile() != null || d.listing_type !== 'official');
+    if (
+      submittingFormA &&
+      (!this.contractNumber().trim() ||
+        !this.contractStart() ||
+        !this.contractEnd() ||
+        !this.formAFile())
+    ) {
+      this._notify(
+        'Для Official укажите Contract Number, срок договора и приложите Form A (PDF)',
+        'ERROR',
+      );
+      this.saving.set(false);
+      return;
+    }
     try {
       // 1) Новые фото — до сохранения полей (нужен только id, он уже есть).
       if (this.newPhotos().length) {
@@ -273,7 +302,32 @@ export class EditPropertyPageComponent {
         this.newPreviews.set([]);
         this.photos.set(await this._photoService.getPhotos(d.id));
       }
-      // 2) Поля (whitelist). Неприменимые по типу — null (как в add-property).
+      // 2) Новый Form A (official): загрузить PDF + вставить строку ДО edit_property,
+      // чтобы триггер увидел свежую неодобренную строку. Сбой — прерываем сохранение.
+      if (this.listingType() === 'official' && this.formAFile()) {
+        try {
+          const pdfPath = await this._formA.uploadFormA(
+            d.id,
+            d.owner_id,
+            this.formAFile()!,
+          );
+          await this._formA.insertFormA({
+            property_id: d.id,
+            file_url: pdfPath,
+            contract_number: this.contractNumber().trim() || null,
+            listing_start: this.contractStart() || null,
+            listing_end: this.contractEnd() || null,
+            pdf_password: this.formAPassword() || null,
+            status: 'active',
+            uploaded_by: d.owner_id,
+          });
+        } catch {
+          this._notify('Не удалось загрузить Form A — попробуйте ещё раз', 'ERROR');
+          this.saving.set(false);
+          return;
+        }
+      }
+      // 3) Поля (whitelist). Неприменимые по типу — null (как в add-property).
       const status = await this._owner.editProperty({
         propertyId: d.id,
         price,
@@ -299,6 +353,7 @@ export class EditPropertyPageComponent {
         visibility: this.visibility(),
         publicLocationId: this.publicLocationId(),
         originalPrice: this.originalPriceLocked() ? null : num(this.originalPrice()),
+        isExclusive: this.isExclusive(),
       });
       this._notify(
         status === 'pending_review' ? 'Объект отправлен на проверку' : 'Сохранено',
@@ -464,6 +519,7 @@ export class EditPropertyPageComponent {
     this.leaseUntil.set(d.lease_until ?? null);
     this.listingType.set(d.listing_type ?? 'pocket');
     this.visibility.set(d.visibility ?? 'public');
+    this.isExclusive.set(d.is_exclusive ?? false);
     // publicLocationId — computed из бегунка (Task 4B); здесь НЕ трогаем.
     // OP форматируем с разделителями (как основную цену) для единообразия.
     this.originalPrice.set(
@@ -489,4 +545,29 @@ export class EditPropertyPageComponent {
     const digits = val.replace(/\D/g, '');
     this.originalPrice.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
+
+  // Выбор файла Form A (PDF); не-PDF сбрасываем сразу (SP-C1).
+  onFormAFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    if (file && file.type !== 'application/pdf') {
+      this.formAFile.set(null);
+      this.formAFileName.set('');
+      input.value = '';
+      return;
+    }
+    this.formAFile.set(file);
+    this.formAFileName.set(file?.name ?? '');
+    input.value = '';
+  }
+
+  // Подпись финальной кнопки: UX-подсказка (авторитет — серверный статус).
+  readonly submitLabel = computed(() => {
+    const d = this.detail();
+    const willModerate =
+      (this.listingType() === 'official' && this.formAFile() != null) ||
+      (this.listingType() === 'official' && d?.listing_type !== 'official') ||
+      (this.visibility() === 'public' && d?.visibility !== 'public');
+    return willModerate ? 'Опубликовать' : 'Сохранить';
+  });
 }

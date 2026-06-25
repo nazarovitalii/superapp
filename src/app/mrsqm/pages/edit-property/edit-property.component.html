@@ -403,6 +403,69 @@
                 </div>
               </div>
             }
+            <!-- Поля Form A / договора — только для official-листинга (SP-C1). -->
+            @if (listingType() === 'official') {
+              <div class="field">
+                <span class="field-label"
+                  >Номер договора <span class="req-star">*</span></span
+                >
+                <input
+                  type="text"
+                  [ngModel]="contractNumber()"
+                  (ngModelChange)="contractNumber.set($event)"
+                  placeholder="Contract Number"
+                />
+              </div>
+              <div class="field">
+                <span class="field-label"
+                  >Срок договора <span class="req-star">*</span></span
+                >
+                <div class="lease-row">
+                  <input
+                    type="date"
+                    [ngModel]="contractStart()"
+                    (ngModelChange)="contractStart.set($event)"
+                  />
+                  <input
+                    type="date"
+                    [ngModel]="contractEnd()"
+                    (ngModelChange)="contractEnd.set($event)"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="edit-exclusive-check"
+                    [ngModel]="isExclusive()"
+                    (ngModelChange)="isExclusive.set($event)"
+                  />
+                  <label for="edit-exclusive-check">Эксклюзивный договор</label>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Приложить новый Form A (PDF)</span>
+                <label class="photo-add">
+                  <mat-icon>upload_file</mat-icon>
+                  <span>{{ formAFileName() || 'Выбрать файл PDF' }}</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    (change)="onFormAFile($event)"
+                  />
+                </label>
+              </div>
+              <div class="field">
+                <span class="field-label">Пароль PDF (если есть)</span>
+                <input
+                  type="text"
+                  [ngModel]="formAPassword()"
+                  (ngModelChange)="formAPassword.set($event)"
+                  placeholder="Пароль для открытия PDF"
+                />
+              </div>
+            }
           }
 
           <!-- ШАГ 4: Описание -->
@@ -552,7 +615,7 @@
             @if (saving()) {
               <mat-spinner [diameter]="20"></mat-spinner>
             } @else {
-              {{ saveLabel() }}
+              {{ submitLabel() }}
             }
           </button>
         }

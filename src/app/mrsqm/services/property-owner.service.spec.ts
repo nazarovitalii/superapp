@@ -140,6 +140,7 @@ describe('PropertyOwnerService.editProperty', () => {
       visibility: 'public',
       publicLocationId: null,
       originalPrice: null,
+      isExclusive: false,
     };
     const before = service.changedTick();
     const status = await service.editProperty(payload);
@@ -156,10 +157,44 @@ describe('PropertyOwnerService.editProperty', () => {
         p_area_sqft: 900,
         p_view_ids: ['v1'],
         p_visibility: 'public',
+        p_is_exclusive: false,
       }),
     );
     // неизменяемых полей в параметрах быть не должно
     expect(params['p_bedrooms']).toBeUndefined();
     expect(params['p_category_id']).toBeUndefined();
+  });
+
+  it('editProperty шлёт p_is_exclusive: true при isExclusive=true', async () => {
+    const payload: EditPropertyPayload = {
+      propertyId: 'p2',
+      price: 200,
+      description: null,
+      isMaid: false,
+      isStudy: false,
+      isHotelPool: false,
+      isVastu: false,
+      areaSqft: null,
+      plotSqft: null,
+      floorLevelId: null,
+      floorNumber: null,
+      floorsInUnitId: null,
+      viewIds: null,
+      positionIds: null,
+      amenityIds: null,
+      furnished: null,
+      pricePeriod: null,
+      occupancyStatus: 'vacant',
+      leaseUntil: null,
+      listingType: 'official',
+      visibility: 'public',
+      publicLocationId: null,
+      originalPrice: null,
+      isExclusive: true,
+    };
+    await service.editProperty(payload);
+    const [name, params] = rpc.calls.mostRecent().args;
+    expect(name).toBe('edit_property');
+    expect(params).toEqual(jasmine.objectContaining({ p_is_exclusive: true }));
   });
 });
