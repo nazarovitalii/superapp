@@ -26,6 +26,7 @@ import {
   OwnerAction,
   PropertyDetail,
   PropertyFeedItem,
+  PropertyFormA,
   PropertyPhoto,
   PropertyProject,
   OWNER_ACTIONS_BY_STATUS,
@@ -207,6 +208,9 @@ export class PropertyDetailComponent implements OnDestroy {
       isVastu: d?.is_vastu ?? false,
       publicLocationPath: d?.public_location_path ?? null,
       project: this._mapProject(d?.project ?? null),
+      // SP-B: Form A + Exclusive.
+      isExclusive: d?.is_exclusive ?? false,
+      formA: d?.form_a ?? [],
     };
   });
 
@@ -592,6 +596,13 @@ export class PropertyDetailComponent implements OnDestroy {
       completion,
       handover,
     };
+  }
+
+  /** Статус строки Form A: approved_at → 'approved'; иначе moderation_note → 'rejected'; иначе → 'на проверке'. */
+  formAStatus(r: PropertyFormA): string {
+    if (r.approved_at) return 'approved';
+    if (r.moderation_note) return 'rejected';
+    return 'на проверке';
   }
 
   private _label(id: string | null | undefined, list?: FilterOptionId[]): string | null {

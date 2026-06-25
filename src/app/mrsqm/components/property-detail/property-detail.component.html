@@ -283,6 +283,9 @@
             @if (vm().commissionIncluded) {
               <span class="type-chip">Комиссия включена</span>
             }
+            @if (vm().isExclusive) {
+              <span class="type-chip">Exclusive</span>
+            }
           </div>
         </div>
 
@@ -579,6 +582,18 @@
             }
             @if (vm().municipalityNumber) {
               <p class="section-text">Municipality №: {{ vm().municipalityNumber }}</p>
+            }
+          </div>
+        }
+
+        <!-- ── Form A (договор эксклюзивного листинга; только если есть строки) ── -->
+        @if (vm().formA.length) {
+          <div class="section">
+            <div class="section-label"><mat-icon>assignment</mat-icon>Form A</div>
+            @for (r of vm().formA; track r.contract_number) {
+              <p class="section-text">
+                Form A {{ r.listing_start }}–{{ r.listing_end }} · {{ formAStatus(r) }}
+              </p>
             }
           </div>
         }

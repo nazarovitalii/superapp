@@ -15,6 +15,7 @@ import {
   FilterOptions,
   PropertyDetail,
   PropertyFeedItem,
+  PropertyFormA,
   PropertyPhoto,
   PropertyProject,
 } from '../../types/database';
@@ -931,5 +932,137 @@ describe('PropertyDetailComponent', () => {
     comp.detail.set({ ...baseDetail, status: 'archived_sold' });
     await comp.confirmDelete();
     expect(ownerSvc.deleteProperty).not.toHaveBeenCalled();
+  });
+
+  // ─── SP-B Task 3: Form A строки + бейдж Exclusive ────────────────────────
+
+  const makeFormA = (over: Partial<PropertyFormA> = {}): PropertyFormA => ({
+    contract_number: 'FA-001',
+    listing_start: '2026-01-01',
+    listing_end: '2026-06-30',
+    approved_at: null,
+    moderation_note: null,
+    ...over,
+  });
+
+  it('formAStatus: approved_at → «approved»', () => {
+    const { comp } = makeComponent();
+    const r = makeFormA({ approved_at: '2026-02-01T00:00:00Z', moderation_note: null });
+    expect(comp.formAStatus(r)).toBe('approved');
+  });
+
+  it('formAStatus: нет approved_at + moderation_note → «rejected»', () => {
+    const { comp } = makeComponent();
+    const r = makeFormA({ approved_at: null, moderation_note: 'Не прошёл проверку' });
+    expect(comp.formAStatus(r)).toBe('rejected');
+  });
+
+  it('formAStatus: нет approved_at и нет moderation_note → «на проверке»', () => {
+    const { comp } = makeComponent();
+    const r = makeFormA({ approved_at: null, moderation_note: null });
+    expect(comp.formAStatus(r)).toBe('на проверке');
+  });
+
+  it('vm().isExclusive: is_exclusive=true → true', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_exclusive: true });
+    await comp.loadProperty();
+    expect(comp.vm().isExclusive).toBe(true);
+  });
+
+  it('vm().isExclusive: is_exclusive=null → false (фолбэк)', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ is_exclusive: null });
+    await comp.loadProperty();
+    expect(comp.vm().isExclusive).toBe(false);
+  });
+
+  it('vm().formA: form_a=[{approved_at}] → массив с одной строкой статуса approved', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({
+      form_a: [makeFormA({ approved_at: '2026-02-01T00:00:00Z' })],
+    });
+    await comp.loadProperty();
+    const rows = comp.vm().formA;
+    expect(rows.length).toBe(1);
+    expect(comp.formAStatus(rows[0])).toBe('approved');
+  });
+
+  it('vm().formA: form_a=null → пустой массив', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ form_a: null });
+    await comp.loadProperty();
+    expect(comp.vm().formA).toEqual([]);
+  });
+
+  it('vm().formA: form_a=[] → пустой массив', async () => {
+    const { comp, supa } = makeComponent();
+    supa.rpcResult = detail({ form_a: [] });
+    await comp.loadProperty();
+    expect(comp.vm().formA).toEqual([]);
+  });
+
+  it('бейдж Exclusive рендерится при isExclusive=true', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ is_exclusive: true });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const chips: string =
+      fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';
+    expect(chips).toContain('Exclusive');
+  });
+
+  it('бейдж Exclusive НЕ рендерится при isExclusive=false', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ is_exclusive: false });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const chips: string =
+      fixture.nativeElement.querySelector('.type-chips')?.textContent ?? '';
+    expect(chips).not.toContain('Exclusive');
+  });
+
+  it('блок Form A рендерит строки при наличии form_a', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({
+      form_a: [
+        makeFormA({
+          listing_start: '2026-01-01',
+          listing_end: '2026-06-30',
+          approved_at: '2026-02-01T00:00:00Z',
+        }),
+      ],
+    });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const sections = fixture.nativeElement.querySelectorAll('.section');
+    const formASection = Array.from(sections as NodeListOf<HTMLElement>).find((el) =>
+      el.textContent?.includes('Form A'),
+    );
+    expect(formASection).not.toBeUndefined();
+    expect(formASection!.textContent).toContain('2026-01-01');
+    expect(formASection!.textContent).toContain('2026-06-30');
+    expect(formASection!.textContent).toContain('approved');
+  });
+
+  it('блок Form A скрыт при пустом form_a', async () => {
+    const { comp, fixture, supa } = makeComponent();
+    supa.rpcResult = detail({ form_a: [] });
+    await comp.loadProperty();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const allText: string = fixture.nativeElement.textContent ?? '';
+    // Заголовок секции «Form A» не должен появиться при пустом списке
+    // (но слово «Form» встречается в «Form A» строках; ищем иконку-лейбл через class)
+    const sections = fixture.nativeElement.querySelectorAll('.section');
+    const formASection = Array.from(sections as NodeListOf<HTMLElement>).find((el) => {
+      const label = el.querySelector('.section-label');
+      return label?.textContent?.includes('Form A');
+    });
+    expect(formASection).toBeUndefined();
+    void allText; // избегаем unused-variable предупреждение
   });
 });
