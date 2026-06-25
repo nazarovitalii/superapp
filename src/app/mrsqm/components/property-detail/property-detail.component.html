@@ -590,7 +590,7 @@
         @if (vm().formA.length) {
           <div class="section">
             <div class="section-label"><mat-icon>assignment</mat-icon>Form A</div>
-            @for (r of vm().formA; track r.contract_number) {
+            @for (r of vm().formA; track $index) {
               <p class="section-text">
                 Form A {{ r.listing_start }}–{{ r.listing_end }} · {{ formAStatus(r) }}
               </p>
