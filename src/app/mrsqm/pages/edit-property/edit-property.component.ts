@@ -241,12 +241,6 @@ export class EditPropertyPageComponent {
   // Флаг выполнения операции сохранения.
   readonly saving = signal(false);
 
-  // Текст кнопки: active → «Сохранить»; rejected/withdrawn → «Отправить на проверку».
-  readonly saveLabel = computed(() => {
-    const s = this.detail()?.status;
-    return s === 'active' ? 'Сохранить' : 'Отправить на проверку';
-  });
-
   /** Показать снек с общим конфигом (низ-лево, стиль ленты — как в property-detail). */
   private _notify(msg: string, type: SnackType): void {
     this._snack.open({

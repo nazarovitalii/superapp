@@ -173,10 +173,6 @@ describe('EditPropertyPageComponent', () => {
     expect(ta.value).toBe('d');
   });
 
-  it('saveLabel = «Сохранить» для active', () => {
-    expect(fixture.componentInstance.saveLabel()).toBe('Сохранить');
-  });
-
   it('onOriginalPriceInput форматирует OP с разделителями', () => {
     const c = fixture.componentInstance;
     c.onOriginalPriceInput('1400000');
