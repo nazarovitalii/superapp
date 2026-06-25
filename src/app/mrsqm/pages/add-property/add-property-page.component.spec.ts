@@ -4,6 +4,7 @@ import { AddPropertyPageComponent } from './add-property-page.component';
 import { revealIndexFromFraction } from './reveal-slider.util';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
+import { PropertyFormAService } from '../../services/property-form-a.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import {
   BuildingInfo,
@@ -71,6 +72,14 @@ class FakePhotoService {
   async uploadAndAttach(_id: string, _files: File[], _fp: File[] = []): Promise<void> {}
 }
 
+// Стаб PropertyFormAService.
+class FakeFormAService {
+  async uploadFormA(_propertyId: string, _ownerId: string, _file: File): Promise<string> {
+    return 'owner-1/prop-id/uuid.pdf';
+  }
+  async insertFormA(_row: unknown): Promise<void> {}
+}
+
 // Стаб MrsqmAuthService.
 class FakeAuthService {
   currentUser = (): null => null;
@@ -131,6 +140,7 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -228,21 +238,33 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     expect(result).toBeNull();
   });
 
-  // ── _validateStep: гейт шага 5 (Листинг) ────────────────────────────────
+  // ── _validateStep: гейт шага 5 (Листинг) — Form A (SP-B) ────────────────
 
-  it('шаг 5 (Листинг): official без titleDeedNumber → возвращает ошибку', () => {
+  it('шаг 5 (Листинг): official без contractNumber → возвращает ошибку', () => {
     component.step.set(5);
     component.listingType.set('official');
-    component.titleDeedNumber.set('');
+    component.contractNumber.set('');
+    component.formAFile.set(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' }));
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(typeof result).toBe('string');
     expect(result).toBeTruthy();
   });
 
-  it('шаг 5 (Листинг): official c titleDeedNumber → возвращает null', () => {
+  it('шаг 5 (Листинг): official без formAFile → возвращает ошибку', () => {
     component.step.set(5);
     component.listingType.set('official');
-    component.titleDeedNumber.set('TD-123456');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(null);
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 5 (Листинг): official c contractNumber и formAFile → возвращает null', () => {
+    component.step.set(5);
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' }));
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
   });
@@ -332,6 +354,7 @@ describe('AddPropertyPageComponent — Off-Plan гейтинг (FC-3)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -435,6 +458,7 @@ describe('AddPropertyPageComponent — reorder галереи (B4)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -500,6 +524,7 @@ describe('AddPropertyPageComponent — Floor Plan до 4 (B4)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -564,6 +589,7 @@ describe('AddPropertyPageComponent — selectReveal (B5)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -634,6 +660,7 @@ describe('AddPropertyPageComponent — pickLocation дедуп leaf (FB-1)', () 
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -731,6 +758,7 @@ describe('AddPropertyPageComponent — developer-автокомплит (AP-5)',
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -826,6 +854,7 @@ describe('AddPropertyPageComponent — новые поля формы', () => {
       providers: [
         { provide: PropertyCreateService, useValue: create },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -931,6 +960,7 @@ describe('AddPropertyPageComponent — yearOptions (V-6)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -974,6 +1004,7 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -1047,6 +1078,7 @@ describe('AddPropertyPageComponent — позиции (наборы)', () => {
       providers: [
         { provide: PropertyCreateService, useClass: FakePropertyCreateService },
         { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
         {
           provide: Router,
@@ -1109,5 +1141,245 @@ describe('AddPropertyPageComponent — позиции (наборы)', () => {
     component.togglePosition('mid');
     component.togglePosition('mid');
     expect(component.positionIds()).toEqual([]);
+  });
+});
+
+// ─── SP-B: Form A — onFormAFile, submit, статус official ─────────────────────
+describe('AddPropertyPageComponent — Form A (SP-B)', () => {
+  let component: AddPropertyPageComponent;
+  let create: FakePropertyCreateService;
+  let formA: FakeFormAService;
+
+  const makePdfFile = (): File =>
+    new File(['%PDF'], 'form-a.pdf', { type: 'application/pdf' });
+  const makeNonPdfFile = (): File =>
+    new File(['data'], 'photo.jpg', { type: 'image/jpeg' });
+
+  const setupOwner = (): void => {
+    const auth = TestBed.inject(MrsqmAuthService);
+    (auth as unknown as { currentUser: () => unknown }).currentUser = () => ({
+      id: 'owner-1',
+    });
+  };
+
+  const setRequiredFields = (): void => {
+    component.options.set({
+      ...FAKE_OPTIONS,
+      unit_types: [
+        { id: 'apt', value: 'apartment', label_en: 'Apartment', parent_id: null },
+      ],
+    } as unknown as FilterOptions);
+    component.unitTypeId.set('apt');
+    component.locationId.set('loc-1');
+    component.step.set(7);
+    component.dealType.set('sale');
+    component.bedrooms.set(2);
+    component.bathrooms.set(2);
+    component.areaSqft.set('1200');
+    component.floorLevelId.set('fl-1');
+    component.price.set('1,200,000');
+  };
+
+  beforeEach(async () => {
+    create = new FakePropertyCreateService();
+    formA = new FakeFormAService();
+
+    await TestBed.configureTestingModule({
+      imports: [AddPropertyPageComponent],
+      providers: [
+        { provide: PropertyCreateService, useValue: create },
+        { provide: PropertyPhotoService, useClass: FakePhotoService },
+        { provide: PropertyFormAService, useValue: formA },
+        { provide: MrsqmAuthService, useClass: FakeAuthService },
+        {
+          provide: Router,
+          useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(AddPropertyPageComponent);
+    component = fixture.componentInstance;
+  });
+
+  // ── onFormAFile ────────────────────────────────────────────────────────────
+
+  it('onFormAFile: принимает PDF-файл', () => {
+    const file = makePdfFile();
+    const input = { files: [file], value: '' } as unknown as HTMLInputElement;
+    const event = { target: input } as unknown as Event;
+    component.onFormAFile(event);
+    expect(component.formAFile()).toBe(file);
+    expect(component.formAFileName()).toBe('form-a.pdf');
+  });
+
+  it('onFormAFile: отклоняет не-PDF и сбрасывает сигнал', () => {
+    component.formAFile.set(makePdfFile());
+    component.formAFileName.set('old.pdf');
+    const nonPdf = makeNonPdfFile();
+    const input = { files: [nonPdf], value: '' } as unknown as HTMLInputElement;
+    const event = { target: input } as unknown as Event;
+    component.onFormAFile(event);
+    expect(component.formAFile()).toBeNull();
+    expect(component.formAFileName()).toBe('');
+  });
+
+  it('onFormAFile: при пустом выборе сбрасывает файл', () => {
+    const input = { files: [], value: '' } as unknown as HTMLInputElement;
+    const event = { target: input } as unknown as Event;
+    component.onFormAFile(event);
+    expect(component.formAFile()).toBeNull();
+  });
+
+  // ── official submit: payload без title_deed-ключей, вызов uploadFormA + insertFormA ──
+
+  it('official-submit: payload не содержит title_deed-ключей', async () => {
+    setupOwner();
+    setRequiredFields();
+    spyOn(create, 'createProperty').and.callFake(async (_p: unknown) => 'new-id');
+    spyOn(formA, 'uploadFormA').and.resolveTo('owner-1/new-id/uuid.pdf');
+    spyOn(formA, 'insertFormA').and.resolveTo();
+
+    component.listingType.set('official');
+    component.visibility.set('public');
+    component.contractNumber.set('CN-001');
+    component.contractStart.set('2026-07-01');
+    component.contractEnd.set('2027-07-01');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    const payload = (create.createProperty as jasmine.Spy).calls.mostRecent()
+      .args[0] as Record<string, unknown>;
+    expect('title_deed_number' in payload).toBeFalse();
+    expect('title_deed_year' in payload).toBeFalse();
+    expect('plot_number' in payload).toBeFalse();
+    expect('municipality_number' in payload).toBeFalse();
+  });
+
+  it('official-submit: вызывает uploadFormA и insertFormA', async () => {
+    setupOwner();
+    setRequiredFields();
+    spyOn(create, 'createProperty').and.resolveTo('new-id');
+    const uploadSpy = spyOn(formA, 'uploadFormA').and.resolveTo(
+      'owner-1/new-id/uuid.pdf',
+    );
+    const insertSpy = spyOn(formA, 'insertFormA').and.resolveTo();
+
+    const pdfFile = makePdfFile();
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(pdfFile);
+
+    await component.submit();
+
+    expect(uploadSpy).toHaveBeenCalledWith('new-id', 'owner-1', pdfFile);
+    expect(insertSpy).toHaveBeenCalled();
+    const insertArg = insertSpy.calls.mostRecent().args[0] as Record<string, unknown>;
+    expect(insertArg['property_id']).toBe('new-id');
+    expect(insertArg['uploaded_by']).toBe('owner-1');
+    expect('pdf_password' in insertArg).toBeTrue();
+  });
+
+  // ── status = pending_review для official (в том числе при network-visibility) ──
+
+  it('official + network → status = pending_review', async () => {
+    setupOwner();
+    setRequiredFields();
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+    spyOn(formA, 'uploadFormA').and.resolveTo('path');
+    spyOn(formA, 'insertFormA').and.resolveTo();
+
+    component.listingType.set('official');
+    component.visibility.set('network');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    const payload = captured[0] as Record<string, unknown>;
+    expect(payload['status']).toBe('pending_review');
+  });
+
+  it('pocket + network → status = active', async () => {
+    setupOwner();
+    setRequiredFields();
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+
+    component.listingType.set('pocket');
+    component.visibility.set('network');
+
+    await component.submit();
+
+    const payload = captured[0] as Record<string, unknown>;
+    expect(payload['status']).toBe('active');
+  });
+
+  it('pocket + public → status = pending_review', async () => {
+    setupOwner();
+    setRequiredFields();
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+
+    component.listingType.set('pocket');
+    component.visibility.set('public');
+
+    await component.submit();
+
+    const payload = captured[0] as Record<string, unknown>;
+    expect(payload['status']).toBe('pending_review');
+  });
+
+  // ── is_exclusive в payload ────────────────────────────────────────────────
+
+  it('official + isExclusive=true → payload.is_exclusive = true', async () => {
+    setupOwner();
+    setRequiredFields();
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+    spyOn(formA, 'uploadFormA').and.resolveTo('path');
+    spyOn(formA, 'insertFormA').and.resolveTo();
+
+    component.listingType.set('official');
+    component.isExclusive.set(true);
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    const payload = captured[0] as Record<string, unknown>;
+    expect(payload['is_exclusive']).toBe(true);
+  });
+
+  it('pocket → payload.is_exclusive = false', async () => {
+    setupOwner();
+    setRequiredFields();
+    const captured: unknown[] = [];
+    spyOn(create, 'createProperty').and.callFake(async (p: unknown) => {
+      captured.push(p);
+      return 'id';
+    });
+
+    component.listingType.set('pocket');
+    component.isExclusive.set(true); // игнорируется для pocket
+
+    await component.submit();
+
+    const payload = captured[0] as Record<string, unknown>;
+    expect(payload['is_exclusive']).toBe(false);
   });
 });

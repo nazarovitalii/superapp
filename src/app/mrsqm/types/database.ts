@@ -176,6 +176,16 @@ export interface LocationSearchItem {
   community_name: string | null;
 }
 
+// ─── Form A (договор эксклюзивного листинга) ──────────────────────────────
+// Данные из таблицы property_form_a, возвращаемые get_property (без файла/пароля).
+export interface PropertyFormA {
+  contract_number: string | null;
+  listing_start: string | null;
+  listing_end: string | null;
+  approved_at: string | null; // NULL = на проверке
+  moderation_note: string | null; // причина отклонения
+}
+
 // ─── Payload для INSERT в properties (под RLS owner_id = auth.uid()) ──────
 // owner_id не передаём — ставится из auth.uid() на клиенте перед вставкой.
 export interface PropertyInsert {
@@ -197,6 +207,7 @@ export interface PropertyInsert {
   is_hotel_pool: boolean;
   is_vastu?: boolean | null;
   is_study?: boolean | null;
+  is_exclusive: boolean;
   original_price?: number | null;
   cheques?: number | null;
   area_sqft: number | null;
@@ -217,13 +228,8 @@ export interface PropertyInsert {
   developer_id: string | null;
   completion_year: number | null;
   completion_q: string | null;
-  title_deed_number: string | null;
-  title_deed_year: number | null;
-  plot_number: string | null;
-  municipality_number: string | null;
   visibility: string;
-  // status: network → 'active' сразу, public → 'pending_review' (модерация).
-  // Модерации в БД нет — статус задаёт клиент по visibility (продуктовое правило).
+  // status: official → 'pending_review' всегда; network → 'active'; public → 'pending_review'.
   status: PropertyStatus;
   description: string | null;
 }
@@ -452,6 +458,10 @@ export interface PropertyDetail {
   rejection_reason: string | null;
   // Дата истечения объявления (ось истечения LM); показывается в шапке статуса «Активно до …».
   expires_at: string | null;
+  // Эксклюзивный договор (SP-B).
+  is_exclusive?: boolean | null;
+  // Form A данные из property_form_a (SP-B); возвращается get_property.
+  form_a?: PropertyFormA[] | null;
   // Ошибка доступа: get_property возвращает { error, property_id } вместо объекта.
   error?: string;
 }

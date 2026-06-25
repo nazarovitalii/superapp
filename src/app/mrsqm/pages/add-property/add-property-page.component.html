@@ -860,58 +860,80 @@
               </div>
             </div>
 
-            <!-- Документы (Title Deed и пр.) — только для официального листинга.
-                 Для pocket-листинга документы не требуются. -->
+            <!-- Поля Form A / договора — только для official-листинга. -->
             @if (listingType() === 'official') {
               <div class="field">
                 <span class="field-label"
-                  >Title Deed №<span class="req-star">*</span></span
+                  >Номер договора<span class="req-star">*</span></span
                 >
                 <input
                   type="text"
-                  [ngModel]="titleDeedNumber()"
-                  (ngModelChange)="titleDeedNumber.set($event)"
-                  placeholder="Номер свидетельства"
+                  [ngModel]="contractNumber()"
+                  (ngModelChange)="contractNumber.set($event)"
+                  placeholder="Contract Number"
                 />
               </div>
               <div class="field">
-                <span class="field-label">Год Title Deed</span>
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  [ngModel]="titleDeedYear()"
-                  (ngModelChange)="titleDeedYear.set($event)"
-                  placeholder="напр. 2022"
-                />
+                <span class="field-label">Срок договора</span>
+                <div class="lease-row">
+                  <input
+                    type="date"
+                    [ngModel]="contractStart()"
+                    (ngModelChange)="contractStart.set($event)"
+                    placeholder="Дата начала"
+                  />
+                  <input
+                    type="date"
+                    [ngModel]="contractEnd()"
+                    (ngModelChange)="contractEnd.set($event)"
+                    placeholder="Дата окончания"
+                  />
+                </div>
               </div>
               <div class="field">
-                <span class="field-label">Plot number</span>
-                <input
-                  type="text"
-                  [ngModel]="plotNumber()"
-                  (ngModelChange)="plotNumber.set($event)"
-                  placeholder="Номер участка"
-                />
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="exclusive-check"
+                    [ngModel]="isExclusive()"
+                    (ngModelChange)="isExclusive.set($event)"
+                  />
+                  <label for="exclusive-check">Эксклюзивный договор</label>
+                </div>
               </div>
               <div class="field">
-                <span class="field-label">Municipality number</span>
+                <span class="field-label"
+                  >Form A (PDF)<span class="req-star">*</span></span
+                >
+                <label class="photo-add">
+                  <mat-icon>upload_file</mat-icon>
+                  <span>{{ formAFileName() || 'Выбрать файл PDF' }}</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    (change)="onFormAFile($event)"
+                  />
+                </label>
+              </div>
+              <div class="field">
+                <span class="field-label">Пароль PDF (если есть)</span>
                 <input
                   type="text"
-                  [ngModel]="municipalityNumber()"
-                  (ngModelChange)="municipalityNumber.set($event)"
-                  placeholder="Муниципальный номер"
+                  [ngModel]="formAPassword()"
+                  (ngModelChange)="formAPassword.set($event)"
+                  placeholder="Пароль для открытия PDF"
                 />
               </div>
 
               <p class="note">
-                Для официального листинга потребуется прикрепить Form A (PDF) — загрузка
-                документов появится здесь позже.
+                Official-листинг уходит на модерацию. Появится в ленте после проверки Form
+                A.
               </p>
             }
             <p class="note">
-              @if (visibility() === 'network') {
+              @if (listingType() !== 'official' && visibility() === 'network') {
                 Объект для сети публикуется сразу и появится в ленте у ваших коллег.
-              } @else {
+              } @else if (listingType() !== 'official') {
                 Публичный объект уйдёт на модерацию и появится в ленте после одобрения.
               }
             </p>

@@ -17,6 +17,7 @@ import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { moveItemInArray } from '../../../util/move-item-in-array';
 import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
+import { PropertyFormAService } from '../../services/property-form-a.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import {
   BuildingInfo,
@@ -79,6 +80,7 @@ const CHILDREN_SELECT_THRESHOLD = 10;
 export class AddPropertyPageComponent {
   private readonly _service = inject(PropertyCreateService);
   private readonly _photoService = inject(PropertyPhotoService);
+  private readonly _formA = inject(PropertyFormAService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _router = inject(Router);
 
@@ -191,10 +193,14 @@ export class AddPropertyPageComponent {
   // ─── Шаг 6: Листинг ────────────────────────────────────────────────────
   readonly listingType = signal<string>('pocket');
   readonly visibility = signal<string>('public');
-  readonly titleDeedNumber = signal<string>('');
-  readonly titleDeedYear = signal<string>('');
-  readonly plotNumber = signal<string>('');
-  readonly municipalityNumber = signal<string>('');
+  // Поля Form A / договора (только для official-листинга).
+  readonly contractNumber = signal<string>('');
+  readonly contractStart = signal<string>('');
+  readonly contractEnd = signal<string>('');
+  readonly isExclusive = signal<boolean>(false);
+  readonly formAFile = signal<File | null>(null);
+  readonly formAFileName = signal<string>('');
+  readonly formAPassword = signal<string>('');
 
   // ─── Шаг 7: Описание / Шаг 8: Фото ────────────────────────────────────
   readonly description = signal<string>('');
@@ -670,6 +676,22 @@ export class AddPropertyPageComponent {
     this.originalPrice.set(digits ? Number(digits).toLocaleString('en-US') : '');
   }
 
+  // ─── Шаг 6: Form A (PDF) ────────────────────────────────────────────────
+  // Принять только файл с типом application/pdf; иначе сбросить.
+  onFormAFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    if (file && file.type !== 'application/pdf') {
+      this.formAFile.set(null);
+      this.formAFileName.set('');
+      input.value = '';
+      return;
+    }
+    this.formAFile.set(file);
+    this.formAFileName.set(file?.name ?? '');
+    input.value = '';
+  }
+
   // ─── Навигация ──────────────────────────────────────────────────────────
   private _validateStep(): string | null {
     const tf = this.fields();
@@ -699,8 +721,12 @@ export class AddPropertyPageComponent {
         if (!this.price()) return 'Укажите цену';
         return null;
       case 5:
-        if (this.listingType() === 'official' && !this.titleDeedNumber())
-          return 'Для официального листинга укажите номер Title Deed';
+        if (this.listingType() === 'official') {
+          if (!this.contractNumber().trim())
+            return 'Для официального листинга укажите номер договора (Contract Number)';
+          if (!this.formAFile())
+            return 'Для официального листинга прикрепите файл Form A (PDF)';
+        }
         return null;
       default:
         return null;
@@ -748,7 +774,6 @@ export class AddPropertyPageComponent {
     const plot = tf.plot ? num(this.plotSqft()) : null;
     const isOffplan = this.handover() === 'offplan';
     const isOccupied = this.handover() === 'ready' && this.occupancy() === 'occupied';
-    // Документы (Title Deed/Plot/Municipality) — только для официального листинга.
     const isOfficial = this.listingType() === 'official';
     // lease_until: первое число выбранного месяца/года.
     const lm = String(this.leaseMonth() ?? '');
@@ -773,6 +798,7 @@ export class AddPropertyPageComponent {
       is_hotel_pool: tf.hotelPool ? this.isHotelPool() : false,
       is_vastu: tf.vastu ? this.isVastu() : false,
       is_study: tf.maid ? this.isStudy() : false,
+      is_exclusive: isOfficial ? this.isExclusive() : false,
       original_price: this.dealType() === 'sale' ? num(this.originalPrice()) : null,
       cheques: this.dealType() === 'rent' ? this.cheques() : null,
       area_sqft: sqft,
@@ -794,13 +820,10 @@ export class AddPropertyPageComponent {
       developer_id: this.pickedDeveloperId() ?? (isOffplan ? this._developerId() : null),
       completion_year: isOffplan ? num(this.completionYear()) : null,
       completion_q: isOffplan ? this.completionQ() : null,
-      title_deed_number: isOfficial ? this.titleDeedNumber().trim() || null : null,
-      title_deed_year: isOfficial ? num(this.titleDeedYear()) : null,
-      plot_number: isOfficial ? this.plotNumber().trim() || null : null,
-      municipality_number: isOfficial ? this.municipalityNumber().trim() || null : null,
       visibility: this.visibility(),
-      // network — публикуется сразу (active); public — на модерацию (pending_review).
-      status: this.visibility() === 'network' ? 'active' : 'pending_review',
+      // official → всегда pending_review (модерация обязательна).
+      // network → active сразу; public → pending_review.
+      status: isOfficial || this.visibility() !== 'network' ? 'pending_review' : 'active',
       description: this.description().trim() || null,
     };
 
@@ -815,6 +838,27 @@ export class AddPropertyPageComponent {
           await this._photoService.uploadAndAttach(id, this.photos(), this.floorPlans());
         } catch {
           this.error.set('Объект создан, но часть фото не загрузилась');
+        }
+      }
+      // Form A: загружаем PDF и вставляем строку в property_form_a.
+      // Сбой не откатывает объект — сообщаем, но продолжаем.
+      if (isOfficial && this.formAFile()) {
+        try {
+          const pdfPath = await this._formA.uploadFormA(id, owner.id, this.formAFile()!);
+          await this._formA.insertFormA({
+            property_id: id,
+            file_url: pdfPath,
+            contract_number: this.contractNumber().trim() || null,
+            listing_start: this.contractStart() || null,
+            listing_end: this.contractEnd() || null,
+            pdf_password: this.formAPassword() || null,
+            status: 'active',
+            uploaded_by: owner.id,
+          });
+        } catch {
+          this.error.set(
+            'Объект создан, но Form A не загрузилась — свяжитесь с поддержкой',
+          );
         }
       }
       await this._router.navigateByUrl('/mrsqm/feed');
