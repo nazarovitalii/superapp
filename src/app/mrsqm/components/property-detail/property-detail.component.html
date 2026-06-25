@@ -174,28 +174,34 @@
       <div class="detail-body">
         <!-- ── Управление своим объектом (is_owner) — owner-панель наверху (CD-2/3) ── -->
         @if (isOwner()) {
+          <!-- Статус-баннер (цветной блок): несёт ТОЛЬКО статус + причину.
+               Кнопки вынесены в отдельный ряд ниже (CD-2/3, редизайн). -->
           <div
-            class="owner-panel"
+            class="owner-status"
             [class]="'tone-' + bannerTone()"
           >
-            <!-- Шапка статуса: иконка тона + статус (для активного — «Активно до …») -->
-            <div class="owner-panel-head">
-              <mat-icon>{{ statusIcon() }}</mat-icon>
-              <span class="owner-panel-status">
-                @if (detail()?.status === 'active' && expiryDate()) {
-                  Активно до {{ expiryDate() }}
-                } @else {
-                  {{ statusLabel() }}
-                }
-              </span>
-            </div>
+            <mat-icon class="owner-status-icon">{{ statusIcon() }}</mat-icon>
+            <span class="owner-status-label">
+              @if (detail()?.status === 'active' && expiryDate()) {
+                Активно до {{ expiryDate() }}
+              } @else {
+                {{ statusLabel() }}
+              }
+            </span>
             @if (detail()?.status === 'rejected' && detail()?.rejection_reason) {
-              <p class="owner-panel-reason">Причина: {{ detail()?.rejection_reason }}</p>
+              <p class="owner-status-reason">Причина: {{ detail()?.rejection_reason }}</p>
             }
-            <div class="owner-panel-actions">
+          </div>
+
+          <!-- Ряд действий владельца — вне баннера. Главное действие (Редактировать/
+               Продлить) залито акцентом, вторичные — в рамке, «Удалить» — красный, справа. -->
+          @if (ownerActions().length) {
+            <div class="owner-actions">
               @if (ownerActions().includes('edit')) {
                 <button
-                  mat-stroked-button
+                  mat-flat-button
+                  color="primary"
+                  class="owner-action"
                   (click)="goEdit()"
                   [disabled]="ownerBusy()"
                 >
@@ -206,6 +212,7 @@
               @if (ownerActions().includes('actualize')) {
                 <button
                   mat-stroked-button
+                  class="owner-action"
                   (click)="actualize()"
                   [disabled]="ownerBusy()"
                 >
@@ -216,6 +223,7 @@
                 <button
                   mat-flat-button
                   color="primary"
+                  class="owner-action"
                   (click)="renew()"
                   [disabled]="ownerBusy()"
                 >
@@ -225,6 +233,7 @@
               @if (ownerActions().includes('archive')) {
                 <button
                   mat-stroked-button
+                  class="owner-action"
                   [matMenuTriggerFor]="archiveMenu"
                   [disabled]="ownerBusy()"
                 >
@@ -247,8 +256,8 @@
               }
               @if (ownerActions().includes('delete')) {
                 <button
-                  mat-stroked-button
-                  class="danger-btn is-delete"
+                  mat-button
+                  class="owner-action danger-btn is-delete"
                   (click)="confirmDelete()"
                   [disabled]="ownerBusy()"
                 >
@@ -256,7 +265,7 @@
                 </button>
               }
             </div>
-          </div>
+          }
         }
 
         <!-- ── 2. Цена и тип сделки ──────────────────────────────────────── -->

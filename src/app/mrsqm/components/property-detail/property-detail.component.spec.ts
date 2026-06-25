@@ -207,7 +207,10 @@ const makeComponent = (
     { provide: SnackService, useValue: snack },
     { provide: SeenTrackingService, useValue: seen },
     { provide: PropertyOwnerService, useValue: ownerSvc },
-    { provide: Router, useValue: { navigateByUrl: () => Promise.resolve(true) } },
+    {
+      provide: Router,
+      useValue: { navigateByUrl: () => Promise.resolve(true), url: '/mrsqm/feed' },
+    },
   ];
   if (dialogOverride) {
     providers.push({ provide: MatDialog, useValue: dialogOverride });
@@ -448,7 +451,8 @@ describe('PropertyDetailComponent', () => {
     await comp.loadProperty();
     await fixture.whenStable();
     fixture.detectChanges();
-    const actions = fixture.nativeElement.querySelector('.owner-panel');
+    // Кнопки вынесены из цветного баннера в отдельный ряд .owner-actions (редизайн CD-2/3).
+    const actions = fixture.nativeElement.querySelector('.owner-actions');
     expect(actions).not.toBeNull();
     // active → кнопка «Изменить» (по матрице LM; «Редактировать» — у rejected/withdrawn).
     expect(actions.textContent).toContain('Изменить');
@@ -932,6 +936,66 @@ describe('PropertyDetailComponent', () => {
     comp.detail.set({ ...baseDetail, status: 'archived_sold' });
     await comp.confirmDelete();
     expect(ownerSvc.deleteProperty).not.toHaveBeenCalled();
+  });
+
+  // Баг-фикс: удаление из правой панели не должно оставлять открытым окно
+  // редактирования удалённого объекта в главном контенте.
+  it('confirmDelete() уводит с окна редактирования удалённого объекта на ленту', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'deleteProperty',
+      'editProperty',
+    ]);
+    (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+
+    const dialogRefSpy = jasmine.createSpyObj<MatDialogRef<unknown>>('MatDialogRef', [
+      'afterClosed',
+    ]);
+    dialogRefSpy.afterClosed.and.returnValue(of(true));
+    const dialogSpy = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
+    (dialogSpy.open as jasmine.Spy).and.returnValue(dialogRefSpy);
+
+    const { comp } = makeComponent(ownerSvc, dialogSpy);
+    // Эмулируем, что главный контент — на странице редактирования этого объекта.
+    const router = TestBed.inject(Router);
+    (router as unknown as { url: string }).url = `/mrsqm/edit/${baseDetail.id}`;
+    const navSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+    comp.detail.set({ ...baseDetail, status: 'archived_sold' });
+    await comp.confirmDelete();
+
+    expect(ownerSvc.deleteProperty).toHaveBeenCalledWith(baseDetail.id);
+    expect(navSpy).toHaveBeenCalledWith('/mrsqm/feed');
+  });
+
+  it('confirmDelete() НЕ навигирует, если окно редактирования не открыто', async () => {
+    const ownerSvc = jasmine.createSpyObj<PropertyOwnerService>('PropertyOwnerService', [
+      'actualizeProperty',
+      'archiveProperty',
+      'renewProperty',
+      'deleteProperty',
+      'editProperty',
+    ]);
+    (ownerSvc.deleteProperty as jasmine.Spy).and.resolveTo(undefined);
+
+    const dialogRefSpy = jasmine.createSpyObj<MatDialogRef<unknown>>('MatDialogRef', [
+      'afterClosed',
+    ]);
+    dialogRefSpy.afterClosed.and.returnValue(of(true));
+    const dialogSpy = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
+    (dialogSpy.open as jasmine.Spy).and.returnValue(dialogRefSpy);
+
+    const { comp } = makeComponent(ownerSvc, dialogSpy);
+    // url по умолчанию '/mrsqm/feed' — окно редактирования НЕ открыто.
+    const router = TestBed.inject(Router);
+    const navSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+    comp.detail.set({ ...baseDetail, status: 'archived_sold' });
+    await comp.confirmDelete();
+
+    expect(navSpy).not.toHaveBeenCalled();
   });
 
   // ─── SP-B Task 3: Form A строки + бейдж Exclusive ────────────────────────

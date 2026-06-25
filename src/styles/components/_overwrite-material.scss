@@ -447,6 +447,16 @@ body.isVerticalActionBar .cdk-overlay-pane.mat-mdc-tooltip-panel {
   box-shadow: var(--task-selected-shadow, var(--task-detail-shadow));
 }
 
+// DIALOG — MrSQM confirm (своя разметка mrsqm-confirm-dialog, не апстрим).
+// panelClass приземляется на .cdk-overlay-pane → округляем поверхность и ширину.
+.cdk-overlay-pane.mrsqm-confirm-pane {
+  max-width: 480px;
+
+  .mat-mdc-dialog-surface {
+    border-radius: 16px;
+  }
+}
+
 // SNACK
 // Move snack bar above mobile bottom nav for all touch devices
 @include media-queries.mq(xs, max) {

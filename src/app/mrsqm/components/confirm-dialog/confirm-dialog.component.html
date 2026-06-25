@@ -1,0 +1,35 @@
+<div
+  class="confirm"
+  [class.confirm--danger]="data.danger"
+>
+  <div class="confirm-head">
+    @if (data.icon) {
+      <span class="confirm-icon">
+        <mat-icon>{{ data.icon }}</mat-icon>
+      </span>
+    }
+    <h2 class="confirm-title">{{ data.title }}</h2>
+  </div>
+
+  @if (data.message) {
+    <p class="confirm-msg">{{ data.message }}</p>
+  }
+
+  <!-- Cancel первым в DOM → получает фокус по умолчанию (безопасно для деструктива) -->
+  <div class="confirm-actions">
+    <button
+      type="button"
+      class="confirm-btn confirm-btn--ghost"
+      (click)="close(false)"
+    >
+      {{ data.cancelTxt || 'Отмена' }}
+    </button>
+    <button
+      type="button"
+      class="confirm-btn confirm-btn--solid"
+      (click)="close(true)"
+    >
+      {{ data.okTxt }}
+    </button>
+  </div>
+</div>

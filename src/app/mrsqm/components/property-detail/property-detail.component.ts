@@ -46,7 +46,7 @@ import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 import { MatDialog } from '@angular/material/dialog';
-import { DialogConfirmComponent } from '../../../ui/dialog-confirm/dialog-confirm.component';
+import { MrsqmConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { firstValueFrom } from 'rxjs';
 import Swiper from 'swiper';
 import { Navigation, Thumbs } from 'swiper/modules';
@@ -511,10 +511,13 @@ export class PropertyDetailComponent implements OnDestroy {
             message: 'Он уйдёт из активной выдачи.',
             okTxt: 'Отметить проданным',
           }
-        : { title: 'Снять объект с публикации?', message: '', okTxt: 'Снять' };
+        : { title: 'Снять объект с публикации?', okTxt: 'Снять' };
     const ok = await firstValueFrom(
       this._dialog
-        .open(DialogConfirmComponent, { data: { ...msg, titleIcon: 'inventory_2' } })
+        .open(MrsqmConfirmDialogComponent, {
+          panelClass: 'mrsqm-confirm-pane',
+          data: { ...msg, cancelTxt: 'Отмена', icon: 'inventory_2' },
+        })
         .afterClosed(),
     );
     if (ok) await this.archive(status);
@@ -526,13 +529,16 @@ export class PropertyDetailComponent implements OnDestroy {
     if (!d) return;
     const ok = await firstValueFrom(
       this._dialog
-        .open(DialogConfirmComponent, {
+        .open(MrsqmConfirmDialogComponent, {
+          panelClass: 'mrsqm-confirm-pane',
           data: {
             title: 'Удалить объект навсегда?',
             message:
               'Объект и все его следы будут стёрты безвозвратно: фотографии, история цены, совпадения с фильтрами. Это действие нельзя отменить.',
             okTxt: 'Удалить навсегда',
-            titleIcon: 'delete_forever',
+            cancelTxt: 'Отмена',
+            icon: 'delete_forever',
+            danger: true,
           },
         })
         .afterClosed(),
@@ -542,6 +548,11 @@ export class PropertyDetailComponent implements OnDestroy {
     try {
       await this._ownerService.deleteProperty(d.id);
       this._notify('Объект удалён', 'SUCCESS');
+      // Если в главном контенте открыто окно редактирования этого же объекта —
+      // увести с него на ленту, иначе остаётся «осиротевшая» форма удалённого объекта.
+      if (this._router.url.startsWith(`/mrsqm/edit/${d.id}`)) {
+        void this._router.navigateByUrl('/mrsqm/feed');
+      }
       this.closed.emit();
     } catch {
       this._notify('Не удалось удалить', 'ERROR');
