@@ -724,6 +724,10 @@ export class AddPropertyPageComponent {
         if (this.listingType() === 'official') {
           if (!this.contractNumber().trim())
             return 'Для официального листинга укажите номер договора (Contract Number)';
+          if (!this.contractStart())
+            return 'Для официального листинга укажите дату начала договора';
+          if (!this.contractEnd())
+            return 'Для официального листинга укажите дату окончания договора';
           if (!this.formAFile())
             return 'Для официального листинга прикрепите файл Form A (PDF)';
         }

@@ -260,10 +260,36 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
     expect(result).toBeTruthy();
   });
 
-  it('шаг 5 (Листинг): official c contractNumber и formAFile → возвращает null', () => {
+  it('шаг 5 (Листинг): official без contractStart → возвращает ошибку (SP-C1)', () => {
     component.step.set(5);
     component.listingType.set('official');
     component.contractNumber.set('CN-001');
+    component.contractStart.set('');
+    component.contractEnd.set('2027-07-01');
+    component.formAFile.set(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' }));
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 5 (Листинг): official без contractEnd → возвращает ошибку (SP-C1)', () => {
+    component.step.set(5);
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.contractStart.set('2026-07-01');
+    component.contractEnd.set('');
+    component.formAFile.set(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' }));
+    const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(typeof result).toBe('string');
+    expect(result).toBeTruthy();
+  });
+
+  it('шаг 5 (Листинг): official c contractNumber, датами и formAFile → возвращает null', () => {
+    component.step.set(5);
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.contractStart.set('2026-07-01');
+    component.contractEnd.set('2027-07-01');
     component.formAFile.set(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' }));
     const result = (component as any)._validateStep(); // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(result).toBeNull();
