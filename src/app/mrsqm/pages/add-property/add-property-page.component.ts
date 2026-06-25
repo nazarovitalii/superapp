@@ -841,7 +841,8 @@ export class AddPropertyPageComponent {
         }
       }
       // Form A: загружаем PDF и вставляем строку в property_form_a.
-      // Сбой не откатывает объект — сообщаем, но продолжаем.
+      // При сбое — НЕ уходим в ленту: оставляем пользователя на форме с ошибкой.
+      let formAFailed = false;
       if (isOfficial && this.formAFile()) {
         try {
           const pdfPath = await this._formA.uploadFormA(id, owner.id, this.formAFile()!);
@@ -856,12 +857,15 @@ export class AddPropertyPageComponent {
             uploaded_by: owner.id,
           });
         } catch {
+          formAFailed = true;
           this.error.set(
-            'Объект создан, но Form A не загрузилась — свяжитесь с поддержкой',
+            'Объект сохранён, но Form A не прикрепилась — пожалуйста, свяжитесь с поддержкой',
           );
         }
       }
-      await this._router.navigateByUrl('/mrsqm/feed');
+      if (!formAFailed) {
+        await this._router.navigateByUrl('/mrsqm/feed');
+      }
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Не удалось создать объект');
     } finally {

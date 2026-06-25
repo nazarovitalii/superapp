@@ -1382,4 +1382,60 @@ describe('AddPropertyPageComponent — Form A (SP-B)', () => {
     const payload = captured[0] as Record<string, unknown>;
     expect(payload['is_exclusive']).toBe(false);
   });
+
+  // ── SP-B баг: сбой Form A — НЕ уходить в ленту (failure-mode) ───────────
+
+  it('official-submit: uploadFormA реджектит → error выставлена, navigate НЕ вызван', async () => {
+    setupOwner();
+    setRequiredFields();
+    spyOn(create, 'createProperty').and.resolveTo('new-id');
+    spyOn(formA, 'uploadFormA').and.rejectWith(new Error('Storage error'));
+    spyOn(formA, 'insertFormA').and.resolveTo();
+    const router = TestBed.inject(Router);
+
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    expect(component.error()).toContain('Объект сохранён');
+    expect(router.navigateByUrl).not.toHaveBeenCalledWith('/mrsqm/feed');
+  });
+
+  it('official-submit: insertFormA реджектит → error выставлена, navigate НЕ вызван', async () => {
+    setupOwner();
+    setRequiredFields();
+    spyOn(create, 'createProperty').and.resolveTo('new-id');
+    spyOn(formA, 'uploadFormA').and.resolveTo('owner-1/new-id/uuid.pdf');
+    spyOn(formA, 'insertFormA').and.rejectWith(new Error('DB error'));
+    const router = TestBed.inject(Router);
+
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    expect(component.error()).toContain('Объект сохранён');
+    expect(router.navigateByUrl).not.toHaveBeenCalledWith('/mrsqm/feed');
+  });
+
+  it('official-submit: успех → navigate вызван с /mrsqm/feed (happy-path)', async () => {
+    setupOwner();
+    setRequiredFields();
+    spyOn(create, 'createProperty').and.resolveTo('new-id');
+    spyOn(formA, 'uploadFormA').and.resolveTo('owner-1/new-id/uuid.pdf');
+    spyOn(formA, 'insertFormA').and.resolveTo();
+    const router = TestBed.inject(Router);
+
+    component.listingType.set('official');
+    component.contractNumber.set('CN-001');
+    component.formAFile.set(makePdfFile());
+
+    await component.submit();
+
+    expect(component.error()).toBeNull();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/mrsqm/feed');
+  });
 });
