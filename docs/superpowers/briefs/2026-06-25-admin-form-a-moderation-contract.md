@@ -41,18 +41,27 @@ ORDER BY fa.uploaded_at DESC;
 ## 3. Действия модератора (что писать)
 
 **Approve:**
+
+> ⚠️ **ПОРЯДОК ОБЯЗАТЕЛЕН:** сначала Form A, потом properties. На `properties` стоит BEFORE-триггер
+> `trg_official_requires_approved_forma`: при `UPDATE status='active'` он проверяет `property_form_a.approved_at`.
+> Если форма ещё не помечена — статус принудительно откатывается в `pending_review`. Выполнять ОБЯЗАТЕЛЬНО
+> в одной транзакции или строго в таком порядке.
+
 ```sql
--- 1) активировать листинг (как существующая модерация public; published_at/expires_at — по текущей логике Админки)
-UPDATE public.properties
-   SET status = 'active'
- WHERE id = $property_id;
--- 2) пометить конкретную строку Form A одобренной
+BEGIN;
+-- 1) СНАЧАЛА пометить конкретную строку Form A одобренной
 UPDATE public.property_form_a
    SET approved_at = now(), approved_by = $moderator_id
  WHERE id = $form_a_id;
+-- 2) ЗАТЕМ активировать листинг (триггер проверит approved_at в шаге 1 и пропустит)
+UPDATE public.properties
+   SET status = 'active'
+ WHERE id = $property_id;
+COMMIT;
 ```
 
 **Reject:**
+
 ```sql
 UPDATE public.properties
    SET status = 'rejected', rejection_reason = $reason
@@ -63,6 +72,7 @@ UPDATE public.property_form_a
 ```
 
 ⚠️ **Обязательно писать в строку `property_form_a`, не только в `properties`.** Фронт (superapp) выводит статус Form A в карточке из полей строки:
+
 - `approved_at IS NULL` и `moderation_note IS NULL` → «на проверке»
 - `approved_at IS NOT NULL` → «approved»
 - `moderation_note IS NOT NULL` и `approved_at IS NULL` → «rejected»

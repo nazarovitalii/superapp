@@ -96,7 +96,7 @@
 | F-12a | 🔴        | Обязательный полный адрес (leaf): каскад через `search_locations` (info-mode children); поиск если >10 вариантов, чипы если ≤10; leaf = children пуст                                                                                                                                                                                                                                                         | ✅     |
 | F-12b | 🔴        | Бегунок видимости адреса: по умолчанию 100%, точки = уровни локаций (напр. Damac Hills → Golf Town → Golf Promenade → GP 5 → GP 5a). Можно двигать влево, но НЕ ниже уровня комьюнити. В ленте всем показывается выбранный уровень. ⚠️ Нужна миграция: колонка в `properties` (напр. `public_location_id`) + правка `get_feed`/`get_property` — согласовать. Сейчас в форме read-only трейл уровней + заметка | `[ ]`  |
 | F-12c | 🟡        | Occupied → поле «занято до» (месяц+год, необязательное) → `lease_until`                                                                                                                                                                                                                                                                                                                                       | ✅     |
-| F-12d | 🟡        | Официальный листинг → обязательное прикрепление Form A (PDF). Зависит от Storage (см. P-5b); сейчас в форме — поля Title Deed №/год, plot/municipality number + заметка о Form A                                                                                                                                                                                                                              | `[~]`  |
+| F-12d | 🟡        | Официальный листинг → обязательное прикрепление Form A (PDF). Зависит от Storage (см. P-5b); сейчас в форме — поля Title Deed №/год, plot/municipality number + заметка о Form A                                                                                                                                                                                                                              | ✅     |
 | F-12e | 🟡        | После выбора leaf — Building info из `location_developers` (год постройки/сдачи, этажность, юниты) блоком ниже                                                                                                                                                                                                                                                                                                | ✅     |
 | F-12f | 🔴        | Шаг комнат: чекбоксы `is_maid` «Maid room» и `is_hotel_pool` «Hotel apartment». ⚠️ В живой БД hotel_apartment — коммерческий unit_type (не подтип Apartment, как в CSV); подтипы Apartment уже без него. Чекбокс hotelPool — для apartment+hotel_apartment                                                                                                                                                    | ✅     |
 
@@ -353,6 +353,34 @@
 | WP-M11 | Видимость (visibility / public addr)   |                                                                   |
 | WP-M12 | Описание                               |                                                                   |
 | WP-M13 | Фото + планировка (таб 8 формы)        | зависит от K (Storage-загрузка)                                   |
+
+---
+
+## Эпики 2026-06-25 — SP-A/B/C (мастер edit + Official/Form A + инвариант-триггер)
+
+> **✅ SP-A (edit-redo wizard):** Окно редактирования переписано в линейный мастер 5 шагов (1:1 с формой
+> добавления, общий SCSS-партиал `_property-form.scss`). SDD, opus-ревью 0 critical. Задеплоен.
+>
+> **✅ SP-B (Official/Form A — фундамент):** Схема — `property_form_a` (contract_number, pdf_password,
+> listing_start/end), `properties.is_exclusive`; приватный бакет `property_form_a` (INSERT-only RLS);
+> `get_property` — +form_a/+is_exclusive. Форма добавления — полные поля Form A под Official (Contract №,
+> даты, Exclusive, PDF, пароль); все поля обязательны; failure-mode: сбой Form A → ошибка без навигации.
+> SDD Tasks 1–3, opus-ревью 0 critical. Задеплоен.
+> **Хвост:** DROP старых колонок (title_deed_number/year, plot_number, municipality_number) — DDL-гейт «да».
+>
+> **✅ SP-C1 (edit-Official + инвариант-триггер):** BEFORE-триггер: Official `status='active'` только если
+> последняя `property_form_a.approved_at IS NOT NULL`, иначе → `pending_review`. `edit_property` +`p_is_exclusive`.
+> Форма редактирования — поля Form A под Official + сабмит перед RPC + честный RETURNING status.
+> T-SPC1 ✅ прод-смоук. Контракт + задание для Админки:
+> `docs/superpowers/briefs/2026-06-25-admin-task-form-a-moderation.md`. Задеплоен.
+>
+> **✅ My Inventory:** колонка «Агент» → «Статус» (Активен/…) для своих объектов. Commit `0304d4bbe`. Ждёт пуша.
+
+| #         | Задача                                                                           | Статус |
+| --------- | -------------------------------------------------------------------------------- | ------ |
+| SPB-T4    | DROP устаревших колонок title_deed_number/year, plot_number, municipality_number | `[ ]`  |
+| T-SPB1    | Прод-смоук: add Official без дат → валидационная ошибка (ручной тест)            | `[ ]`  |
+| ADMIN-MOD | Реализация модерации Form A в Админке (задание: brief выше, admin-сессия)        | `[ ]`  |
 
 ---
 
