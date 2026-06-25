@@ -257,3 +257,24 @@ describe('PropertyCardComponent — computed signals', () => {
     expect(icon?.textContent?.trim()).toBe('bookmark');
   });
 });
+
+describe('PropertyCardComponent — My Inventory: статус вместо агента', () => {
+  it('isOwnItem=true + status=pending_review → метка «На модерации», имя агента не видно', () => {
+    const fixture = makeFixture({ status: 'pending_review' });
+    fixture.componentRef.setInput('isOwnItem', true);
+    fixture.detectChanges();
+    const agentCol: HTMLElement = fixture.nativeElement.querySelector('.col-agent');
+    expect(agentCol.textContent?.trim()).toContain('На модерации');
+    // Имя агента (Test Agent) не должно быть в колонке
+    expect(agentCol.textContent).not.toContain('Test Agent');
+  });
+
+  it('isOwnItem=false → виден owner_full_name, метка статуса отсутствует', () => {
+    const fixture = makeFixture({ status: 'active', owner_full_name: 'Иван Иванов' });
+    fixture.componentRef.setInput('isOwnItem', false);
+    fixture.detectChanges();
+    const agentCol: HTMLElement = fixture.nativeElement.querySelector('.col-agent');
+    expect(agentCol.textContent).toContain('Иван Иванов');
+    expect(agentCol.textContent).not.toContain('Активен');
+  });
+});

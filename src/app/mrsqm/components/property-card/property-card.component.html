@@ -89,11 +89,16 @@
       }
     </div>
 
-    <!-- Агент: имя чёрным сверху + агентство серым ниже (item 2) -->
+    <!-- Агент: имя чёрным сверху + агентство серым ниже (item 2).
+         В My Inventory (isOwnItem=true) — статус листинга вместо агента. -->
     <div class="col col-agent">
-      <span class="agent-name">{{ property().owner_full_name || '—' }}</span>
-      @if (property().owner_agency_name) {
-        <span class="agent-agency">{{ property().owner_agency_name }}</span>
+      @if (isOwnItem()) {
+        <span class="agent-name">{{ statusLabel() }}</span>
+      } @else {
+        <span class="agent-name">{{ property().owner_full_name || '—' }}</span>
+        @if (property().owner_agency_name) {
+          <span class="agent-agency">{{ property().owner_agency_name }}</span>
+        }
       }
     </div>
 

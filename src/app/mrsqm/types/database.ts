@@ -324,6 +324,8 @@ export interface PropertyFeedItem {
   // Дата актуализации (поднимает объект в ленте) и видимость — есть в jsonb get_feed.
   last_actualized_at?: string | null;
   visibility?: string | null;
+  // Статус листинга — get_feed отдаёт поле p.status; нужен для My Inventory (статус вместо агента).
+  status?: PropertyStatus;
   owner_full_name: string | null;
   owner_photo_url: string | null;
   owner_agency_name: string | null;

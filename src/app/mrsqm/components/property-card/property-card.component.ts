@@ -8,7 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { PropertyFeedItem } from '../../types/database';
+import { PropertyFeedItem, PROPERTY_STATUS_LABELS } from '../../types/database';
 import { DoneToggleComponent } from '../../../ui/done-toggle/done-toggle.component';
 import { formatFeedDate } from '../../util/feed-date.util';
 import { resolveFeedAddress } from '../../util/feed-address.util';
@@ -63,4 +63,10 @@ export class PropertyCardComponent {
       ? { first: parts[0], second: parts[1] }
       : { first: raw, second: null };
   });
+
+  // My Inventory: человекочитаемая метка статуса листинга вместо агента (hot-path: computed).
+  readonly statusLabel = computed(
+    () =>
+      PROPERTY_STATUS_LABELS[this.property().status!] ?? this.property().status ?? '—',
+  );
 }
