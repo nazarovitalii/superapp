@@ -185,9 +185,27 @@ readonly submitLabel = computed(() => {
 
 - [ ] **Step 6: Компонент `.ts` — сабмит: Form A ДО `edit_property` + `isExclusive`**
 
-В `save()` ПЕРЕД вызовом `this._owner.editProperty(...)` (и после блока загрузки фото) вставить:
+В `save()` ПЕРЕД вызовом `this._owner.editProperty(...)` (и после блока загрузки фото) вставить — СНАЧАЛА валидация (все поля Form A обязательны при подаче), затем загрузка:
 
 ```ts
+// Валидация: при подаче нового Form A (или Pocket→Official) ВСЕ поля обязательны.
+const submittingFormA =
+  this.listingType() === 'official' &&
+  (this.formAFile() != null || d.listing_type !== 'official');
+if (
+  submittingFormA &&
+  (!this.contractNumber().trim() ||
+    !this.contractStart() ||
+    !this.contractEnd() ||
+    !this.formAFile())
+) {
+  this._notify(
+    'Для Official укажите Contract Number, срок договора и приложите Form A (PDF)',
+    'ERROR',
+  );
+  this.saving.set(false);
+  return;
+}
 // Новый Form A (official): загрузить PDF + вставить строку ДО edit_property,
 // чтобы триггер увидел свежую неодобренную строку. Сбой — прерываем сохранение.
 if (this.listingType() === 'official' && this.formAFile()) {
@@ -309,6 +327,41 @@ npm run checkFile src/app/mrsqm/pages/edit-property/edit-property.component.html
 npm run checkFile src/app/mrsqm/pages/edit-property/edit-property.component.spec.ts
 npm run test:file src/app/mrsqm/pages/edit-property/edit-property.component.spec.ts
 git add -A && git commit -m "feat(mrsqm): edit-property — поля Form A под Official + is_exclusive (новый Form A → модерация)"
+```
+
+---
+
+> **Обязательность (Step 7 html):** у Contract Number и обеих дат в edit-блоке добавить `<span class="req-star">*</span>` к лейблам (поля обязательны при подаче Form A). Пароль — без звезды (опционален).
+
+---
+
+### Task 3: Починка валидации add-property — даты договора обязательны (фикс задеплоенного бага)
+
+> Латентный баг SP-B: `property_form_a.listing_start`/`listing_end` — NOT NULL, а add-форма не валидирует даты → Official без дат падает на вставке Form A. Contract Number и PDF в add уже обязательны; не хватает дат.
+
+**Files:** Modify `src/app/mrsqm/pages/add-property/add-property-page.component.{ts,html,spec.ts}`.
+
+- [ ] **Step 1: Валидация дат (`.ts`)** — в `_validateStep()`, `case 5` (official), ПОСЛЕ проверки Contract Number и ДО/рядом с проверкой PDF добавить:
+
+```ts
+if (!this.contractStart())
+  return 'Для официального листинга укажите дату начала договора';
+if (!this.contractEnd())
+  return 'Для официального листинга укажите дату окончания договора';
+```
+
+- [ ] **Step 2: req-star в шаблоне (`.html`)** — у лейбла «Срок договора» (и/или у обеих дат) добавить `<span class="req-star">*</span>`, чтобы обязательность была видна. Пароль — без звезды.
+
+- [ ] **Step 3: Тест (`.spec.ts`)** — official без `contractStart`/`contractEnd` → `next()` со step 5 выставляет `error` (не пускает дальше); с заполненными — пускает. Существующие тесты official-сабмита дополнить датами, чтобы остались зелёными.
+
+- [ ] **Step 4: checkFile + тест + commit**
+
+```bash
+npm run checkFile src/app/mrsqm/pages/add-property/add-property-page.component.ts
+npm run checkFile src/app/mrsqm/pages/add-property/add-property-page.component.html
+npm run checkFile src/app/mrsqm/pages/add-property/add-property-page.component.spec.ts
+npm run test:file src/app/mrsqm/pages/add-property/add-property-page.component.spec.ts
+git add -A && git commit -m "fix(mrsqm): add-property — даты договора обязательны для Official (Form A listing_start/end NOT NULL)"
 ```
 
 ---
