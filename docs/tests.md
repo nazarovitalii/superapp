@@ -226,4 +226,15 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-SPC1: edit Official + новый Form A → инвариант-триггер уводит в pending_review (live)
+
+**Дата:** 2026-06-25
+**Триггер:** SP-C1 задеплоен — поля Form A в окне редактирования + БД-триггер `enforce_official_forma_approved` (Official+active ⟺ свежий Form A одобрен, иначе pending_review) + `edit_property` +`is_exclusive`.
+**Запрос:** создатель в live-UI отредактировал объект → тип Official → заполнил Contract №/срок → приложил Form A PDF → «Опубликовать». Проверка в проде: `select fa.*, p.listing_type, p.status from property_form_a fa join properties p on p.id=fa.property_id order by fa.uploaded_at desc limit 5;`
+**Ожидали:** новая строка `property_form_a` (insert-only, `approved_at` NULL = ждёт модерации) + объект `listing_type=official`, `status=pending_review` (триггер сработал, обойти нельзя).
+**Получили:** ✅ 3 объекта official/`pending_review`/`approved_at=NULL` со строками Form A (Contract №, обе даты заполнены); свежайший (15:36, Contract 123123) — смоук создателя. Триггер увёл active→pending_review; фронт показал «Объект отправлен на проверку».
+**Вывод:** ✅ end-to-end edit-Official работает: фронт грузит PDF + insert строки Form A до `edit_property`, триггер enforce-ит модерацию на сервере. ⏳ **T-SPB1** (add Official без дат → форма блокирует ошибкой; флоу B) — проверить вручную. Модерация (approve→active) — Админка (порядок: Form A approved → потом active).
+
+---
+
 _Других тестов пока нет._
