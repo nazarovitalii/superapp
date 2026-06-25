@@ -187,9 +187,10 @@
   line-height: 1.15;
 }
 
+// CD-4: 2-я строка площади (plot) — тот же размер/начертание, что 1-я строка (BUA);
+// серым остаётся только цвет. Кегль наследуется от .first-line (14px).
 .size-plot {
   color: var(--text-color-muted);
-  font-size: 0.78em;
 }
 
 // U-6: Тип — каждое слово на своей строке (двухсловный тип → 2 строки).
@@ -221,6 +222,8 @@
     font-size: 0.72rem;
     color: var(--text-color-muted);
     text-decoration: line-through;
+    // CD-5: тоньше линия зачёркивания (по умолчанию браузер рисует жирновато)
+    text-decoration-thickness: 1px;
   }
 }
 
