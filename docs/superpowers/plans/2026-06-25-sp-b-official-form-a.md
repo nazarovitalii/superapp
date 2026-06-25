@@ -1,463 +1,213 @@
-# SP-B — Official / Form A фундамент Implementation Plan
+# SP-B — Official / Form A (лёгкий вариант) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** Заменить старые official-поля (Title Deed/Plot/Municipality) на поля договора листинга + Form A PDF; надёжно хранить их (включая пароль под жёстким RLS) в приватном Storage; показывать владельцу; ставить Official всегда на модерацию и отдавать Form A модератору Админки.
+**Goal:** Заменить старые official-поля на поля договора + Form A PDF; хранить (PDF в приватном бакете, пароль в колонке под RLS); показывать в панели **список строк Form A** (не файл); Official всегда на модерацию.
 
-**Architecture:** Расширяем существующую (дормантную, 0 строк) таблицу `property_form_a`. Новый **приватный** бакет `property_form_a` (PDF-only) → PDF читается через **signed URL** (не public). RPC `upsert_property_form_a` (DEFINER, owner-check) создаёт строку Form A + ставит `properties.status='pending_review'` + пишет `properties.is_exclusive`. `get_property` отдаёт текущий Form A (пароль — только владельцу). Старые колонки выпиливаются из тел функций и DROP-аются **второй фазой** (после выката нового фронта). Реализация — SDD; DDL — через гейт «да» с показом финального SQL.
+**Architecture:** Следуем паттерну `property_photos` — **прямой `insert` + RLS**, без кастомного RPC, без лайфсайкла, без фаз. Form A insert-only (история). `get_property` отдаёт массив `form_a` (без файла/пароля) + `is_exclusive`. Реализация — SDD; Task 1 (DDL) ведёт контроллер через гейт «да».
 
-**Tech Stack:** Supabase self-hosted (Postgres, RLS, SECURITY DEFINER RPC, Storage), Angular standalone/OnPush/signals, CDK, dart-sass.
+**Tech Stack:** Supabase (Postgres/RLS/Storage), Angular standalone/OnPush/signals.
 
 ## Global Constraints
-
-- UI-строки и комментарии — **на русском**. Пользователь НЕ программист.
-- `npm run checkFile <file>` после КАЖДОГО тронутого `.ts`/`.scss`/`.html`/`.spec.ts` (вкл. шаблоны). `npm run lint && npm run buildFrontend:prodWeb` перед пушем.
-- **DDL только с явным «да» создателя и показом финального SQL.** Применять транзакционно (`apply-migration.sh`). Тела функций (`get_property`/`get_feed`) брать из ЖИВОЙ БД (`pg_get_functiondef`), патчить **staleness-proof** (anchor-replace с guard «якорь не найден»), не переписывать из доков. `pg_get_functiondef` отдаёт тело без `;` — добавлять вручную при DROP+CREATE. ROLLBACK-смоук до боевого apply.
-- **RLS под каждую операцию** (на RLS-таблице нужна политика на каждый cmd, иначе молчаливый no-op). Бакет приватный — проверять и storage.objects policies.
-- **Пароль Form A — чувствительный:** `pdf_password` отдаётся ТОЛЬКО владельцу (get_property: `WHEN is_owner`) и модератору (service_role); **никогда не логировать** (`Log.log({id})`, не контент), не в ленту, не чужим.
-- **Official ВСЕГДА → модерация:** сабмит/правка Official → `properties.status='pending_review'` + строка Form A `status='pending'` (независимо от friends/public). Pocket-правила прежние.
-- **Зеро-даунтайн (двухфазно, как WP-M):** Фаза A — аддитивно (новые колонки/бакет/RPC; get_property/get_feed ДОБАВЛЯЮТ Form A/is_exclusive, но СТАРЫЕ title_deed-ключи пока ОСТАВЛЯЮТ — старый прод-фронт их ещё читает). Фаза B (хвост, после выката нового фронта) — убрать title_deed из тел функций + DROP 4 колонок.
-- **Общая БД:** `property_form_a`/`properties` наши; `wa-media`/`bayut_*` не трогать. Роль `supabase_admin`.
-- Строгий TS, без `any` (→ `unknown`); OnPush; signals; стиль формы — общий партиал `_property-form.scss` (SP-A).
-- **Вне scope:** движок сценариев публикации (кнопки по статусу, expiry, «Form A < 30 дней», renew/republish) — это SP-C. Здесь только захват/хранение/показ Form A + создание pending-строки.
+- UI/комментарии — на русском. `checkFile` каждый тронутый файл (вкл. `.html`/`.spec.ts`). `lint`+`buildFrontend:prodWeb` перед пушем.
+- **DDL только с «да» + показ финального SQL**, транзакционно, ROLLBACK-смоук до боевого apply. Тело `get_property` — из ЖИВОЙ БД (staleness-proof anchor-replace, guard «якорь не найден»), не из доков.
+- **Без кастомного RPC** — `insert` в `property_form_a` под RLS (как фото). `properties.status` ставит фронт в payload.
+- **Form A insert-only** (строки не удаляем/не помечаем). **`status='active'`** при вставке (чек: active/expired/replaced — это lifecycle, НЕ модерация). Модерация = `approved_at`/`moderation_note` (Админка).
+- **`pdf_password`** — RLS таблицы; **НЕ в `get_property`**, не в ленту, не чужим, **не логировать**.
+- **Official всегда → `pending_review`**. Pocket — прежние правила.
+- **НЕ трогаем:** `get_feed`, `edit-property`, чужие бакеты (`wa-media`)/таблицы. DROP старых колонок — отдельная уборка (Task 4, после выката).
+- Без `any` (→`unknown`); OnPush; signals; стиль — общий партиал `_property-form.scss`.
+- **Вне scope:** «Add new»/переподача, «Опубликовать вместо Сохранить»/Cancel, движок сценариев — SP-C.
 
 ---
 
-### Task 1: Миграция Фаза A — схема + бакет + RLS + RPC + get_property/get_feed (аддитивно)
+### Task 1: Миграция (аддитивно) — колонки + приватный бакет + RLS + get_property
 
-DDL-фундамент. Применяет контроллер на DDL-гейте «да» (не субагент). Реализатор/контроллер пишет файл, контроллер показывает финальный SQL и применяет транзакционно.
+Контроллер пишет, ROLLBACK-смоук, показывает финальный SQL, применяет на «да».
 
-**Files:**
-- Create: `docs/migrations/2026-06-25-sp-b-form-a-phaseA.sql`
-- Modify (auto, хук): `docs/database.md`
+**Files:** Create `docs/migrations/2026-06-25-sp-b-form-a.sql` · Modify (хук) `docs/database.md`
 
-**Interfaces:**
-- Produces: колонки `property_form_a.contract_number text`, `property_form_a.pdf_password text`, `properties.is_exclusive boolean`; бакет `property_form_a`; RPC `upsert_property_form_a(...) RETURNS uuid`; `get_property` отдаёт ключ `form_a` (jsonb) + `is_exclusive` + (владельцу) `form_a.pdf_password`; `get_feed` отдаёт `is_exclusive`.
+**Interfaces (Produces):** `property_form_a.contract_number/pdf_password`; `properties.is_exclusive`; бакет `property_form_a`; RLS-политики (таблица+бакет); `get_property` отдаёт `form_a` (jsonb-массив) + `is_exclusive`.
 
-- [ ] **Step 1: Снять живые сигнатуры/тела (для staleness-proof патча)**
-
-Run (введение, не правка):
+- [ ] **Step 1: Снять живое тело get_property**
 ```bash
-bash .claude/skills/migrate/tools/psql.sh "SELECT pg_get_functiondef('public.get_property'::regproc);" > /tmp/get_property.sql
-bash .claude/skills/migrate/tools/psql.sh "SELECT pg_get_functiondef('public.get_feed'::regproc);" > /tmp/get_feed.sql
+bash .claude/skills/migrate/tools/psql.sh "SELECT pg_get_functiondef('public.get_property'::regproc);" > /tmp/gp.sql
 ```
-Изучить, где формируется JSON объекта (ключи `'title_deed_number'` и т.д.), куда добавить `'form_a'`/`'is_exclusive'`, и есть ли `is_owner` в scope (для пароля).
+Подтвердить якоря: `'is_vastu',            p.is_vastu,` и `'developer_name_ref',  d.name,` (есть в теле), выражение владельца `(p.owner_id = v_current_user_id)`.
 
-- [ ] **Step 2: Написать миграцию Фазы A**
-
-Создать `docs/migrations/2026-06-25-sp-b-form-a-phaseA.sql`. Комментарий-шапка: что/зачем/обратимо. Содержимое:
-
+- [ ] **Step 2: Написать миграцию**
+`docs/migrations/2026-06-25-sp-b-form-a.sql`:
 ```sql
--- SP-B Фаза A (аддитивно, зеро-даунтайн): расширить property_form_a, добавить
--- properties.is_exclusive, приватный бакет property_form_a + RLS, RPC upsert_property_form_a,
--- get_property/get_feed ДОБАВЛЯЮТ form_a/is_exclusive (title_deed-ключи пока оставляем — Фаза B уберёт).
--- Обратимо: колонки/бакет/политики/функции дропаются; данных нет (property_form_a пуст).
+-- SP-B (аддитивно): поля Form A/договора, приватный бакет, RLS, get_property → form_a + is_exclusive.
+-- Без RPC, без DROP (старые колонки — отдельной уборкой). property_form_a пуст → безопасно.
 
 -- 1) Колонки
 ALTER TABLE public.property_form_a ADD COLUMN IF NOT EXISTS contract_number text;
 ALTER TABLE public.property_form_a ADD COLUMN IF NOT EXISTS pdf_password text;
 ALTER TABLE public.properties      ADD COLUMN IF NOT EXISTS is_exclusive boolean NOT NULL DEFAULT false;
 
--- 2) Приватный бакет под Form A PDF (НЕ public, только PDF, лимит 20 МБ)
+-- 2) RLS таблицы property_form_a (дормантная — добавляем клиентские политики; владелец объекта).
+ALTER TABLE public.property_form_a ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS form_a_owner_select ON public.property_form_a;
+DROP POLICY IF EXISTS form_a_owner_insert ON public.property_form_a;
+DROP POLICY IF EXISTS form_a_owner_update ON public.property_form_a;
+DROP POLICY IF EXISTS form_a_owner_delete ON public.property_form_a;
+CREATE POLICY form_a_owner_select ON public.property_form_a FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.properties p WHERE p.id = property_id AND p.owner_id = auth.uid()));
+CREATE POLICY form_a_owner_insert ON public.property_form_a FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (SELECT 1 FROM public.properties p WHERE p.id = property_id AND p.owner_id = auth.uid()));
+CREATE POLICY form_a_owner_update ON public.property_form_a FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.properties p WHERE p.id = property_id AND p.owner_id = auth.uid()));
+CREATE POLICY form_a_owner_delete ON public.property_form_a FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.properties p WHERE p.id = property_id AND p.owner_id = auth.uid()));
+
+-- 3) Приватный бакет под Form A PDF (НЕ public, только PDF, 20 МБ).
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES ('property_form_a', 'property_form_a', false, 20971520, ARRAY['application/pdf'])
 ON CONFLICT (id) DO UPDATE
-  SET public = false,
-      file_size_limit = EXCLUDED.file_size_limit,
-      allowed_mime_types = EXCLUDED.allowed_mime_types;
+  SET public=false, file_size_limit=EXCLUDED.file_size_limit, allowed_mime_types=EXCLUDED.allowed_mime_types;
 
--- 3) RLS на storage.objects для бакета (путь {owner_id}/{property_id}/{uuid}.pdf).
---    Владелец — все операции над своими (первый сегмент = auth.uid()); модератор ходит
---    под service_role (RLS его не ограничивает). Чужой/anon — нет.
-DROP POLICY IF EXISTS form_a_owner_all ON storage.objects;
-CREATE POLICY form_a_owner_all ON storage.objects
-  FOR ALL TO authenticated
-  USING (bucket_id = 'property_form_a' AND (storage.foldername(name))[1] = auth.uid()::text)
-  WITH CHECK (bucket_id = 'property_form_a' AND (storage.foldername(name))[1] = auth.uid()::text);
+-- 4) RLS storage.objects для бакета: владелец (путь {owner_id}/{property_id}/...); модератор=service_role.
+DROP POLICY IF EXISTS form_a_obj_owner_all ON storage.objects;
+CREATE POLICY form_a_obj_owner_all ON storage.objects FOR ALL TO authenticated
+  USING (bucket_id='property_form_a' AND (storage.foldername(name))[1] = auth.uid()::text)
+  WITH CHECK (bucket_id='property_form_a' AND (storage.foldername(name))[1] = auth.uid()::text);
+```
 
--- 4) RPC: создать строку Form A + поставить объект на модерацию + записать is_exclusive.
---    DEFINER + owner-check (как edit_property). PDF грузит клиент в бакет ДО вызова;
---    сюда передаётся p_file_url (storage path). Official всегда → pending_review.
-CREATE OR REPLACE FUNCTION public.upsert_property_form_a(
-  p_property_id    uuid,
-  p_file_url       text,
-  p_contract_number text,
-  p_listing_start  date,
-  p_listing_end    date,
-  p_pdf_password   text,
-  p_is_exclusive   boolean
-) RETURNS uuid
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $function$
-DECLARE
-  v_owner uuid;
-  v_id uuid;
+- [ ] **Step 3: Патч get_property (DO-блок, staleness-proof) — добавить is_exclusive + form_a**
+В ту же миграцию (тело берётся из живой БД на apply, не хардкодим):
+```sql
+DO $patch$
+DECLARE v_def text;
 BEGIN
-  SELECT owner_id INTO v_owner FROM public.properties WHERE id = p_property_id;
-  IF v_owner IS NULL OR v_owner <> auth.uid() THEN
-    RAISE EXCEPTION 'not owner or property not found';
+  v_def := pg_get_functiondef('public.get_property'::regproc);
+  IF position('''is_vastu''' IN v_def) = 0 OR position('''developer_name_ref''' IN v_def) = 0 THEN
+    RAISE EXCEPTION 'get_property: якорь не найден — патч прерван';
   END IF;
-
-  -- Прежний текущий Form A → 'replaced' (история 1:много; чек допускает active/expired/replaced).
-  UPDATE public.property_form_a
-     SET status = 'replaced'
-   WHERE property_id = p_property_id AND status = 'active';
-
-  -- Новый Form A — текущий ('active' = lifecycle, НЕ модерация). Модерация = approved_at/at/note
-  -- (NULL approved_at = «на проверке»); ставит Админка. Official всегда → properties.pending_review.
-  INSERT INTO public.property_form_a
-    (property_id, file_url, contract_number, listing_start, listing_end,
-     pdf_password, status, uploaded_by, uploaded_at)
-  VALUES
-    (p_property_id, p_file_url, p_contract_number, p_listing_start, p_listing_end,
-     p_pdf_password, 'active', auth.uid(), now())
-  RETURNING id INTO v_id;
-
-  UPDATE public.properties
-     SET is_exclusive = COALESCE(p_is_exclusive, false),
-         status = 'pending_review'
-   WHERE id = p_property_id;
-
-  RETURN v_id;
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION public.upsert_property_form_a(uuid,text,text,date,date,text,boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.upsert_property_form_a(uuid,text,text,date,date,text,boolean) TO authenticated;
+  -- is_exclusive после is_vastu (regexp учитывает выравнивание пробелами)
+  v_def := regexp_replace(v_def,
+    '(''is_vastu'',\s+p\.is_vastu,)',
+    '\1' || E'\n      ''is_exclusive'', p.is_exclusive,', 'g');
+  -- form_a-массив (история, без файла/пароля) перед developer_name_ref
+  v_def := regexp_replace(v_def,
+    '(''developer_name_ref'',\s+d\.name,)',
+    E'''form_a'', (SELECT COALESCE(jsonb_agg(jsonb_build_object('
+    || '''contract_number'', fa.contract_number, ''listing_start'', fa.listing_start, '
+    || '''listing_end'', fa.listing_end, ''approved_at'', fa.approved_at, '
+    || '''moderation_note'', fa.moderation_note) ORDER BY fa.uploaded_at DESC), ''[]''::jsonb) '
+    || 'FROM public.property_form_a fa WHERE fa.property_id = p.id),' || E'\n      ' || '\1', 'g');
+  EXECUTE v_def;
+END $patch$;
 ```
+(`EXECUTE` гоняет `CREATE OR REPLACE` из живого def — проблемы «нет `;`» нет, это один стейтмент.)
 
-> ✅ Чек проверен на проде: `property_form_a_status_check = status IN ('active','expired','replaced')` — это **жизненный цикл** Form A, НЕ модерация. Поэтому новый Form A вставляем как `'active'`, прежний `active` → `'replaced'`. Модерация — через `approved_at`/`approved_by`/`moderation_note` (NULL approved_at = «на проверке»), ставит Админка. `'pending'` НЕ допустим — не использовать.
+- [ ] **Step 4: ROLLBACK-смоук (контроллер)** — прогнать в транзакции с `ROLLBACK`: ALTER/политики/бакет/патч без ошибок; `SELECT get_property('<owner-объект>') ? 'form_a'` = true; `-> 'is_exclusive'` присутствует. Прод-объект для смоука: `5f6a3c58-b3f9-433c-a51e-72bbbf502c8f`.
 
-- [ ] **Step 3: Патч `get_property` (staleness-proof, тело из ЖИВОЙ БД)**
-
-В ту же миграцию добавить DROP+CREATE `get_property` ИЛИ `replace()`-патч (по структуре живого тела из /tmp/get_property.sql). Требуемая дельта в JSON объекта:
-- Добавить ключ `'is_exclusive', p.is_exclusive`.
-- Добавить ключ `'form_a'` = подзапрос текущего Form A:
-  ```sql
-  'form_a', (
-    SELECT jsonb_build_object(
-      'file_url',        fa.file_url,
-      'contract_number', fa.contract_number,
-      'listing_start',   fa.listing_start,
-      'listing_end',     fa.listing_end,
-      'status',          fa.status,            -- lifecycle: active/expired/replaced
-      'approved_at',     fa.approved_at,       -- NULL = на проверке (модерация)
-      'moderation_note', fa.moderation_note,   -- причина отклонения, если есть
-      'pdf_password',    CASE WHEN (p.owner_id = v_current_user_id) THEN fa.pdf_password ELSE NULL END
-    )
-    FROM public.property_form_a fa
-    WHERE fa.property_id = p.id AND fa.status = 'active'
-    ORDER BY fa.uploaded_at DESC
-    LIMIT 1
-  ),
-  ```
-  где выражение владельца в живом теле `get_property` = **`(p.owner_id = v_current_user_id)`** (подтверждено интроспекцией). Якоря для staleness-proof replace: `is_exclusive` — после строки `'is_vastu',            p.is_vastu,`; `form_a` — перед `'developer_name_ref',  d.name,` (обе уникальны в живом теле). DO-блок с guard «якорь не найден».
-- **title_deed-ключи НЕ трогаем** (Фаза A их оставляет).
-- `;` после `$function$` добавить вручную. ROLLBACK-смоук обязателен.
-
-- [ ] **Step 4: Патч `get_feed` (staleness-proof) — добавить `is_exclusive`**
-
-В тело `get_feed` JSON карточки добавить `'is_exclusive', p.is_exclusive` (рядом с `'listing_type'`). title_deed в `get_feed` (если есть) — Фаза A оставляет. Тот же staleness-proof подход.
-
-- [ ] **Step 5: ROLLBACK-смоук (контроллер, до боевого apply)**
-
-Прогнать миграцию в транзакции с финальным `ROLLBACK` (или `apply-migration.sh` на копии стейтмента) — убедиться: ALTER проходят, бакет вставляется, политика создаётся, RPC создаётся, `get_property`/`get_feed` пересоздаются без syntax-error, `SELECT get_property('<owner-объект>') ? 'form_a'` = true.
-
-- [ ] **Step 6: Применить (DDL-гейт «да» — контроллер показывает финальный SQL, ждёт «да»)**
-
+- [ ] **Step 5: DDL-гейт — показать финальный SQL, ждать «да», применить**
 ```bash
-bash .claude/skills/migrate/tools/apply-migration.sh docs/migrations/2026-06-25-sp-b-form-a-phaseA.sql
+bash .claude/skills/migrate/tools/apply-migration.sh docs/migrations/2026-06-25-sp-b-form-a.sql
 ```
-Верификация: `pg_get_function_arguments('public.upsert_property_form_a'::regproc)`; `SELECT id,public,allowed_mime_types FROM storage.buckets WHERE id='property_form_a'`; `SELECT policyname,cmd FROM pg_policies WHERE tablename='objects' AND policyname='form_a_owner_all'`; `SELECT get_property('<owner uuid>') -> 'form_a'`.
+Верификация: колонки есть; `SELECT id,public,allowed_mime_types FROM storage.buckets WHERE id='property_form_a'`; `SELECT policyname,cmd FROM pg_policies WHERE tablename='property_form_a'` (4 шт); `get_property('<owner>') -> 'form_a'` = `[]`.
 
-- [ ] **Step 7: Переместить в applied/ + commit**
-
-```bash
-git mv docs/migrations/2026-06-25-sp-b-form-a-phaseA.sql docs/migrations/applied/
-git add -A && git commit -m "migrate: SP-B Фаза A применена (property_form_a +поля, бакет, RPC, get_property/get_feed)"
-```
+- [ ] **Step 6: `git mv` в applied/ + commit** (`migrate: SP-B Form A — колонки/бакет/RLS/get_property`).
 
 ---
 
-### Task 2: Сервис Form A PDF (приватный бакет, signed URL) + типы
+### Task 2: Сервис Form A + типы + add-property (поля Official, прямой insert)
 
-Загрузка PDF в приватный бакет и чтение через signed URL (бакет НЕ public → `getPublicUrl` нельзя). Плюс типы Form A.
-
-**Files:**
-- Create: `src/app/mrsqm/services/property-form-a.service.ts`
-- Create: `src/app/mrsqm/services/property-form-a.service.spec.ts`
-- Modify: `src/app/mrsqm/types/database.ts` (тип `PropertyFormA`, поле `form_a`/`is_exclusive` в `PropertyDetail`, `is_exclusive` в `PropertyFeedItem`; убрать из `PropertyInsert` title_deed/plot/municipality — см. Task 3)
+**Files:** Create `src/app/mrsqm/services/property-form-a.service.ts` (+`.spec.ts`); Modify `types/database.ts`, `add-property-page.component.{ts,html,spec.ts}`.
 
 **Interfaces:**
-- Consumes: бакет `property_form_a` + RPC `upsert_property_form_a` (Task 1).
-- Produces:
-  - `uploadFormA(propertyId: string, ownerId: string, file: File): Promise<string>` — грузит PDF, возвращает storage path (его пишем в `file_url`).
-  - `saveFormA(p: FormAPayload): Promise<string>` — зовёт RPC `upsert_property_form_a`.
-  - `signedUrl(path: string): Promise<string | null>` — `createSignedUrl(path, 3600)` для просмотра PDF владельцем.
-  - `interface FormAPayload { propertyId; fileUrl; contractNumber; listingStart; listingEnd; pdfPassword; isExclusive }`.
+- Produces: `PropertyFormAService.uploadFormA(propertyId, ownerId, file): Promise<string>` (path), `.insertFormA(row): Promise<void>`. Тип `PropertyFormA`, `PropertyDetail.form_a?: PropertyFormA[]`, `.is_exclusive?: boolean`.
 
-- [ ] **Step 1: Тип `PropertyFormA` + расширения в `types/database.ts`**
-
-Добавить:
+- [ ] **Step 1: Типы (`types/database.ts`)**
 ```ts
 export interface PropertyFormA {
-  file_url: string | null;
   contract_number: string | null;
   listing_start: string | null;
   listing_end: string | null;
-  status: string | null;
-  pdf_password: string | null; // только владельцу (сервер отдаёт NULL чужим)
+  approved_at: string | null;     // NULL = на проверке
+  moderation_note: string | null; // причина отклонения
 }
 ```
-В `PropertyDetail` добавить `form_a?: PropertyFormA | null;` и `is_exclusive?: boolean | null;`. В `PropertyFeedItem` добавить `is_exclusive?: boolean | null;`.
+В `PropertyDetail`: `form_a?: PropertyFormA[] | null;`, `is_exclusive?: boolean | null;`. В `PropertyInsert`: убрать `title_deed_number/title_deed_year/plot_number/municipality_number`; добавить `is_exclusive: boolean`.
 
-- [ ] **Step 2: Написать тест сервиса (spec)**
-
-`property-form-a.service.spec.ts`: замокать `MrsqmSupabaseService.client.storage` и `.rpc`. Проверить:
-- `uploadFormA` зовёт `storage.from('property_form_a').upload(path, file, {contentType:'application/pdf', upsert:true})` с путём вида `${ownerId}/${propertyId}/...pdf` и возвращает path.
-- `saveFormA` зовёт `rpc('upsert_property_form_a', {...})` и возвращает id.
-- `signedUrl` зовёт `createSignedUrl(path, 3600)` и возвращает `signedUrl`.
-
-(Каркас моков — как `property-photo.service.spec.ts`.)
-
-- [ ] **Step 3: Реализация сервиса**
-
+- [ ] **Step 2: Сервис (тест → реализация)**
+`property-form-a.service.spec.ts`: мок `storage` + `from().insert`; проверить `uploadFormA` зовёт `upload(path, file, {contentType:'application/pdf', upsert:true})` с путём `${ownerId}/${propertyId}/...pdf` → возвращает path; `insertFormA` зовёт `from('property_form_a').insert(row)`.
+Реализация:
 ```ts
 import { inject, Injectable } from '@angular/core';
 import { MrsqmSupabaseService } from './supabase.service';
-
 const BUCKET = 'property_form_a';
-
-export interface FormAPayload {
-  propertyId: string;
-  fileUrl: string;
-  contractNumber: string | null;
-  listingStart: string | null;
-  listingEnd: string | null;
-  pdfPassword: string | null;
-  isExclusive: boolean;
+export interface FormARow {
+  property_id: string; file_url: string; contract_number: string | null;
+  listing_start: string | null; listing_end: string | null;
+  pdf_password: string | null; status: string; uploaded_by: string;
 }
-
 @Injectable({ providedIn: 'root' })
 export class PropertyFormAService {
   private readonly _supabase = inject(MrsqmSupabaseService);
-
-  // Грузит PDF в приватный бакет, возвращает storage-path (пишем в form_a.file_url).
   async uploadFormA(propertyId: string, ownerId: string, file: File): Promise<string> {
     const path = `${ownerId}/${propertyId}/${crypto.randomUUID()}.pdf`;
     const { error } = await this._supabase.client.storage
-      .from(BUCKET)
-      .upload(path, file, { contentType: 'application/pdf', upsert: true });
+      .from(BUCKET).upload(path, file, { contentType: 'application/pdf', upsert: true });
     if (error) throw error;
     return path;
   }
-
-  // Создаёт строку Form A + ставит объект на модерацию (серверный RPC).
-  async saveFormA(p: FormAPayload): Promise<string> {
-    return this._supabase.rpc<string>('upsert_property_form_a', {
-      p_property_id: p.propertyId,
-      p_file_url: p.fileUrl,
-      p_contract_number: p.contractNumber,
-      p_listing_start: p.listingStart,
-      p_listing_end: p.listingEnd,
-      p_pdf_password: p.pdfPassword,
-      p_is_exclusive: p.isExclusive,
-    });
-  }
-
-  // Подписанная ссылка на PDF (бакет приватный) — для просмотра владельцем.
-  async signedUrl(path: string): Promise<string | null> {
-    const { data, error } = await this._supabase.client.storage
-      .from(BUCKET)
-      .createSignedUrl(path, 3600);
-    return error ? null : (data?.signedUrl ?? null);
+  async insertFormA(row: FormARow): Promise<void> {
+    const { error } = await this._supabase.client.from('property_form_a').insert(row);
+    if (error) throw error;
   }
 }
 ```
 
-- [ ] **Step 4: Прогнать тест + checkFile**
-
-`npm run test:file .../property-form-a.service.spec.ts` → PASS. `npm run checkFile` на `.service.ts`, `.spec.ts`, `types/database.ts`.
-
-- [ ] **Step 5: Commit**
-```bash
-git add src/app/mrsqm/services/property-form-a.service.ts src/app/mrsqm/services/property-form-a.service.spec.ts src/app/mrsqm/types/database.ts
-git commit -m "feat(mrsqm): сервис Form A PDF (приватный бакет, signed URL) + типы"
+- [ ] **Step 3: add-property `.ts` — сигналы/валидация/payload/сабмит**
+- Удалить сигналы `titleDeedNumber/titleDeedYear/plotNumber/municipalityNumber`. Добавить `contractNumber/contractStart/contractEnd/isExclusive/formAFile/formAPassword` + `onFormAFile(e)` (проверка `type==='application/pdf'`). Inject `PropertyFormAService`.
+- `_validateStep` case Листинг: official требует `contractNumber()` и `formAFile()` (заменить проверку titleDeed).
+- payload: убрать 4 title_deed-ключа; `is_exclusive: isOfficial ? this.isExclusive() : false`; `status: isOfficial ? 'pending_review' : (this.visibility()==='network' ? 'active' : 'pending_review')`.
+- В `submit()` после `createProperty(payload)` (id) и загрузки фото, если `isOfficial && formAFile()`:
+```ts
+const path = await this._formA.uploadFormA(id, owner.id, this.formAFile()!);
+await this._formA.insertFormA({
+  property_id: id, file_url: path,
+  contract_number: this.contractNumber().trim() || null,
+  listing_start: this.contractStart(), listing_end: this.contractEnd(),
+  pdf_password: this.formAPassword() || null, status: 'active', uploaded_by: owner.id,
+});
 ```
+
+- [ ] **Step 4: add-property `.html` — шаг Листинг (official)**
+Заменить блок title_deed на (классы из партиала): Contract Number (`req-star`), Срок (две `type="date"` в `.lease-row`), Exclusive (`.check-row`), Form A PDF (`.photo-add` + `input type=file accept="application/pdf"`, имя файла в подписи), Password (`input`). Подпись «Official уходит на модерацию». (Разметка — как в прошлой версии плана, шаг 3 Step 3.)
+
+- [ ] **Step 5: Тесты + checkFile (4 файла вкл .html) + commit**
+Тесты: official-сабмит без title_deed-ключей → `uploadFormA`+`insertFormA`; `status='pending_review'` для official+network; `onFormAFile` отклоняет не-PDF. (Мок `PropertyFormAService`.)
+`feat(mrsqm): add-property — поля Form A/договора (прямой insert), Official всегда на модерацию`
 
 ---
 
-### Task 3: Форма добавления — Official-поля Form A (замена title_deed)
+### Task 3: Панель — список строк Form A + бейдж Exclusive
 
-В шаге Листинг `add-property` заменить старые official-поля на новые; грузить PDF + звать RPC; Official всегда `pending_review`; перестать слать title_deed в insert.
+**Files:** Modify `property-detail.component.{ts,html,spec.ts}`
 
-**Files:**
-- Modify: `src/app/mrsqm/pages/add-property/add-property-page.component.ts`
-- Modify: `src/app/mrsqm/pages/add-property/add-property-page.component.html`
-- Modify: `src/app/mrsqm/types/database.ts` (убрать из `PropertyInsert` поля `title_deed_number`, `title_deed_year`, `plot_number`, `municipality_number`; добавить `is_exclusive: boolean`)
-- Modify: `src/app/mrsqm/pages/add-property/add-property-page.component.spec.ts`
-
-**Interfaces:**
-- Consumes: `PropertyFormAService` (Task 2), RPC через сервис.
-- Produces: Official-сабмит создаёт объект (без title_deed) → грузит PDF → `saveFormA` (ставит pending_review).
-
-- [ ] **Step 1: Сигналы и валидация (.ts)**
-- Удалить сигналы `titleDeedNumber`, `titleDeedYear`, `plotNumber`, `municipalityNumber`.
-- Добавить: `contractNumber = signal('')`, `contractStart = signal<string|null>(null)`, `contractEnd = signal<string|null>(null)`, `isExclusive = signal(false)`, `formAFile = signal<File|null>(null)`, `formAPassword = signal('')`.
-- `onFormAFile(e: Event)`: взять файл, проверить `type === 'application/pdf'` (иначе `error.set('Только PDF')`), `formAFile.set(file)`.
-- В `_validateStep()` (шаг Листинг, case 5): для official требовать `contractNumber()`, `formAFile()`, даты — иначе сообщение. Заменить прежнюю проверку `titleDeedNumber`.
-- Inject `PropertyFormAService`.
-
-- [ ] **Step 2: Payload + сабмит (.ts)**
-- В `payload` убрать `title_deed_number/title_deed_year/plot_number/municipality_number`; добавить `is_exclusive: isOfficial ? this.isExclusive() : false`.
-- Статус: `status: isOfficial ? 'pending_review' : (this.visibility() === 'network' ? 'active' : 'pending_review')` — **Official всегда модерация**.
-- После `createProperty` (получили `id`), если `isOfficial && formAFile()`:
-  ```ts
-  const path = await this._formA.uploadFormA(id, owner.id, this.formAFile()!);
-  await this._formA.saveFormA({
-    propertyId: id, fileUrl: path,
-    contractNumber: this.contractNumber().trim() || null,
-    listingStart: this.contractStart(), listingEnd: this.contractEnd(),
-    pdfPassword: this.formAPassword() || null,
-    isExclusive: this.isExclusive(),
-  });
-  ```
-  (порядок: создать объект → фото → Form A; сбой Form A — сообщить, не падать молча).
-
-- [ ] **Step 3: Шаблон (.html), шаг Листинг (official)**
-Заменить блок Title Deed/Plot/Municipality (внутри `@if (listingType() === 'official')`) на (классы из общего партиала):
-```html
-<div class="field">
-  <span class="field-label">Contract Number<span class="req-star">*</span></span>
-  <input type="text" [ngModel]="contractNumber()" (ngModelChange)="contractNumber.set($event)" placeholder="Номер договора" />
-</div>
-<div class="field">
-  <span class="field-label">Срок договора (с / по)</span>
-  <div class="lease-row">
-    <input type="date" [ngModel]="contractStart()" (ngModelChange)="contractStart.set($event)" />
-    <input type="date" [ngModel]="contractEnd()" (ngModelChange)="contractEnd.set($event)" />
-  </div>
-</div>
-<div class="field">
-  <div class="check-group">
-    <label class="check-row">
-      <span class="check-label">Exclusive</span>
-      <input type="checkbox" [ngModel]="isExclusive()" (ngModelChange)="isExclusive.set($event)" />
-    </label>
-  </div>
-</div>
-<div class="field">
-  <span class="field-label">Form A (PDF)<span class="req-star">*</span></span>
-  <label class="photo-add">
-    <mat-icon>upload_file</mat-icon>
-    <span>{{ formAFile() ? formAFile()!.name : 'Выбрать PDF' }}</span>
-    <input type="file" accept="application/pdf" hidden (change)="onFormAFile($event)" />
-  </label>
-</div>
-<div class="field">
-  <span class="field-label">Пароль к Form A PDF</span>
-  <input type="text" [ngModel]="formAPassword()" (ngModelChange)="formAPassword.set($event)" placeholder="Пароль, если PDF защищён" />
-</div>
-<p class="note">Official-листинг уходит на проверку модератором.</p>
-```
-
-- [ ] **Step 4: Тесты (.spec.ts)**
-Обновить/добавить: official-сабмит зовёт `createProperty` без title_deed-ключей, затем `uploadFormA`+`saveFormA`; `status='pending_review'` для official+network; `onFormAFile` отклоняет не-PDF. (Замокать `PropertyFormAService`.)
-
-- [ ] **Step 5: test:file + checkFile (все 4 файла, вкл. .html) + commit**
-```bash
-git commit -m "feat(mrsqm): форма добавления — поля Form A/договора вместо title_deed; Official всегда на модерацию"
-```
+- [ ] **Step 1: vm (.ts)** — добавить `isExclusive: d?.is_exclusive ?? false` и `formA: d?.form_a ?? []`. Хелпер статуса строки: `formAStatus(r: PropertyFormA): string` → `r.approved_at ? 'approved' : (r.moderation_note ? 'rejected' : 'на проверке')`.
+- [ ] **Step 2: шаблон (.html)** — бейдж Exclusive при `vm().isExclusive`; блок «Form A»: `@for (r of vm().formA)` строка `Form A {{ r.listing_start }}–{{ r.listing_end }} · {{ formAStatus(r) }}`. Файл/пароль НЕ показываем. (Кнопка «Add new» — SP-C, здесь не добавляем.)
+- [ ] **Step 3: тесты** — `is_exclusive=true` → бейдж; `form_a=[{...approved_at}]` → строка со статусом «approved»; пустой `form_a` → блок пуст/скрыт. checkFile + commit (`feat(mrsqm): деталь — строки Form A + бейдж Exclusive`).
 
 ---
 
-### Task 4: Окно редактирования — Official-поля Form A (шаг Листинг)
+### Task 4 (уборка, ПОСЛЕ выката Tasks 1–3): DROP старых official-колонок
 
-Те же поля в `edit-property` (мастер SP-A, шаг 3 «Листинг»), при `listing_type='official'`. Префилл из `detail().form_a`. Правка Official → новый Form A + pending_review.
+После подтверждения, что новый `add-property` live (не пишет/не читает title_deed). DDL-гейт «да».
 
-**Files:**
-- Modify: `src/app/mrsqm/pages/edit-property/edit-property.component.ts`
-- Modify: `src/app/mrsqm/pages/edit-property/edit-property.component.html`
-- Modify: `src/app/mrsqm/pages/edit-property/edit-property.component.spec.ts`
-
-**Interfaces:**
-- Consumes: `PropertyFormAService`, `detail().form_a`, `detail().is_exclusive`.
-- Produces: при сохранении official — `uploadFormA` (если выбран новый файл) + `saveFormA`.
-
-- [ ] **Step 1: Сигналы + префилл (.ts)**
-Добавить сигналы `contractNumber/contractStart/contractEnd/isExclusive/formAFile/formAPassword` + `onFormAFile`. В `_prefill`: из `d.form_a` (contract_number, listing_start/end, status, pdf_password — владельцу приходит) и `d.is_exclusive`. Inject `PropertyFormAService`.
-
-- [ ] **Step 2: save() — official-ветка**
-В `save()` после `editProperty`, если `listingType()==='official'`: если выбран новый `formAFile()` — `uploadFormA`, затем `saveFormA({...})` (ставит pending_review). Снек/нав — как есть. (Файл не обязателен при правке, если Form A уже есть и не меняется — но смена pocket→official требует файла; добавить валидацию.)
-
-- [ ] **Step 3: Шаблон (.html) шаг 3 «Листинг»**
-Под чипами «Тип листинга» добавить `@if (listingType() === 'official') { ... }` с теми же полями, что в Task 3 Step 3 (Contract Number, даты, Exclusive, Form A PDF, пароль). Текущий PDF (если есть) — ссылка через `signedUrl` (кнопка «Открыть текущий Form A»).
-
-- [ ] **Step 4: Тесты + checkFile (вкл. .html) + commit**
-```bash
-git commit -m "feat(mrsqm): окно редактирования — поля Form A в шаге Листинг (official)"
-```
+**Files:** Create `docs/migrations/2026-06-25-sp-b-drop-title-deed.sql`
+- [ ] Патч `get_property` (staleness-proof) — убрать ключи `title_deed_number/title_deed_year/plot_number/municipality_number`; затем `ALTER TABLE public.properties DROP COLUMN IF EXISTS title_deed_number, DROP COLUMN IF EXISTS title_deed_year, DROP COLUMN IF EXISTS plot_number, DROP COLUMN IF EXISTS municipality_number;`. ROLLBACK-смоук → «да» → apply → applied/.
 
 ---
 
-### Task 5: Деталь-панель — блок Form A + бейдж Exclusive
+## Порядок / зависимости
+1. **Task 1** (DDL, аддитивно) → база. 2. **Task 2** (сервис+типы+add). 3. **Task 3** (панель). 4. Финальное opus-ревью → lint+prodWeb → деплой Tasks 1–3 (по «пушь»). 5. После live → **Task 4** (DROP, отдельный «да»).
 
-Показ Form A владельцу (ссылка на PDF через signed URL, contract number, срок, статус модерации) + бейдж Exclusive всем.
-
-**Files:**
-- Modify: `src/app/mrsqm/components/property-detail/property-detail.component.ts`
-- Modify: `src/app/mrsqm/components/property-detail/property-detail.component.html`
-- Modify: `src/app/mrsqm/components/property-detail/property-detail.component.spec.ts`
-
-**Interfaces:**
-- Consumes: `detail().form_a`, `detail().is_exclusive`, `PropertyFormAService.signedUrl`.
-
-- [ ] **Step 1: vm + signed URL (.ts)**
-В `vm()` добавить `isExclusive: d?.is_exclusive ?? false` и `formA: d?.form_a ?? null`. Метод `openFormA()`: `const url = await this._formA.signedUrl(this.detail()?.form_a?.file_url ?? ''); if (url) window.open(url, '_blank')`. Inject `PropertyFormAService`.
-
-- [ ] **Step 2: Шаблон (.html)**
-- Бейдж Exclusive (рядом с official-бейджем) при `vm().isExclusive`.
-- Владельцу (`isOwner()`) — блок «Form A»: contract number, срок (start–end), статус модерации, кнопка «Открыть Form A (PDF)» → `openFormA()`. Пароль показать владельцу (если `form_a.pdf_password`). Чужим — ничего.
-
-- [ ] **Step 3: Тесты (.spec.ts)**
-`is_exclusive=true` → бейдж рендерится; владельцу с `form_a` — блок виден, кнопка зовёт `signedUrl`; не-владельцу form_a-блок скрыт. (Замокать `PropertyFormAService`.)
-
-- [ ] **Step 4: checkFile (вкл. .html) + commit**
-```bash
-git commit -m "feat(mrsqm): деталь — блок Form A (signed URL) + бейдж Exclusive"
-```
-
----
-
-### Task 6 (хвост, ПОСЛЕ выката Tasks 2–5): Фаза B — выпилить title_deed + DROP + контракт Админке
-
-Выполняется **только после подтверждения, что новый фронт live** (иначе старый прод-фронт читает title_deed из get_property). DDL-гейт «да».
-
-**Files:**
-- Create: `docs/migrations/2026-06-25-sp-b-form-a-phaseB-drop.sql`
-- Create: `docs/superpowers/briefs/2026-06-25-form-a-moderation-contract.md`
-
-- [ ] **Step 1: Контракт Админке (брифом)**
-`briefs/2026-06-25-form-a-moderation-contract.md`: как модератор (их репо, service_role) читает строку `property_form_a` (+`pdf_password`), пишет `status='approved'|'rejected'`, `approved_by`, `approved_at`, `moderation_note`; approve листинга → `properties.status='active'` (UPDATE-путь активации, RT-2); reject → `rejected` + `rejection_reason` (LM-3). superApp кода Админки не трогает.
-
-- [ ] **Step 2: Миграция Фазы B**
-`phaseB-drop.sql` (одной транзакцией): staleness-proof патч тел `get_property`/`get_feed` — убрать ключи `title_deed_number/title_deed_year/plot_number/municipality_number`; затем `ALTER TABLE public.properties DROP COLUMN IF EXISTS title_deed_number, DROP COLUMN IF EXISTS title_deed_year, DROP COLUMN IF EXISTS plot_number, DROP COLUMN IF EXISTS municipality_number;`. На гейте контроллер дополнительно спрашивает создателя, не дропнуть ли что-то из `property_form_a` (рекомендация — оставить всё).
-
-- [ ] **Step 3: ROLLBACK-смоук → DDL-гейт «да» → apply → applied/ → commit**
-Верификация: `get_property` больше не отдаёт title_deed-ключи и не падает; колонки отсутствуют.
-
----
-
-## Карта зависимостей / порядок выката
-
-1. **Task 1** (Фаза A, DDL) → база для всего.
-2. **Task 2** (сервис+типы) → нужен Tasks 3–5.
-3. **Tasks 3,4,5** (UI) — после Task 2; можно подряд.
-4. Финальное whole-branch ревью (opus) → lint+prodWeb → **деплой** Tasks 1–5 (по «пушь»).
-5. После подтверждения, что фронт live → **Task 6** (Фаза B DROP + контракт), отдельный DDL-гейт «да».
-
-## Self-Review (выполнено)
-
-- **Покрытие спеки:** §2 схема → Task 1; §3 бакет → Task 1; §4 RPC/get_property/пароль → Task 1+2; §5 UI → Tasks 3–5; §6 граница (без SP-C) — соблюдена; §7 безопасность (RLS, пароль не логируем/не чужим) — в Global Constraints + Task 1 Step 3; контракт Админке → Task 6.
-- **Плейсхолдеры:** тела `get_property`/`get_feed` намеренно патчатся из ЖИВОЙ БД (staleness-proof, не из доков) — это требование /migrate, не плейсхолдер; указаны точные ключи/дельта и `<is_owner_expr>` для поиска в живом теле.
-- **Двухфазность:** title_deed остаётся в Фазе A (старый фронт жив), убирается в Фазе B после выката — зеро-даунтайн.
-- **Типы:** `PropertyFormA`/`form_a`/`is_exclusive` объявлены в Task 2 и используются в Tasks 3–5 с теми же именами; `PropertyInsert` теряет title_deed в Task 3 (после Фазы A, до Фазы B — insert прямой, лишних ключей просто не шлём).
+## Self-Review
+- Покрытие спеки: §2 → Task 1; §3 get_property → Task 1 Step 3; §4 UI → Tasks 2–3; §6 уборка → Task 4; §7 безопасность (RLS/пароль-не-в-get_property/не логируем) — Global Constraints + Task 1. edit-property не трогаем (спека §4). get_feed не трогаем.
+- Плейсхолдеры: тело get_property патчится из ЖИВОЙ БД (staleness-proof regexp с guard) — требование /migrate, не плейсхолдер; якоря и выражение владельца подтверждены интроспекцией.
+- Типы: `PropertyFormA`/`form_a[]`/`is_exclusive` объявлены в Task 2 Step 1, используются в Task 3; `PropertyInsert` теряет title_deed в Task 2 (insert прямой — лишних ключей не шлём; колонки живы до Task 4).

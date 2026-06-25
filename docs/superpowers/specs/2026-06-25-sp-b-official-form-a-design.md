@@ -1,120 +1,94 @@
-# Дизайн: SP-B — Official / Form A фундамент
+# Дизайн: SP-B — Official / Form A фундамент (лёгкий вариант)
 
-> **Дата:** 2026-06-25 · **Статус:** дизайн утверждён к планированию (brainstorming пройден)
-> **Эпик:** A (мастер edit, задеплоен) → **B (этот)** → C (движок сценариев публикации).
-> **Контекст:** официальные листинги в Дубае требуют Form A (RERA-разрешение брокеру выставлять объект). Сейчас форма Official собирает поля про *право собственности* (Title Deed/Plot/Municipality), что не то. SP-B заменяет их на поля **договора листинга + Form A PDF** и закладывает фундамент: схема, приватный Storage, захват и хранение, контракт с Админкой-модератором.
+> **Дата:** 2026-06-25 · **Статус:** дизайн утверждён к планированию · **Эпик:** A (мастер edit, задеплоен) → **B (этот)** → C (движок сценариев).
+> **Контекст:** Official-листинги в Дубае требуют Form A (RERA-разрешение брокеру выставлять объект). Форма Official сейчас собирает поля права собственности (Title Deed/Plot/Municipality) — не то. SP-B заменяет их на поля договора + Form A PDF и закладывает фундамент: схема, приватный Storage, захват и показ.
+> **Принцип:** следуем существующим паттернам приложения (прямой `insert` + RLS, как у `property_photos`). Без кастомных RPC, без лайфсайкл-машинерии, без фаз. Минимум кода, решающий задачу.
 
 ## 0. Цель
 
-Дать агенту в форме Official вводить данные договора и прикреплять **Form A (PDF)**, надёжно их хранить (включая чувствительный пароль к PDF), показывать владельцу и **отдавать модератору в Админке** для проверки. Реальная модерация (approve/reject) — в репозитории Админки; superApp даёт SQL-контракт и фронт-сторону. **Движок сценариев публикации (кнопки по статусу, expiry, «Form A < 30 дней») — НЕ здесь, это SP-C.**
+Агент в форме Official вводит данные договора и прикрепляет **Form A (PDF)**. Хранится надёжно (PDF в приватном бакете; пароль в колонке под RLS — читает только владелец/модератор). В карточке-детали показывается **список строк Form A** (`Form A 22.03.2026–22.06.2026 · approved`), строки копятся (история, insert-only), файл в панели не показываем. Official всегда уходит на модерацию. Модерация (approve/reject) — в Админке (их репо), читает строку напрямую под service_role.
 
-## 1. Закрытые решения (brainstorming 2026-06-25)
+## 1. Закрытые решения
 
 | # | Решение |
 | --- | --- |
-| Пароль Form A | **Хранить, доступ строго ограничен.** Колонка `pdf_password` под жёстким RLS: читают ТОЛЬКО владелец объекта (в своём `get_property`) и модератор (service_role / DEFINER-RPC в Админке). Не хэшируем (модератору нужен в читаемом виде, чтобы открыть PDF). Не отдаём в ленту/чужим. Усиление шифрованием — позже, вне SP-B. |
-| Старые official-поля | **Заменить И удалить.** `title_deed_number`, `title_deed_year`, `plot_number`, `municipality_number` на `properties` — все **пустые** (0 заполнено из 20, проверено на проде) → убираем из формы и **DROP-аем** колонки. Точный список DROP подтверждается на DDL-гейте с показом SQL. |
-| Official → модерация | **Official ВСЕГДА идёт в модерацию** (и Friends, и Public). Сабмит/правка Official → `properties.status='pending_review'` + строка `property_form_a` со `status='pending'`. (Pocket-правила прежние: network без модерации, public → модерация.) |
-| Модель данных | **Расширяем существующую `property_form_a`** (она в проде, дормантная, **0 строк** — ALTER безопасен), не плодим новую таблицу. |
-| История Form A | **1:много.** Каждый договор/продление = новая строка `property_form_a`. «Текущий» Form A = последняя (по `listing_end`/`uploaded_at`). Задел под SP-C (продление, «Form A < 30 дней»). |
+| Без RPC | Form A пишется **прямым `insert`** в `property_form_a` (RLS «владелец своего объекта»), как `property_photos`. `properties.status='pending_review'` ставит сам фронт в payload (форма уже так делает). |
+| История | **Insert-only.** Каждый Form A = новая строка; строки НЕ удаляются и НЕ помечаются. Панель перечисляет их. (Лайфсайкл `replaced`/`expired` и продление — SP-C.) |
+| Показ в панели | **Строка, не файл:** `Form A {listing_start}–{listing_end} · {статус модерации}`. Статус = производное от `approved_at`/`moderation_note` (NULL approved_at → «на проверке»; approved_at → «approved»; moderation_note без approved → «rejected»). Файл/пароль в панель НЕ отдаём. |
+| Пароль | Колонка `pdf_password` под RLS таблицы (владелец читает свою строку, чужой/anon — нет; модератор — service_role). В `get_property` НЕ возвращаем вовсе (панель его не показывает). Модератор читает строку напрямую в Админке. |
+| Старые поля | Убрать из формы `add-property` (`title_deed_number/year`, `plot_number`, `municipality_number`). DROP колонок — **отдельная тривиальная уборка** после выката (4 пустые колонки, 0 данных; см. §6). |
+| Official → модерация | Official **всегда** `status='pending_review'` (и Friends, и Public). Pocket-правила прежние. |
+| Бакет | Новый приватный `property_form_a` (PDF-only). Чтения файла из фронта нет (панель не показывает) → signed URL во фронте не нужен; PDF читает модератор под service_role. |
 
-## 2. Модель данных
+## 2. Данные
 
-### 2.1 `property_form_a` (ALTER существующей; 0 строк в проде)
+### `property_form_a` (ALTER; в проде пустая, 0 строк)
+Текущие колонки переиспользуем: `property_id`, `file_url` (storage-path PDF), `listing_start`=Contract Start, `listing_end`=Contract End, `status` (lifecycle `active/expired/replaced` — в SP-B всегда `'active'`), `uploaded_by`, `approved_by`/`approved_at`/`moderation_note` (модерация, пишет Админка), `uploaded_at`.
+**Добавляем:** `contract_number text`, `pdf_password text`.
 
-Текущие колонки (оставляем, все нужны): `id`, `property_id` (FK), `file_url` (PDF в бакете), `listing_start date` (= **Contract Start**), `listing_end date` (= **Contract End**), `status text` (модерация Form A, `property_form_a_status_check`), `uploaded_by uuid`, `approved_by text`, `approved_at timestamptz`, `moderation_note text`, `uploaded_at timestamptz`.
+### `properties`
+**Добавляем:** `is_exclusive boolean NOT NULL DEFAULT false`.
+**Старые official-колонки** (`title_deed_number/year`, `plot_number`, `municipality_number`) — DROP отдельной уборкой (§6).
 
-**Добавляем:**
-- `contract_number text` — номер договора.
-- `pdf_password text` — пароль к PDF (RLS-защищён, см. §4).
+### RLS
+- `property_form_a` (таблица дормантная — добавить клиентские политики): **insert/select/update/delete для владельца объекта** — `EXISTS (SELECT 1 FROM properties WHERE id=property_id AND owner_id=auth.uid())`. Чужой/anon — нет. (Урок WP-M: на RLS-таблице нужна политика на каждый cmd, иначе молчаливый no-op.)
+- Storage `property_form_a` (приватный бакет): владелец — все операции над своими (`{owner_id}/{property_id}/...`), модератор — service_role, чужой/anon — нет.
 
-> На DDL-гейте дополнительно спросить создателя, не дропнуть ли что-то из текущих колонок `property_form_a` — по дизайну все 11 используются (файл, даты, модерация, аудит), рекомендация: оставить все. Решение фиксируется при показе SQL.
+## 3. `get_property` (один staleness-proof патч)
+Добавить в JSON объекта:
+- `'is_exclusive', p.is_exclusive`;
+- `'form_a'` = **массив строк** (история, insert-only), без файла и пароля:
+  ```sql
+  'form_a', (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'contract_number', fa.contract_number,
+      'listing_start',   fa.listing_start,
+      'listing_end',     fa.listing_end,
+      'approved_at',     fa.approved_at,
+      'moderation_note', fa.moderation_note
+    ) ORDER BY fa.uploaded_at DESC), '[]'::jsonb)
+    FROM public.property_form_a fa WHERE fa.property_id = p.id
+  )
+  ```
+`get_feed` НЕ трогаем (бейдж Exclusive в ленте — позже).
 
-### 2.2 `properties`
+## 4. UI
 
-- **Добавить:** `is_exclusive boolean NOT NULL DEFAULT false` — эксклюзивность листинга (бейдж на карточке/детали; атрибут уровня объекта для показа/фильтра — поэтому на `properties`, не на `property_form_a`).
-- **DROP (пустые, убраны из формы):** `title_deed_number`, `title_deed_year`, `plot_number`, `municipality_number`.
-  - ⚠️ Эти ключи отдаются в `get_property`/`get_feed` JSON (несколько мест) → перед DROP убрать их из тел функций (staleness-proof патч), иначе RPC упадут на несуществующих колонках. Это часть миграции SP-B.
+### `add-property`, шаг Листинг (official)
+- **Убрать:** Title Deed №/год, Plot number, Municipality number.
+- **Добавить:** Contract Number · Contract Start/End (даты) · Is Exclusive (тоггл) · Form A PDF (загрузка, только PDF) · Password to Form A.
+- Сабмит: создать объект (status `pending_review` для official) → загрузить PDF в бакет (`{owner}/{id}/...pdf`) → `insert` строки `property_form_a` (status `'active'`). Перестать слать title_deed.
+- Валидация official: Contract Number + Form A PDF обязательны.
 
-### 2.3 Кардинальность / «текущий Form A»
+### `property-detail` (панель)
+- **Список строк Form A** (`form_a` из get_property): `Form A {start}–{end} · {статус}`. Файл/пароль не показываем.
+- Бейдж **Exclusive** при `is_exclusive`.
+- Кнопка **Add new** и её флоу (новый Form A → «Опубликовать», Cancel) — **SP-C**, не здесь.
 
-`property_form_a` 1:много к `properties`. **Текущий Form A = `ORDER BY uploaded_at DESC LIMIT 1`** (детерминированно, последний загруженный). `get_property` отдаёт текущий. (Логику «approved + не истёкший» для публикации добавит SP-C — здесь только показ последнего.)
+### `edit-property`
+В SP-B **не трогаем** (Form A заводится при создании; переподача нового Form A — «Add new» в SP-C). is_exclusive-правка — при необходимости позже.
 
-## 3. Storage — приватный бакет под Form A PDF
+## 5. Граница scope
+**SP-B:** схема (ALTER + бакет + RLS), `get_property` (form_a-массив + is_exclusive), захват Form A в `add-property`, показ строк + бейджа в панели. Official → `pending_review`.
+**SP-C:** «Add new» (переподача нового Form A) + кнопка «Опубликовать вместо Сохранить» + Cancel, движок сценариев (статусы/expiry/«Form A <30 дней»), approve/reject — Админка.
 
-- Новый бакет **`property_form_a`** (нейминг как `property_photos`): `public=false`, `allowed_mime_types='{application/pdf}'`, лимит размера (напр. 10–20 МБ).
-- Путь объекта: `{owner_id}/{property_id}/{uuid}.pdf` (owner-scoped по первому сегменту).
-- RLS на `storage.objects` (bucket_id='property_form_a'):
-  - **insert/select/update/delete для владельца:** `(storage.foldername(name))[1] = auth.uid()::text` (как привязка к своему `owner_id`).
-  - **select для модератора:** через service_role (Админка ходит под service_role) — RLS не ограничивает service_role.
-  - Чужой агент / anon — нет доступа.
-- Клиент валидирует MIME=`application/pdf` и расширение `.pdf` ДО загрузки (бакет — второй барьер).
+## 6. Уборка (после выката SP-B, отдельный DDL-гейт)
+Когда новый `add-property` live (не пишет/не читает title_deed): убрать ключи `title_deed_number/year/plot_number/municipality_number` из тела `get_property`, затем `DROP COLUMN` эти 4 (пустые, 0 данных → безопасно). Тривиально, не блокирует фичу.
 
-## 4. RPC / доступ
-
-- **Запись Form A (whitelist-RPC, SECURITY DEFINER, owner-check)** — по аналогии с `edit_property`: принимает `p_property_id`, `p_contract_number`, `p_listing_start`, `p_listing_end`, `p_pdf_password`, `p_file_url`, `p_is_exclusive`. Создаёт строку `property_form_a` (`status='pending'`, `uploaded_by=auth.uid()`), пишет `properties.is_exclusive`, ставит `properties.status='pending_review'` (Official всегда модерация). PDF грузится клиентом в бакет до RPC; в RPC передаётся `file_url`.
-- **`get_property`** дополнить: текущий Form A — `file_url`, `contract_number`, `listing_start`, `listing_end`, `status` (модерации Form A) + `properties.is_exclusive`.
-  - **`pdf_password` отдаём ТОЛЬКО владельцу** (`WHEN is_owner THEN pdf_password ELSE NULL`). Никогда в ленту/чужим.
-- **Контракт для Админки** (их репо `~/Projects/admin`, код не трогаем — только контракт-док):
-  - модератор читает строку `property_form_a` (+ `pdf_password`) под service_role / через DEFINER-RPC;
-  - пишет `status='approved'|'rejected'`, `approved_by`, `approved_at`, `moderation_note`;
-  - approve листинга → `properties.status='active'` (существующий путь активации UPDATE-ом, RT-2 / [[listing-active-via-update-not-only-insert]]); reject → `status='rejected'` + `rejection_reason` (LM-3). Тонкая связка «active только если Form A approved» — Админка + SP-C, не SP-B.
-
-## 5. UI
-
-### 5.1 Форма добавления (`add-property`), шаг Листинг (official)
-
-При `listing_type='official'`:
-- **Убрать:** Title Deed №, год Title Deed, Plot number, Municipality number.
-- **Добавить:**
-  - Contract Number (текст).
-  - Contract Start Date / End Date (даты).
-  - Is Exclusive (тоггл/чекбокс yes-no).
-  - Form A PDF — загрузка файла, **только PDF** (accept=application/pdf + валидация).
-  - Password to Form A PDF (текст; чувствительное — не логировать, см. §7).
-- Валидация Official: Form A PDF + Contract Number + даты обязательны (Official всегда модерация).
-- Подпись: «Official-листинг уходит на проверку модератором».
-
-### 5.2 Окно редактирования (`edit-property`), шаг Листинг (3)
-
-Те же поля при `listing_type='official'` (мастер SP-A уже на месте). Правка Official → пересоздание/обновление текущего Form A + `pending_review` (Официальный всегда модерация). Переключение pocket→official тоже требует Form A.
-
-### 5.3 Деталь-панель (`property-detail`)
-
-- Владельцу: блок «Form A» — ссылка на PDF, Contract Number, срок (start–end), статус модерации Form A. (Пароль владелец видит — поле «пароль к PDF».)
-- Всем: бейдж **Exclusive**, если `is_exclusive`.
-- Чужим/в ленте: ни PDF-ссылки, ни пароля.
-
-## 6. Граница scope
-
-**SP-B делает:** схема (ALTER property_form_a, ALTER+DROP properties, патчи get_property/get_feed), приватный бакет+RLS, RPC записи Form A, захват полей в add/edit, показ в детали, контракт с Админкой. Official-сабмит создаёт `pending_review` + Form A `pending`.
-
-**SP-B НЕ делает (→ SP-C):** движок сценариев — кнопки по статусу/типу/сроку, expiry, спец-флоу «Form A < 30 дней» (сценарий 2.1), матрица publish/renew/republish. Решение approve/reject — Админка (кросс-репо).
-
-## 7. Безопасность / правила
-
-- **Пароль Form A — чувствительный:** RLS под §4, отдаётся только владельцу+модератору; **никогда не логировать** (sync-rule 9: не логировать пользовательский контент). В `Log.log` не попадает.
-- **RLS обязателен** под каждую операцию бакета и таблицы (урок WP-M: на RLS-таблице нужна политика на каждый cmd, иначе молчаливый no-op). Пре-флайт покрытия по `/migrate`.
-- **Общая БД** — `property_form_a`/`properties` наши; `bayut_*`/parser-бакеты (`wa-media`) не трогать.
-- **DDL только с «да»** создателя и показом финального SQL; зеро-даунтайм: аддитивное (ADD columns, bucket, RPC) — Фаза A; DROP старых колонок — после патча тел функций в той же транзакции/миграции (они уже не читаются формой). DROP безопасен по данным (всё пусто, проверено).
+## 7. Безопасность
+- `pdf_password` — чувствительный: RLS таблицы; **не в `get_property`**, не в ленту, не чужим; **не логировать** (sync-rule 9).
+- RLS под каждую операцию (таблица + бакет). DDL только с «да» + показ финального SQL; роль `supabase_admin`; чужие бакеты (`wa-media`)/таблицы не трогать.
+- Без `any`, OnPush, signals; стиль формы — общий партиал `_property-form.scss`.
 
 ## 8. Тестирование
+- Миграция: ROLLBACK-смоук — ALTER/бакет/политики/патч `get_property` без ошибок; `get_property('<owner>') ? 'form_a'`.
+- RLS: владелец insert/select своей строки; чужой агент — нет; anon — нет. Бакет: владелец грузит свой PDF; не-PDF отклоняется.
+- UI: official-шаг рендерит новые поля, прячет старые; PDF-валидация; обязательность; панель рендерит строки form_a + бейдж Exclusive; пароль/файл не показываются.
+- `checkFile` на каждый тронутый файл (вкл. `.html`/`.spec.ts`); `lint`+`buildFrontend:prodWeb` перед пушем.
 
-- **Миграция:** ROLLBACK-смоук — ALTER применяется, бакет создаётся, политики на месте; патч get_property/get_feed не ломает JSON; DROP колонок проходит после патча тел.
-- **RLS:** владелец читает свой `pdf_password` (get_property), **чужой агент — NULL**, anon — нет; бакет: владелец грузит/читает свой PDF, чужой/anon — нет; не-PDF mime отклоняется.
-- **RPC записи:** создаёт строку Form A pending + `properties.pending_review` + `is_exclusive`; owner-check (чужой не может).
-- **UI:** Official-шаг рендерит новые поля, прячет старые; PDF-валидация (не-PDF отклоняется); обязательность Official-полей; деталь показывает Form A владельцу и бейдж Exclusive; пароль не виден чужому.
-- `npm run checkFile` на каждый тронутый файл (вкл. `.html`/`.spec.ts`); `lint` + `buildFrontend:prodWeb` перед пушем.
-
-## 9. Файлы (ориентир; точная разбивка — в плане)
-
-- **Миграция(и)** `docs/migrations/2026-06-25-sp-b-*.sql`: ALTER `property_form_a` (+contract_number, +pdf_password); ALTER `properties` (+is_exclusive); патч тел `get_property`/`get_feed` (убрать title_deed/plot/municipality, добавить Form A + is_exclusive + owner-only password); DROP 4 колонок; `storage.buckets` insert + `storage.objects` policies; RPC `upsert_property_form_a` (или имя по плану).
-- **Сервис(ы)** `src/app/mrsqm/services/`: загрузка Form A PDF в бакет + вызов RPC; чтение Form A (через get_property).
-- **Компоненты:** `add-property` (шаг Листинг — поля Official), `edit-property` (шаг Листинг), `property-detail` (блок Form A + бейдж Exclusive). Типы — `types/database.ts`.
-- **Контракт-док Админке** `docs/superpowers/briefs/2026-06-25-form-a-moderation-contract.md` (как модератор читает/пишет Form A; кросс-репо).
-
-## 10. Открытые к подтверждению (на DDL-гейте)
-
-- Точный список DROP-колонок (4 на `properties`; нужно ли что-то из `property_form_a` — рекомендация оставить всё).
-- Имя бакета (`property_form_a`) и лимит размера PDF.
-- Имя RPC записи Form A.
+## 9. Файлы
+- Миграция `docs/migrations/2026-06-25-sp-b-form-a.sql` (ALTER property_form_a/properties; бакет+storage RLS; table RLS; патч get_property).
+- Сервис `src/app/mrsqm/services/property-form-a.service.ts` (upload PDF в бакет + insert строки).
+- `add-property-page.component.{ts,html,spec.ts}` (поля Official, сабмит, убрать title_deed); `types/database.ts` (PropertyFormA, form_a/is_exclusive в PropertyDetail; убрать title_deed из PropertyInsert, +is_exclusive).
+- `property-detail.component.{ts,html,spec.ts}` (строки Form A + бейдж).
+- Уборка (§6): `docs/migrations/2026-06-25-sp-b-drop-title-deed.sql` (после выката).
