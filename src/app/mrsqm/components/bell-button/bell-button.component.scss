@@ -1,0 +1,40 @@
+:host {
+  display: contents;
+}
+
+.bell-btn {
+  position: relative;
+  overflow: visible !important;
+
+  .mat-icon {
+    display: block;
+    transition: color 0.2s ease;
+  }
+
+  // bell_unseen>0 → оранжевая иконка (Рамка №0, сигнал уведомлений).
+  &.has-unseen .mat-icon {
+    color: var(--color-warning, #ff9800);
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--hover-color, rgba(0, 0, 0, 0.04));
+  }
+}
+
+.bell-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--color-warning, #ff9800);
+  color: #fff;
+  font-size: 0.625rem;
+  line-height: 16px;
+  text-align: center;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}

@@ -1,0 +1,24 @@
+@if (isAuthenticated()) {
+  <button
+    class="panel-btn bell-btn"
+    [class.has-unseen]="hasUnseen()"
+    (click)="openDropdown()"
+    mat-icon-button
+    matTooltip="Уведомления"
+    aria-label="Уведомления"
+  >
+    <mat-icon>notifications</mat-icon>
+    @if (badgeText(); as badge) {
+      <span
+        class="bell-badge"
+        aria-live="polite"
+        >{{ badge }}</span
+      >
+    }
+  </button>
+
+  <mrsqm-bell-dropdown
+    [open]="isOpen()"
+    (closed)="onClosed()"
+  />
+}

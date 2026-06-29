@@ -14,11 +14,12 @@ import { T } from '../../../t.const';
 import { KeyboardConfig } from '../../../features/config/keyboard-config.model';
 import { GlobalConfigService } from '../../../features/config/global-config.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { BellButtonComponent } from '../../../mrsqm/components/bell-button/bell-button.component';
 
 @Component({
   selector: 'desktop-panel-buttons',
   standalone: true,
-  imports: [MatIconButton, MatIcon, MatTooltip, TranslatePipe],
+  imports: [MatIconButton, MatIcon, MatTooltip, TranslatePipe, BellButtonComponent],
   template: `
     @if (isScheduleDayPanelEnabled()) {
       <button
@@ -43,6 +44,9 @@ import { PanelContentService } from '../../../features/panels/panel-content.serv
     >
       <mat-icon>smart_toy</mat-icon>
     </button>
+
+    <!-- MrSQM: колокольчик live-уведомлений — справа от AI-кнопки -->
+    <mrsqm-bell-button />
 
     @if (isIssuesPanelEnabled()) {
       <button
