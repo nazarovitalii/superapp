@@ -37,4 +37,11 @@ describe('UnitTypeLabelService', () => {
     await svc.getLabel('ut-1');
     expect(getFilterOptions).toHaveBeenCalledTimes(1);
   });
+
+  it('параллельные первые вызовы → getFilterOptions зовётся один раз', async () => {
+    const p1 = svc.getLabel('ut-1');
+    const p2 = svc.getLabel('ut-1');
+    await Promise.all([p1, p2]);
+    expect(getFilterOptions).toHaveBeenCalledTimes(1);
+  });
 });
