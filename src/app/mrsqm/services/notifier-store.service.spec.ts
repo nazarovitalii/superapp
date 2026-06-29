@@ -250,4 +250,9 @@ describe('NotifierStoreService (действия)', () => {
     store.requestOpen();
     expect(store.openRequested()).toBe(before + 1);
   });
+
+  it('Рамка №0: openListing НЕ зовёт mark_bell_seen (бейдж/точки уведомлений не трогает)', async () => {
+    await store.openListing('prop-1', 'f1');
+    expect(rpc).not.toHaveBeenCalledWith('mark_bell_seen');
+  });
 });

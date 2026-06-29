@@ -38,8 +38,6 @@ export class NotifierStoreService {
 
   // Тик-запрос «открыть дропдаун» (toast/клик колокола); bell-button реагирует effect-ом.
   readonly openRequested = signal(0);
-  // bell_unseen на момент прошлого refresh — для дельты toast/звука. НЕ источник счётчика.
-  private _prevBellUnseen = 0;
 
   private _started = false;
   private _pollTimer: ReturnType<typeof setInterval> | null = null;
