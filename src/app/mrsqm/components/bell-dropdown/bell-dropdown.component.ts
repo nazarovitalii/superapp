@@ -78,18 +78,24 @@ export class BellDropdownComponent {
   }
 
   private async _loadTitles(items: BellItem[]): Promise<void> {
-    const map = new Map(this._titleMap());
-    let changed = false;
+    const resolved: Array<[string, string]> = [];
     for (const it of items) {
-      if (it.unit_type_id && !map.has(it.unit_type_id)) {
+      if (it.unit_type_id && !this._titleMap().has(it.unit_type_id)) {
         const label = await this._labels.getLabel(it.unit_type_id);
-        if (label) {
-          map.set(it.unit_type_id, label);
-          changed = true;
-        }
+        if (label) resolved.push([it.unit_type_id, label]);
       }
     }
-    if (changed) this._titleMap.set(map);
+    if (resolved.length) {
+      this._titleMap.update((cur) => {
+        const m = new Map(cur);
+        for (const [id, l] of resolved) m.set(id, l);
+        return m;
+      });
+    }
+  }
+
+  onRetry(): void {
+    void this._store.refresh();
   }
 
   onRowClick(row: BellRow): void {

@@ -12,8 +12,10 @@ describe('BellDropdownComponent', () => {
   const bell = signal({ bell_unseen: 0, items: [] as unknown[] });
   const status = signal<'idle' | 'loading' | 'ready' | 'error'>('ready');
   const openListing = jasmine.createSpy('openListing');
+  const refresh = jasmine.createSpy('refresh').and.resolveTo(undefined);
 
   beforeEach(async () => {
+    refresh.calls.reset();
     filters.set([
       {
         id: 'f1',
@@ -35,7 +37,7 @@ describe('BellDropdownComponent', () => {
             bell,
             status,
             openListing,
-            refresh: () => Promise.resolve(),
+            refresh,
           },
         },
         {
@@ -117,5 +119,10 @@ describe('BellDropdownComponent', () => {
     fixture.detectChanges();
     comp.onRowClick(comp.rows()[0]);
     expect(openListing).toHaveBeenCalledWith('p1', 'f1', jasmine.anything());
+  });
+
+  it('onRetry() → store.refresh()', () => {
+    comp.onRetry();
+    expect(refresh).toHaveBeenCalled();
   });
 });
