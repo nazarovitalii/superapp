@@ -108,4 +108,31 @@ describe('NotifierStoreService (ядро)', () => {
     await Promise.resolve();
     expect(store.bell().bell_unseen).toBe(4); // всегда число из бэка
   });
+
+  it('start→stop→start: одно событие changed → один refresh (нет утечки подписок)', async () => {
+    // Конструктор уже запустил start() через auth effect — сначала очищаем.
+    store.stop();
+    store.start();
+    store.stop();
+    store.start();
+    await Promise.resolve();
+    await Promise.resolve();
+    list.calls.reset();
+    rpc.calls.reset();
+    changed$.next();
+    await Promise.resolve();
+    await Promise.resolve();
+    // Без фикса: два раза (старая + новая подписка). С фиксом: ровно один.
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('событие opened$ (ре-синк) → один refresh', async () => {
+    store.start();
+    await Promise.resolve();
+    list.calls.reset();
+    opened$.next();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(list).toHaveBeenCalledTimes(1);
+  });
 });

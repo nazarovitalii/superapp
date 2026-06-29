@@ -1,4 +1,5 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilterService } from './saved-filter.service';
 import { NotifierSocketService } from './notifier-socket.service';
@@ -25,8 +26,12 @@ export class NotifierStoreService {
 
   private _started = false;
   private _pollTimer: ReturnType<typeof setInterval> | null = null;
+  // Хранит подписки на socket, чтобы очистить их в stop() и избежать утечки при logout→login.
+  private _subs: Subscription[] = [];
   private readonly _onVisible = (): void => {
-    if (!document.hidden) void this.refresh();
+    // Гард от гонки: callback может прийти после stop().
+    if (!this._started || document.hidden) return;
+    void this.refresh();
   };
 
   constructor() {
@@ -49,8 +54,10 @@ export class NotifierStoreService {
 
     if (live) {
       this._socket.connect(() => this._freshToken());
-      this._socket.opened$.subscribe(() => void this.refresh()); // ре-синк на (ре)коннекте
-      this._socket.changed$.subscribe(() => this._onChanged());
+      this._subs.push(
+        this._socket.opened$.subscribe(() => void this.refresh()), // ре-синк на (ре)коннекте
+        this._socket.changed$.subscribe(() => this._onChanged()),
+      );
     }
 
     this._pollTimer = setInterval(() => void this.refresh(), POLL_MS);
@@ -63,6 +70,9 @@ export class NotifierStoreService {
   stop(): void {
     if (!this._started) return;
     this._started = false;
+    // Отписываемся от socket, чтобы повторный start() не накапливал дублей подписок.
+    this._subs.forEach((s) => s.unsubscribe());
+    this._subs = [];
     this._socket.disconnect();
     if (this._pollTimer) {
       clearInterval(this._pollTimer);
