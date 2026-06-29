@@ -20,7 +20,7 @@ export const formatBellPrice = (item: BellItem): string => {
     return '';
   }
   const cur = item.price_currency ?? 'AED';
-  if (item.match_type === 'price_drop' && item.previous_price) {
+  if (item.match_type === 'price_drop' && item.previous_price != null) {
     return `${cur} ${compact(item.price)} (was ${compact(item.previous_price)})`;
   }
   return `${cur} ${item.price.toLocaleString('en-US')}`;

@@ -43,4 +43,37 @@ describe('formatBellPrice', () => {
   it('цена null → пустая строка', () => {
     expect(formatBellPrice({ ...base, price: null })).toBe('');
   });
+
+  it('compact: целые миллионы без дробной части → «2M»', () => {
+    expect(
+      formatBellPrice({
+        ...base,
+        match_type: 'price_drop',
+        price: 2_000_000,
+        previous_price: 2_000_000,
+      }),
+    ).toBe('AED 2M (was 2M)');
+  });
+
+  it('compact: тысячи → «950K»', () => {
+    expect(
+      formatBellPrice({
+        ...base,
+        match_type: 'price_drop',
+        price: 950_000,
+        previous_price: 1_000_000,
+      }),
+    ).toBe('AED 950K (was 1M)');
+  });
+
+  it('price_drop с previous_price === 0 → показывает «(was 0)» (не падает в full)', () => {
+    expect(
+      formatBellPrice({
+        ...base,
+        match_type: 'price_drop',
+        price: 2_100_000,
+        previous_price: 0,
+      }),
+    ).toBe('AED 2.1M (was 0)');
+  });
 });
