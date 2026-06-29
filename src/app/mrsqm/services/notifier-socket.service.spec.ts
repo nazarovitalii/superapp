@@ -77,7 +77,9 @@ describe('NotifierSocketService', () => {
     await Promise.resolve();
     expect(FakeWebSocket.last?.protocols).toEqual(['jwt-1']);
     FakeWebSocket.last?.onclose?.(); // обрыв → запланирован реконнект
-    await svc.reconnectNowForTest();
+    await (
+      svc as unknown as { _reconnectNowForTest(): Promise<void> }
+    )._reconnectNowForTest();
     expect(FakeWebSocket.last?.protocols).toEqual(['jwt-2']);
   });
 
@@ -91,5 +93,22 @@ describe('NotifierSocketService', () => {
     ws?.onclose?.();
     await Promise.resolve();
     expect(FakeWebSocket.instances.length).toBe(1);
+  });
+
+  it('повторный connect() закрывает прежний сокет (без orphan-реконнекта)', async () => {
+    svc.connect(() => Promise.resolve('jwt-a'));
+    await Promise.resolve();
+    await Promise.resolve();
+    const ws1 = FakeWebSocket.last;
+    svc.connect(() => Promise.resolve('jwt-b'));
+    await Promise.resolve();
+    await Promise.resolve();
+    const ws2 = FakeWebSocket.last;
+    expect(ws1).not.toBe(ws2);
+    expect(ws1?.closed).toBe(true);
+    expect(ws2?.protocols).toEqual(['jwt-b']);
+    ws1?.onclose?.(); // поздний onclose прежнего сокета — onclose занулён в disconnect, no-op
+    await Promise.resolve();
+    expect(FakeWebSocket.instances.length).toBe(2);
   });
 });

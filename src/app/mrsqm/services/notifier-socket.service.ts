@@ -19,8 +19,10 @@ export class NotifierSocketService {
   private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   connect(getToken: () => Promise<string | null>): void {
+    this.disconnect(); // закрыть прежний сокет/таймер, если есть (без orphan-реконнекта)
     this._getToken = getToken;
     this._stopped = false;
+    this._attempt = 0;
     void this._open();
   }
 
@@ -73,8 +75,8 @@ export class NotifierSocketService {
     this._reconnectTimer = setTimeout(() => void this._open(), delay);
   }
 
-  // Хук для юнит-тестов: немедленно выполнить запланированный реконнект.
-  async reconnectNowForTest(): Promise<void> {
+  /** @internal — только для юнит-тестов, не использовать в проде. */
+  async _reconnectNowForTest(): Promise<void> {
     if (this._reconnectTimer) {
       clearTimeout(this._reconnectTimer);
       this._reconnectTimer = null;
