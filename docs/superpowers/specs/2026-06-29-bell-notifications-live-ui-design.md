@@ -8,6 +8,7 @@
 Браузер держит WebSocket к notifier; на сигнал `bell.changed` (и на ряд других триггеров) superApp перечитывает истину по REST в **один реактивный стор**, и все счётчик-поверхности обновляются разом. Дропдаун колокольчика — список фильтров с непросмотренным.
 
 **Объём v1 (утверждено):** ядро + toast.
+
 - ✅ WS-клиент, реактивный стор, живые счётчики (колокол + per-filter бейджи), дропдаун, live-toast.
 - ⛔ **Вне v1 (отложено):** нативная Electron-нотификация, mobile tab-bar badge. Переиспользуем существующий [`notify.service`](../../../src/app/core/notify/notify.service.ts) позже.
 
@@ -15,11 +16,11 @@
 
 ## 2. Модель прочитанности (Рамка №0) — ДВА независимых сигнала
 
-| | 🔔 Уведомления | 🏠 Объекты |
-| --- | --- | --- |
-| Где | бейдж на колоколе + 🟠 акцент у строки фильтра | счётчик ⟨N⟩ у фильтра (сайдбар + строка дропдауна) |
-| Источник | `get_bell().bell_unseen` + `get_bell().items[].unseen` | `get_saved_filters().unseen_count` |
-| Гаснет | при **закрытии** колокольчика → `mark_bell_seen()` | при **открытии объекта** → запись `user_seen_listings` |
+|          | 🔔 Уведомления                                         | 🏠 Объекты                                             |
+| -------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| Где      | бейдж на колоколе + 🟠 акцент у строки фильтра         | счётчик ⟨N⟩ у фильтра (сайдбар + строка дропдауна)     |
+| Источник | `get_bell().bell_unseen` + `get_bell().items[].unseen` | `get_saved_filters().unseen_count`                     |
+| Гаснет   | при **закрытии** колокольчика → `mark_bell_seen()`     | при **открытии объекта** → запись `user_seen_listings` |
 
 ⛔ Не связывать: закрытие колокола НЕ гасит счётчики объектов; открытие объекта НЕ гасит колокол. `mark_bell_seen()` объекты просмотренными НЕ метит.
 
@@ -28,7 +29,9 @@
 Весь код — в `src/app/mrsqm/` (кроме одной вставки в хедер, см. §8).
 
 ### 3.1 `NotifierSocketService` (`mrsqm/services/notifier-socket.service.ts`)
+
 Только WebSocket, без состояния и UI.
+
 - `connect(getToken: () => Promise<string>)` — `new WebSocket('wss://notify.mrsqm.com', [token])` (JWT в `Sec-WebSocket-Protocol`, прил. A контракта).
 - На каждый (ре)коннект — **свежий** токен из `supabase.client.auth.getSession()`.
 - Реконнект сам: экспон. backoff + jitter. Heartbeat — браузер отвечает pong автоматически (клиентского кода нет).
@@ -36,39 +39,53 @@
 - Включается только если тумблер живости ON (§7).
 
 ### 3.2 `NotifierStore` (`mrsqm/services/notifier-store.service.ts`)
+
 **Единственный источник** для всех счётчиков и дропдауна. Сигналы:
+
 - `bell = signal<{ bell_unseen: number; items: BellItem[] }>` ← `get_bell()`.
 - `filters = signal<SavedFilterLite[]>` ← `get_saved_filters()` (`{ filter_id, name, unseen_count }`).
 
 `refresh()` — **единственный** путь обновления истины:
+
 ```
 const [bell, filters] = await Promise.allSettled([rpc('get_bell'), rpc('get_saved_filters')]);
 // get_bell может отсутствовать в проде до применения 017 → allSettled, при reject bell остаётся пустым.
 ```
+
 **Триггеры `refresh()`** (любой → один вызов):
+
 1. `socket.changed`; 2. `socket.opened` (ре-синк, §3.2 контракта); 3. poll каждые ~60с (safety + единственный путь при тумблере OFF); 4. `visibilitychange`/focus (вкладка снова активна).
 
 Методы: `start(liveOn)` (поднимает сокет+poll+visibility, либо только poll при OFF); `closeBell()` → `await rpc('mark_bell_seen')` затем `refresh()` (гасит уведомления). Дебаунс REST **не** делаем — дебаунс на стороне notifier; один сигнал → один `refresh()`.
 
 ### 3.3 `mrsqm-bell-button` (`mrsqm/components/bell-button/`)
+
 Иконка в хедере справа от GPT (`smart_toy`). Состояния:
+
 - `bell_unseen === 0` → серая иконка `notifications` (как соседняя GPT-кнопка).
 - `bell_unseen > 0` → **оранжевая** (`--color-warning`) + бейдж-число (cap «99+»).
-Клик → открыть дропдаун (top-layer `<dialog>`). На **закрытие** дропдауна → `store.closeBell()`.
+  Клик → открыть дропдаун (top-layer `<dialog>`). На **закрытие** дропдауна → `store.closeBell()`.
 
 ### 3.4 `mrsqm-bell-dropdown` (`mrsqm/components/bell-dropdown/`)
+
 Top-layer `<dialog>` (иначе `will-change:transform` правой панели запирает `position:fixed` — известная гоча, см. галерея-лайтбокс). Дизайн — §5.
 
 ### 3.5 Toast — через существующий `SnackService`
+
 На `socket.changed`, если окно в фокусе И тумблер ON. ред.5 сделал тост текстовым (без фото) → snackbar подходит, свой компонент не нужен. Логика:
+
 - Если `bell_unseen` за `refresh()` вырос **>1** → агрегат `N new matches`.
 - Если ровно +1 → `New match in «{filter}»` + строка свежего объекта.
 - Стиль `mrsqm-snack` (низ-лево), auto-dismiss ~5с, клик → открыть дропдаун. Не более 1 тоста.
 
+**Звук (BELL-1.1):** на `socket.changed` при тумблере ON и росте `bell_unseen` — простой WebAudio-«дзинь» (`util/notification-chime.ts`), без ассетов/сети; звучит даже если вкладка не в фокусе (в отличие от тоста — тот только при фокусе). Тумблер OFF → молчит. Звук тихо глотает ошибки (нет `AudioContext` / autoplay-политика до первого клика).
+
 ### 3.6 Per-filter бейджи (сайдбар) — переиспużование
+
 Бейджи `unseen_count` у фильтров уже существуют (RT-4, `saved-filter.service`). Источником делаем `store.filters`: сайдбар читает стор, бейджи обновляются живо на тех же триггерах. Никакого второго счётчика.
 
 ### 3.7 Заголовок строки — хелпер ленты
+
 `title` бэк не отдаёт. Собираем тем же хелпером, что карточка ленты: `{bedrooms}BR {unitType(unit_type_id)}` (резолв `unit_type_id`→название через справочник superApp, как в `property-card`).
 
 ## 4. Поток данных
@@ -80,6 +97,7 @@ Top-layer `<dialog>` (иначе `will-change:transform` правой панел
    → ВСЕ подписчики перерисовываются разом:
         bell-button (точка/число), bell-dropdown (строки), сайдбар (бейджи)
 ```
+
 Ни одна поверхность не считает сама. На `socket.changed` дополнительно — toast (§3.5), если фокус+ON.
 
 ## 5. Дизайн дропдауна (соцсеть-grade, токены SP)
@@ -113,6 +131,7 @@ Top-layer `<dialog>` (иначе `will-change:transform` правой панел
 **Сортировка** строк — по свежему `matched_at`. **Клик** → объект в sidebar (= просмотр объекта: пишем `user_seen_listings` → бэк декрементит `unseen_count` → следующий `refresh()`; на колокол/полосу НЕ влияет).
 
 **Состояния:**
+
 - Загрузка → 2–3 skeleton-строки.
 - Пусто (фильтры есть, новых нет) → `No new matches` + приглушённая 🔔.
 - Нет фильтров → `No saved filters yet` + кнопка **Create filter**.
@@ -129,6 +148,7 @@ Top-layer `<dialog>` (иначе `will-change:transform` правой панел
 ## 7. Тумблер живости
 
 localStorage-флаг (`mrsqm.bellLive`, default ON). Переключатель — в подвале дропдауна.
+
 - ON → сокет + toast + poll + focus.
 - OFF → **сокета и тостов нет**, но счётчики **живые** через poll(60с) + focus. Колокол/дропдаун работают полностью на REST.
 
@@ -148,14 +168,21 @@ localStorage-флаг (`mrsqm.bellLive`, default ON). Переключатель
 - **bell-button:** серая/оранжевая+число по `bell_unseen`; закрытие дропдауна зовёт `closeBell()`.
 - **bell-dropdown:** гейт строк по `unseen_count>0`; оранжевая полоса по `items[].unseen`; превью vs fallback; теги New/Price↓; состояния loading/empty/no-filters/error; клик пишет `user_seen_listings`; Рамка №0 (закрытие колокола НЕ трогает `unseen_count`).
 - **title-хелпер:** `{bedrooms}BR {unitType}`.
+- **notification-chime:** создаёт осциллятор / молча не падает без `AudioContext`.
+- **тумблер Live на лету:** `applyLivePref()` пересобирает сокет под текущий `isBellLiveOn()` (OFF→рвёт сокет, ON→коннектит); дропдаун `toggleLive()` его зовёт.
+- **Рамка №0 (обе стороны):** `closeBell` НЕ зовёт `mark_filter_seen`; `openListing` НЕ зовёт `mark_bell_seen`.
 - E2E — после go-live (нужен живой WS).
 
 ## 11. Зависимости (прод, владелец БД — go-live)
 
 Не блокируют разработку, блокируют «оживление»:
+
 - `migrations/product/016` (триггер `bell_changed_notify` на `filter_matches`) + `017` (`get_bell`/`mark_bell_seen`) — применить в проде.
 - `wss://notify.mrsqm.com` (Traefik: проброс `Upgrade`/`Connection`, эхо `Sec-WebSocket-Protocol`; origin allowlist `https://sapp.mrsqm.com`), secret `SUPABASE_JWT_SECRET`.
 - §4.3 контракта — `get_saved_filters().unseen_count` ✅ **уже есть** у нас (RT-4), правок не нужно.
+- ⚙️ **`mark_bell_seen` — сделать идемпотентно-дешёвым:** клиент зовёт его на **каждое** закрытие колокола (Mark all read / View all / backdrop / Esc), даже когда `bell_unseen` уже 0 (так требует Рамка №0). RPC должен быть no-op-дёшев при нулевом курсоре (заметка финального ревью).
+
+> **Реализация (факт vs §3.6):** сайдбар-бейджи оставлены на существующем RT-4 (`SavedFilterService.reloadTick`); `NotifierStore.refresh()` бампает `bumpReload()` → сайдбар живёт на тех же триггерах. Единый бэкенд-счётчик (`unseen_count`) сохранён, второго фронт-счёта нет. Низкорисковая альтернатива «сайдбар читает `store.filters`» — поведение идентично.
 
 ## 12. Вне scope v1
 
