@@ -71,4 +71,24 @@ describe('BellButtonComponent', () => {
     expect(closeBell).toHaveBeenCalled();
     expect(comp.isOpen()).toBe(false);
   });
+
+  it('ненулевой openRequested на маунте НЕ авто-открывает; последующий бамп открывает', () => {
+    // JSDOM не реализует HTMLDialogElement.showModal — мокаем, чтобы эффект bell-dropdown не падал.
+    const showModalSpy = spyOn(HTMLDialogElement.prototype, 'showModal').and.stub();
+    spyOn(HTMLDialogElement.prototype, 'close').and.stub();
+
+    openRequested.set(5);
+    const fx = TestBed.createComponent(BellButtonComponent);
+    fx.detectChanges();
+    TestBed.flushEffects();
+    expect(fx.componentInstance.isOpen()).toBe(false);
+    openRequested.set(6);
+    fx.detectChanges();
+    TestBed.flushEffects();
+    expect(fx.componentInstance.isOpen()).toBe(true);
+    // Также проверяем, что дропдаун получил команду открыться.
+    expect(showModalSpy).toHaveBeenCalled();
+    // Сбрасываем для изоляции следующих тестов
+    openRequested.set(0);
+  });
 });

@@ -38,7 +38,9 @@ export class BellButtonComponent {
 
   constructor() {
     // Запрос «открыть дропдаун» из toast/клика по уведомлению (store.requestOpen()).
-    let prev = 0;
+    // Снапшот текущего значения на момент монтирования — чтобы ненулевой tick
+    // (toast fired до рендера компонента) не открывал дропдаун сразу.
+    let prev = this._store.openRequested();
     effect(() => {
       const tick = this._store.openRequested();
       if (tick > prev) {
