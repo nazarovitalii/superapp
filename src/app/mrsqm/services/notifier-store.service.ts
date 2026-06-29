@@ -4,9 +4,17 @@ import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilterService } from './saved-filter.service';
 import { NotifierSocketService } from './notifier-socket.service';
 import { MrsqmAuthService } from './auth.service';
+import { PanelContentService } from '../../features/panels/panel-content.service';
+import { SeenTrackingService } from './seen-tracking.service';
+import { SnackService } from '../../core/snack/snack.service';
+import { UnitTypeLabelService } from './unit-type-label.service';
 import { SavedFilter } from './feed-filter.service';
-import { BellResponse } from '../types/notifier';
+import { BellItem, BellResponse } from '../types/notifier';
+import { PropertyFeedItem } from '../types/database';
 import { isBellLiveOn } from '../util/bell-live-pref';
+import { buildPropertyTitle } from '../util/property-title';
+import { formatBellPrice } from '../util/bell-price';
+import { playNotificationChime } from '../util/notification-chime';
 
 const POLL_MS = 60_000;
 
@@ -18,11 +26,20 @@ export class NotifierStoreService {
   private readonly _savedFilters = inject(SavedFilterService);
   private readonly _socket = inject(NotifierSocketService);
   private readonly _auth = inject(MrsqmAuthService);
+  private readonly _panels = inject(PanelContentService);
+  private readonly _seen = inject(SeenTrackingService);
+  private readonly _snack = inject(SnackService);
+  private readonly _labels = inject(UnitTypeLabelService);
 
   readonly bell = signal<BellResponse>({ bell_unseen: 0, items: [] });
   readonly filters = signal<SavedFilter[]>([]);
   readonly bellUnseen = computed(() => this.bell().bell_unseen);
   readonly status = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  // Тик-запрос «открыть дропдаун» (toast/клик колокола); bell-button реагирует effect-ом.
+  readonly openRequested = signal(0);
+  // bell_unseen на момент прошлого refresh — для дельты toast/звука. НЕ источник счётчика.
+  private _prevBellUnseen = 0;
 
   private _started = false;
   private _pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -103,9 +120,115 @@ export class NotifierStoreService {
     this._savedFilters.bumpReload();
   }
 
-  // На socket.changed Task 7 добавит toast+звук; ядро просто перечитывает истину.
+  // socket.changed: перечитать истину, затем (если ON) toast + звук по дельте bell_unseen.
   protected _onChanged(): void {
-    void this.refresh();
+    if (!isBellLiveOn()) {
+      void this.refresh();
+      return;
+    }
+    const before = this.bell().bell_unseen;
+    void this.refresh().then(() => {
+      const after = this.bell().bell_unseen;
+      const delta = after - before;
+      if (delta > 0) {
+        playNotificationChime(); // звук — даже если вкладка не в фокусе
+        if (!document.hidden) void this._showToast(delta);
+      }
+    });
+  }
+
+  // 🔔 Закрыл колокол → двигаем bell-курсор (гасит бейдж И все полосы), затем перечитываем.
+  // Рамка №0: счётчики объектов (unseen_count) НЕ трогаем.
+  async closeBell(): Promise<void> {
+    try {
+      await this._supabase.rpc('mark_bell_seen');
+    } catch {
+      // RPC может отсутствовать до go-live — не блокируем закрытие
+    }
+    await this.refresh();
+  }
+
+  // 🏠 Открыл объект из дропдауна → engagement + гасим объект в фильтре. Бейдж/полосы НЕ трогаем.
+  async openListing(
+    propertyId: string,
+    filterId: string,
+    item?: BellItem,
+  ): Promise<void> {
+    void this._seen.recordView(propertyId);
+    void this._seen
+      .markFilterSeen(filterId, [propertyId])
+      .then(() => void this.refresh());
+    this._panels.openProperty(this._toFeedStub(propertyId, item));
+  }
+
+  requestOpen(): void {
+    this.openRequested.update((n) => n + 1);
+  }
+
+  // Минимальный stub PropertyFeedItem: property-detail сам догрузит полное через get_property
+  // (реактивный effect по property().id). Заполняем что знаем из bell-item, остальное — дефолты.
+  private _toFeedStub(propertyId: string, item?: BellItem): PropertyFeedItem {
+    return {
+      id: propertyId,
+      owner_id: '',
+      deal_type: (item?.deal_type as PropertyFeedItem['deal_type']) ?? 'sale',
+      listing_type: 'pocket',
+      property_type: null,
+      unit_type_id: item?.unit_type_id ?? null,
+      price: item?.price ?? 0,
+      price_currency: item?.price_currency ?? 'AED',
+      price_period: null,
+      bedrooms: item?.bedrooms ?? null,
+      bathrooms: null,
+      area_sqft: null,
+      location_name: item?.location_label ?? null,
+      community_name: item?.community_label ?? null,
+      description: null,
+      furnished: null,
+      handover: null,
+      photos: null,
+      published_at: item?.matched_at ?? new Date().toISOString(),
+      owner_full_name: null,
+      owner_photo_url: null,
+      owner_agency_name: null,
+      is_network: false,
+      developer_name: null,
+    };
+  }
+
+  // Текстовый toast (brief §2B(2)): +1 → строка свежего объекта; >1 → агрегат «N new matches».
+  private async _showToast(delta: number): Promise<void> {
+    let msg: string;
+    if (delta > 1) {
+      msg = `${delta} new matches`;
+    } else {
+      const item = this.bell().items[0];
+      if (item) {
+        const fname =
+          this.filters().find((f) => f.id === item.filter_id)?.auto_name ?? 'your filter';
+        const label = await this._labels.getLabel(item.unit_type_id);
+        const title = buildPropertyTitle(item.bedrooms, label);
+        const loc = item.location_label ?? item.community_label ?? '';
+        msg = `New match in «${fname}» · ${[title, loc, formatBellPrice(item)]
+          .filter((p) => p)
+          .join(' · ')}`;
+      } else {
+        msg = 'New match';
+      }
+    }
+    this._snack.open({
+      msg,
+      type: 'SUCCESS',
+      ico: 'notifications',
+      isSkipTranslate: true,
+      actionStr: 'View',
+      actionFn: () => this.requestOpen(),
+      config: {
+        horizontalPosition: 'left',
+        verticalPosition: 'bottom',
+        panelClass: 'mrsqm-snack',
+      },
+    });
   }
 
   private async _freshToken(): Promise<string | null> {
