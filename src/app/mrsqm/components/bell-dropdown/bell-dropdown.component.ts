@@ -116,6 +116,7 @@ export class BellDropdownComponent {
     const next = !this.liveOn();
     this.liveOn.set(next);
     setBellLive(next);
+    this._store.applyLivePref();
   }
 
   // Состояние «нет сохранённых фильтров» → открыть панель фильтров ленты (spec §5).

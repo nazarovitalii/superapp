@@ -13,9 +13,11 @@ describe('BellDropdownComponent', () => {
   const status = signal<'idle' | 'loading' | 'ready' | 'error'>('ready');
   const openListing = jasmine.createSpy('openListing');
   const refresh = jasmine.createSpy('refresh').and.resolveTo(undefined);
+  const applyLivePref = jasmine.createSpy('applyLivePref');
 
   beforeEach(async () => {
     refresh.calls.reset();
+    applyLivePref.calls.reset();
     filters.set([
       {
         id: 'f1',
@@ -38,6 +40,7 @@ describe('BellDropdownComponent', () => {
             status,
             openListing,
             refresh,
+            applyLivePref,
           },
         },
         {
@@ -124,5 +127,12 @@ describe('BellDropdownComponent', () => {
   it('onRetry() → store.refresh()', () => {
     comp.onRetry();
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it('toggleLive() → setBellLive + store.applyLivePref()', () => {
+    comp.toggleLive();
+    expect(applyLivePref).toHaveBeenCalled();
+    // Восстанавливаем исходное состояние Live (toggleLive переключил его).
+    comp.toggleLive();
   });
 });

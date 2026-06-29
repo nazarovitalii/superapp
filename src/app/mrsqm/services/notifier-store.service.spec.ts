@@ -152,6 +152,43 @@ describe('NotifierStoreService (ядро)', () => {
     await Promise.resolve();
     expect(list).toHaveBeenCalledTimes(1);
   });
+
+  it('applyLivePref(): тумблер OFF на лету рвёт сокет (stop+start без connect)', () => {
+    // Получаем шпионы сокета из провайдера.
+    const socket = TestBed.inject(
+      NotifierSocketService,
+    ) as jasmine.SpyObj<NotifierSocketService> & {
+      connect: jasmine.Spy;
+      disconnect: jasmine.Spy;
+    };
+    store.start();
+    localStorage.setItem('mrsqm.bellLive', 'off');
+    socket.connect.calls.reset();
+    socket.disconnect.calls.reset();
+    store.applyLivePref();
+    expect(socket.disconnect).toHaveBeenCalled();
+    expect(socket.connect).not.toHaveBeenCalled();
+    localStorage.removeItem('mrsqm.bellLive');
+  });
+
+  it('applyLivePref(): тумблер ON на лету поднимает сокет (stop+start с connect)', () => {
+    const socket = TestBed.inject(
+      NotifierSocketService,
+    ) as jasmine.SpyObj<NotifierSocketService> & {
+      connect: jasmine.Spy;
+      disconnect: jasmine.Spy;
+    };
+    // Сначала выключаем Live, запускаем, затем включаем обратно.
+    localStorage.setItem('mrsqm.bellLive', 'off');
+    store.start();
+    localStorage.setItem('mrsqm.bellLive', 'on');
+    socket.connect.calls.reset();
+    socket.disconnect.calls.reset();
+    store.applyLivePref();
+    expect(socket.disconnect).toHaveBeenCalled();
+    expect(socket.connect).toHaveBeenCalled();
+    localStorage.removeItem('mrsqm.bellLive');
+  });
 });
 
 describe('NotifierStoreService (действия)', () => {

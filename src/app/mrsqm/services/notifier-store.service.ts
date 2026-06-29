@@ -82,6 +82,16 @@ export class NotifierStoreService {
     void this.refresh();
   }
 
+  // Применить тумблер живости на лету: пересобрать сокет/подписки под текущий isBellLiveOn().
+  // stop() рвёт сокет/подписки/таймеры; start() заново читает isBellLiveOn() и поднимает
+  // сокет только если ON (иначе только poll + focus).
+  applyLivePref(): void {
+    if (this._started) {
+      this.stop();
+      this.start();
+    }
+  }
+
   stop(): void {
     if (!this._started) return;
     this._started = false;
