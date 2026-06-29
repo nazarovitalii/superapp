@@ -1,0 +1,129 @@
+<dialog
+  #dlg
+  class="bell-dropdown"
+  aria-label="Notifications"
+  (click)="onBackdropClick($event)"
+  (close)="onDialogClose()"
+>
+  <div
+    class="bell-panel"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="bell-head">
+      <span class="bell-title">Notifications</span>
+      <button
+        class="bell-markall"
+        type="button"
+        (click)="closed.emit()"
+      >
+        Mark all read
+      </button>
+    </header>
+
+    @switch (viewState()) {
+      @case ('loading') {
+        <div class="bell-skeletons">
+          <div class="bell-skel"></div>
+          <div class="bell-skel"></div>
+          <div class="bell-skel"></div>
+        </div>
+      }
+      @case ('error') {
+        <div class="bell-empty">
+          <p class="bell-empty-title">Couldn't load notifications</p>
+          <button
+            class="bell-retry"
+            type="button"
+            (click)="status.set('loading')"
+          >
+            Retry
+          </button>
+        </div>
+      }
+      @case ('no-filters') {
+        <div class="bell-empty">
+          <mat-icon class="bell-empty-ico">notifications_none</mat-icon>
+          <p class="bell-empty-title">No saved filters yet</p>
+          <p class="bell-empty-sub">Create a filter to get match alerts.</p>
+          <button
+            class="bell-create"
+            type="button"
+            (click)="onCreateFilter()"
+          >
+            Create filter
+          </button>
+        </div>
+      }
+      @case ('no-new') {
+        <div class="bell-empty">
+          <mat-icon class="bell-empty-ico">notifications_none</mat-icon>
+          <p class="bell-empty-title">No new matches</p>
+          <p class="bell-empty-sub">
+            You'll see new listings for your saved filters here.
+          </p>
+        </div>
+      }
+      @default {
+        <ul class="bell-rows">
+          @for (row of rows(); track row.filterId) {
+            <li
+              class="bell-row"
+              [class.is-unseen]="row.hasUnseenNotification"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="row.name + ', ' + row.unseenCount + ' new'"
+              (click)="onRowClick(row)"
+              (keydown.enter)="onRowClick(row)"
+              (keydown.space)="onRowClick(row); $event.preventDefault()"
+            >
+              <div class="bell-row-top">
+                <span class="bell-row-name">{{ row.name }}</span>
+                <span class="bell-row-badge">{{
+                  row.unseenCount > 99 ? '99+' : row.unseenCount
+                }}</span>
+              </div>
+              @if (row.preview) {
+                <div class="bell-row-preview">
+                  <span
+                    class="bell-tag"
+                    [class.is-drop]="row.preview.matchType === 'price_drop'"
+                    >{{
+                      row.preview.matchType === 'price_drop' ? 'Price ↓' : 'New'
+                    }}</span
+                  >
+                  <span class="bell-row-text"
+                    >{{ row.preview.title }} · {{ row.preview.location }} ·
+                    {{ row.preview.priceText }}</span
+                  >
+                </div>
+              } @else {
+                <div class="bell-row-preview bell-row-fallback">
+                  {{ row.unseenCount }} new — tap to view
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+
+    <footer class="bell-foot">
+      <button
+        class="bell-live"
+        type="button"
+        [class.is-on]="liveOn()"
+        (click)="toggleLive()"
+      >
+        <mat-icon class="bell-live-ico">bolt</mat-icon>
+        <span>{{ liveOn() ? 'Live' : 'Live off' }}</span>
+      </button>
+      <button
+        class="bell-viewall"
+        type="button"
+        (click)="closed.emit()"
+      >
+        View all matches
+      </button>
+    </footer>
+  </div>
+</dialog>
