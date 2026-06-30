@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilterService } from './saved-filter.service';
@@ -28,7 +28,6 @@ export class NotifierStoreService {
 
   readonly bell = signal<BellResponse>({ bell_unseen: 0, items: [] });
   readonly filters = signal<SavedFilter[]>([]);
-  readonly bellUnseen = computed(() => this.bell().bell_unseen);
   readonly status = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
   // Тик-запрос «открыть дропдаун» (toast/клик колокола); bell-button реагирует effect-ом.

@@ -77,7 +77,6 @@ describe('NotifierStoreService (ядро)', () => {
   it('refresh() сводит оба RPC в сигналы', async () => {
     await store.refresh();
     expect(store.bell().bell_unseen).toBe(4);
-    expect(store.bellUnseen()).toBe(4);
     expect(store.filters().length).toBe(1);
   });
 
