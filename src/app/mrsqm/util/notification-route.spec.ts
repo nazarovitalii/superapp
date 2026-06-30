@@ -32,4 +32,13 @@ describe('notificationTarget', () => {
   it('ai_digest → chat', () => {
     expect(notificationTarget(it_('ai_digest', null)).kind).toBe('chat');
   });
+  it('объектный тип без entity_id → none', () => {
+    expect(notificationTarget(it_('new_listing', null)).kind).toBe('none');
+  });
+  it('listing_rejected с entity_id → property', () => {
+    expect(notificationTarget(it_('listing_rejected', 'p2'))).toEqual({
+      kind: 'property',
+      id: 'p2',
+    });
+  });
 });
