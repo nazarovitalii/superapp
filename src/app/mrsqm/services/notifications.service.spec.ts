@@ -1,0 +1,97 @@
+import { TestBed } from '@angular/core/testing';
+import { Subject } from 'rxjs';
+import { NotificationsService } from './notifications.service';
+import { MrsqmSupabaseService } from './supabase.service';
+import { NotifierSocketService } from './notifier-socket.service';
+import { GetNotificationsResponse } from '../types/notification';
+
+describe('NotificationsService', () => {
+  let rpc: jasmine.Spy;
+  let changed$: Subject<void>;
+
+  const page = (
+    over: Partial<GetNotificationsResponse> = {},
+  ): GetNotificationsResponse => ({
+    items: [],
+    unread_count: 0,
+    next_cursor: null,
+    ...over,
+  });
+
+  beforeEach(() => {
+    rpc = jasmine.createSpy('rpc');
+    changed$ = new Subject<void>();
+    TestBed.configureTestingModule({
+      providers: [
+        NotificationsService,
+        { provide: MrsqmSupabaseService, useValue: { rpc } },
+        {
+          provide: NotifierSocketService,
+          useValue: { changed$: changed$.asObservable() },
+        },
+      ],
+    });
+  });
+
+  it('loadFirst заполняет items/unread/cursor', async () => {
+    rpc.and.resolveTo(
+      page({
+        items: [
+          {
+            id: '1',
+            type: 'new_listing',
+            created_at: 'x',
+            read_at: null,
+            entity_id: null,
+            filter_id: 'f',
+            thumb_url: null,
+            data: {},
+            source: 'm',
+          },
+        ],
+        unread_count: 1,
+        next_cursor: 'c1',
+      }),
+    );
+    const svc = TestBed.inject(NotificationsService);
+    await svc.loadFirst();
+    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+    expect(svc.items().length).toBe(1);
+    expect(svc.unreadCount()).toBe(1);
+    expect(svc.nextCursor()).toBe('c1');
+  });
+
+  it('loadMore дописывает и шлёт курсор', async () => {
+    const svc = TestBed.inject(NotificationsService);
+    rpc.and.resolveTo(page({ items: [{ id: '1' } as never], next_cursor: 'c1' }));
+    await svc.loadFirst();
+    rpc.calls.reset();
+    rpc.and.resolveTo(page({ items: [{ id: '2' } as never], next_cursor: null }));
+    await svc.loadMore();
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_cursor: 'c1',
+    });
+    expect(svc.items().length).toBe(2);
+    expect(svc.nextCursor()).toBeNull();
+  });
+
+  it('markAllRead зовёт RPC с null и перечитывает', async () => {
+    const svc = TestBed.inject(NotificationsService);
+    rpc.and.resolveTo(page());
+    await svc.markAllRead();
+    expect(rpc).toHaveBeenCalledWith('mark_notifications_read', { p_ids: null });
+    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+  });
+
+  it('сигнал сокета триггерит loadFirst', async () => {
+    rpc.and.resolveTo(page({ unread_count: 3 }));
+    const svc = TestBed.inject(NotificationsService);
+    await svc.loadFirst();
+    rpc.calls.reset();
+    rpc.and.resolveTo(page({ unread_count: 5 }));
+    changed$.next();
+    await Promise.resolve();
+    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+  });
+});
