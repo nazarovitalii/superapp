@@ -1,0 +1,34 @@
+<div
+  class="ntf-row"
+  [class.is-unread]="vm().isUnread"
+  role="button"
+  tabindex="0"
+  (click)="activated.emit()"
+  (keydown.enter)="activated.emit()"
+  (keydown.space)="activated.emit(); $event.preventDefault()"
+>
+  <div class="ntf-thumb ntf-thumb--{{ vm().thumbKind }} accent-{{ vm().accent }}">
+    @if (vm().thumbKind === 'icon' || !vm().thumbUrl) {
+      <mat-icon class="ntf-thumb-ico">{{ vm().icon }}</mat-icon>
+    } @else {
+      <img
+        class="ntf-thumb-img"
+        [src]="vm().thumbUrl"
+        alt=""
+      />
+    }
+  </div>
+
+  <div class="ntf-body">
+    <div class="ntf-line1">
+      <span class="ntf-title">{{ vm().title }}</span>
+      <span class="ntf-time">{{ time() }}</span>
+    </div>
+    @if (vm().detail) {
+      <div class="ntf-line2">{{ vm().detail }}</div>
+    }
+    @if (filterName()) {
+      <div class="ntf-line3">Filter "{{ filterName() }}"</div>
+    }
+  </div>
+</div>
