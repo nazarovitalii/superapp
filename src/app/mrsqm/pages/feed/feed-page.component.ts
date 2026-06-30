@@ -513,7 +513,8 @@ export class FeedPageComponent {
       p_offset: this.offset(),
       p_scope: this.filter.serverScope(),
       p_my_status: this.filter.serverScope() === 'my' ? this.filter.myStatus() : 'all',
-      // Загруженный сохранённый фильтр → per-filter is_unseen (синхрон с бейджем).
+      // Загруженный сохранённый фильтр → is_unseen считается серверно по глобальному
+      // user_seen_listings.shown_at + floor sf.created_at (тот же сигнал, что кружок-бейдж и дуэлл).
       p_filter_id: this.filter.loadedFilterId(),
       p_sort_by: this.filter.sortBy(),
       p_category_id: categoryVal ? await this._getCategoryId(categoryVal) : null,

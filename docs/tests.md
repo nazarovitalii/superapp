@@ -147,6 +147,7 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 **Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-транзакция).
 **Что проверяли:** 2 применённых патча — `mark_filter_seen` (`ON CONFLICT DO UPDATE seen_at=now()`) и `get_saved_filters.unseen_count` (`GREATEST(p.created_at,p.updated_at) > GREATEST(sf.created_at, COALESCE(seen_at,'epoch'))`).
 **Цикл (один матч фильтра):**
+
 - A: объект изменён (`last_actualized_at=now`), не просмотрен → `unseen_count=2` (считается).
 - B: просмотрел в фильтре (`mark_filter_seen` → `seen_at=now`) → `=1` (**−1**, объект ушёл из счётчика).
 - C: объект изменён ПОСЛЕ просмотра (симуляция: `seen_at` сдвинут в прошлое) → `=2` (**re-notify +1**).
@@ -162,6 +163,7 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 **Данные:** сид-база (18 active total, 2 owner, 0 public-объектов; сети были пусты до теста).
 
 **Отрицательные/структурные (ROLLBACK-смоук):**
+
 - A: сигнатура оканчивается на `p_scope text DEFAULT 'all'` + `p_my_status text DEFAULT 'all'` → ✅
 - B: старый дубль `visibility IN ('public','network')` отсутствует (единый предикат) → ✅
 - C: scope=my по статусам: `all=17` (15 active + 2 pending), `active=15`, `pending=2`, `archived=0` → ✅ маппинг верен
@@ -169,13 +171,14 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 - G: невалидный `p_scope` И невалидный `p_my_status` → исключение (оба PASS) → ✅
 
 **Положительный путь P2 (после дружбы, ROLLBACK-смоук):**
+
 - nazarovitalii `friends` = **3** (network-объекты test2), все `owner=test2`, `is_network=true`, своих нет → ✅
 - nazarovitalii `all` = **3** (0 public + 3 своя-сеть), своих нет → ✅
 - test2 `friends` = **15** (network-объекты nazarovitalii) → ✅
 - Чужой карман вне сети НЕ виден (старая функция отдавала 18 = свои+чужой network — утечка P2 закрыта).
 
 **Применение (реально):** `DROP FUNCTION` + `CREATE FUNCTION` + `GRANT` без ошибок; пост-верификация: `has_scope=t`, `no_visibility_IN=t`, сигнатура с двумя новыми параметрами.
-**Вывод:** ✅ Серверный охват (all/friends/my) и статус-фильтр My работают; P2 закрыт в обе стороны; единый проход (count(*) OVER()) корректен. Файл → `applied/`.
+**Вывод:** ✅ Серверный охват (all/friends/my) и статус-фильтр My работают; P2 закрыт в обе стороны; единый проход (count(\*) OVER()) корректен. Файл → `applied/`.
 
 ---
 
@@ -183,10 +186,11 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 **Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-смоук → реальное применение).
 **Что проверяли:** staleness-proof DO-патч: обёртка формулы re-notify в `CASE WHEN sf.filters->>'scope'='my' THEN 0 ELSE <re-notify> END`.
+
 - Патч применён: NOTICE «my-scope → 0 применён»; `has_scope_case=t` (определение содержит `sf.filters->>'scope'`) → ✅
 - Существующие фильтры не сломаны: `get_saved_filters(nazarovitalii)` = 2 строки (как и до патча) → ✅ правка меняет только скаляр unseen_count между якорями, число строк не меняется.
 - My-scope фильтров в сид-данных нет (4 фильтра: 3 public + 1 null-scope) → ветка my→0 проверена логикой/смоуком вакуумно.
-**Вывод:** ✅ Применено; My-фильтры получат `unseen_count=0` (жёлтого бейджа нет). Файл → `applied/`.
+  **Вывод:** ✅ Применено; My-фильтры получат `unseen_count=0` (жёлтого бейджа нет). Файл → `applied/`.
 
 ---
 
@@ -194,11 +198,12 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 **Дата:** 2026-06-23 · **Где:** прод Supabase (ROLLBACK-смоук → реальное применение).
 **Контекст:** лента не отдавала публичный адрес → friends/public видели только community («адрес поломан»). Модель приватности (бегунок add-property): `public_location_id = NULL` → owner раскрыл ПОЛНЫЙ адрес (дефолт бегунка = leaf); заданный → урезанный уровень. Фикс: `public_location_name = COALESCE(pl.name, l.name)` (null→полный, задан→урезанный), `public_community_name = COALESCE(plc.name, lc.name)`. CREATE OR REPLACE (сигнатура та же, гранты целы).
+
 - def содержит `public_location_name` + join `p.public_location_id` → ✅
 - get_feed(nazarovitalii, my, 1000): **17/17** объектов вернули `public_location_name` (было 0) → ✅
 - ветка null→полный: для объектов без public_location_id `public_location_name = locations.name(location_id)` → ✅
 - ветка задан→урезанный: для объектов с public_location_id `public_location_name = locations.name(public_location_id)` → ✅
-**Вывод:** ✅ Друзья/public видят публичный адрес по модели бегунка (полный по умолчанию, урезанный если owner скрыл). Файл → `applied/`.
+  **Вывод:** ✅ Друзья/public видят публичный адрес по модели бегунка (полный по умолчанию, урезанный если owner скрыл). Файл → `applied/`.
 
 ---
 
@@ -206,11 +211,12 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 **Дата:** 2026-06-24 · **Где:** прод (создатель удалил 2 объекта через карточку; верификация — SELECT).
 **Что проверяли:** боевой прогон LM-5 (`delete_property`) + enqueue-триггер + внешний дренер realtime.
+
 - Аудит: `deleted_listings_audit` = **2 строки** (16:22:59 + 16:23:13) → удаление зафиксировано ✅
 - Каскад БД (11 FK) + явный `pdf_generations` → следы стёрты ✅
 - Enqueue-триггер `trg_enqueue_storage_cleanup` → 2 префикса `{id}/` durable-захвачены ✅
 - **Дренер realtime** (вариант B, задеплоен в Coolify): `storage_cleanup_queue` → **queue_depth=0** (вычищен), бакет `property_photos` **24 → 16** = 8 файлов физически удалено, verify «0 осталось» → строки сняты ✅
-**Вывод:** ✅ Полная цепочка «владелец удалил → БД-каскад+аудит → очередь → физическое удаление файлов» работает в проде. Storage-дренер (вариант B) подтверждён боевым прогоном. Утечки файлов нет.
+  **Вывод:** ✅ Полная цепочка «владелец удалил → БД-каскад+аудит → очередь → физическое удаление файлов» работает в проде. Storage-дренер (вариант B) подтверждён боевым прогоном. Утечки файлов нет.
 
 ---
 
@@ -218,11 +224,12 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 **Дата:** 2026-06-24 · **Где:** прод (миграция применена транзакционно; смоук в `BEGIN…ROLLBACK`).
 **Что проверяли:** новую RPC `edit_property` (whitelist, owner-check, статус/цена/immutability) + аддитивный патч `get_property` (отдаёт `public_location_id`).
+
 - **Владелец, active-объект** (`5f6a3c58…`, owner `8db1f713…`): `edit_property(price=2100000, 'smoke')` → вернул `'active'`; `price` 2.0M→2.1M; `previous_price=2000000`, `price_changed_at` и `last_actualized_at` выставлены ✅
 - **Immutability:** `bedrooms` остались `2` (не в сигнатуре — изменить невозможно) ✅
 - **Чужой** (`sub=000…0`): `edit_property(...)` → `ERROR: property not found or not owned by current user` ✅
 - **Патч чтения:** `get_property(…) ? 'public_location_id'` от владельца → `t` (ключ присутствует); ссылки `v_result->>'public_location_path'` не затронуты (якорь `'public_location_path', CASE` — одно вхождение) ✅
-**Вывод:** ✅ Фаза A применена и проверена. `update_property`/`republish_property` пока живы (дроп — Фаза B после деплоя фронта). DDL-логика корректна; данные не изменены (ROLLBACK).
+  **Вывод:** ✅ Фаза A применена и проверена. `update_property`/`republish_property` пока живы (дроп — Фаза B после деплоя фронта). DDL-логика корректна; данные не изменены (ROLLBACK).
 
 ---
 
@@ -245,6 +252,23 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 **Ожидали:** просмотренные объекты не возвращаются в счётчик; `get_notifications`→200, таблица `notifications` + партиции + cron + индекс на месте.
 **Получили:** ✅ до фикса фильтр `test2` показывал `unseen_count=3` при 3 просмотренных (новая формула=0); после применения test2 → 0, тело функции содержит global-shown подзапрос. ✅ `get_notifications`→200, `mark_notifications_read`→400(anon=норма), `notifications` + 3 партиции + cron `notifications-maintain` (active) + индекс `filter_matches_filter_matched_at_idx`.
 **Вывод:** ✅ баг B закрыт (видел где угодно = не считается); бэкенд ленты живой. ⏳ полная лента 12 типов — после 9 доменных продюсеров.
+
+---
+
+### T-UNSEEN1: единое определение «непросмотрено» — floor sf.created_at + global shown_at (Bug 2 + Bug 3)
+
+**Дата:** 2026-06-30
+**Триггер:** три миграции одной модели «непросмотрено» = `GREATEST(p.created_at,p.updated_at) > GREATEST(sf.created_at, COALESCE(user_seen_listings.shown_at,'epoch'))`:
+
+- `get_saved_filters.unseen_count` +floor `sf.created_at` (`applied/2026-06-30-get-saved-filters-unseen-floor-filter-created.sql`) — Bug 3 кружок.
+- `get_feed.is_unseen` фильтр-ветка: `user_filter_seen` → global `user_seen_listings.shown_at` (`applied/2026-06-30-get-feed-is-unseen-filter-branch-global-shown.sql`) — Bug 2 точка.
+- `get_bell` +floor `sf.created_at` в `bell_unseen` и дропдаун (`applied/2026-06-30-get-bell-floor-filter-created.sql`) — Bug 3 колокол.
+  **Симптомы:** Bug 2 — оранжевая точка в фильтре моргает 5с и возвращается при каждом открытии (кружок-бейдж при этом гаснет). Bug 3 — новый фильтр сразу показывает счётчик на ранее существовавшие объекты («создал первый фильтр → 10 уведомлений»).
+  **Корень:** refactor 2026-06-30 перевёл бейдж на global `shown_at` и удалил per-filter писателя `markFilterSeen`, но (а) `get_feed.is_unseen` фильтр-ветка осталась читать осиротевший `user_filter_seen` (последняя запись 2026-06-29 19:45) → вечно true; (б) при переходе на global выкинут floor `sf.created_at` → старые объекты считаются новыми.
+  **Запрос/проверка (прод, psql):** после применения — `position('user_filter_seen' in get_feed)=0`, обе ветки `is_unseen` на `usl` (usl_count=2); `get_bell` содержит `filter_created_at` ×3 + floor в счётчике; на реальном фильтре `f84274a0…` (10 матчей) — все 10 объектов `GREATEST(created,updated) <= sf.created_at` → для свежего юзера новая формула = 10−10 = 0.
+  **Ожидали:** floor отсекает объекты старше фильтра; точка в фильтре читает тот же сигнал, что пишет дуэлл → гаснет и не возвращается.
+  **Получили:** ✅ `user_filter_seen` исчез из тела `get_feed`; `get_bell` floor ×3 на месте; фильтр с 10 пред-объектами → 0 непросмотренных по новой формуле. Все 3 функции валидны (smoke `get_bell(5)` ≠ null). Фронт: checkFile зелёный, bell-button спека 5/5.
+  **Вывод:** ✅ единое серверное определение «непросмотрено» на 3 поверхностях; Bug 2/3 закрыты на уровне данных. ⏳ финальный UX-клик-тест в проде (точка не возвращается после дуэлла) — за создателем; стайлинг колокольчика (серый залитый + коричневый счётчик) — после деплоя фронта.
 
 ---
 
