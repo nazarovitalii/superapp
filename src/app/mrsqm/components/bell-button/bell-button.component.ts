@@ -10,6 +10,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NotifierStoreService } from '../../services/notifier-store.service';
+import { NotificationsService } from '../../services/notifications.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { BellDropdownComponent } from '../bell-dropdown/bell-dropdown.component';
 
@@ -23,15 +24,16 @@ import { BellDropdownComponent } from '../bell-dropdown/bell-dropdown.component'
 })
 export class BellButtonComponent {
   private readonly _store = inject(NotifierStoreService);
+  private readonly _notifications = inject(NotificationsService);
   private readonly _auth = inject(MrsqmAuthService);
 
   readonly isAuthenticated = this._auth.isAuthenticated;
-  readonly bellUnseen = this._store.bellUnseen;
+  readonly unreadCount = this._notifications.unreadCount;
   readonly isOpen = signal(false);
 
-  readonly hasUnseen = computed(() => this.bellUnseen() > 0);
+  readonly hasUnseen = computed(() => this.unreadCount() > 0);
   readonly badgeText = computed<string | null>(() => {
-    const n = this.bellUnseen();
+    const n = this.unreadCount();
     if (n <= 0) return null;
     return n > 99 ? '99+' : String(n);
   });
@@ -54,9 +56,9 @@ export class BellButtonComponent {
     this.isOpen.set(true);
   }
 
-  // Закрытие дропдауна гасит сигнал уведомлений (Рамка №0): mark_bell_seen + refresh.
+  // Закрытие дропдауна помечает все уведомления прочитанными.
   onClosed(): void {
     this.isOpen.set(false);
-    void this._store.closeBell();
+    void this._notifications.markAllRead();
   }
 }

@@ -5,8 +5,6 @@ import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilterService } from './saved-filter.service';
 import { NotifierSocketService } from './notifier-socket.service';
 import { MrsqmAuthService } from './auth.service';
-import { PanelContentService } from '../../features/panels/panel-content.service';
-import { SeenTrackingService } from './seen-tracking.service';
 import { SnackService } from '../../core/snack/snack.service';
 import { UnitTypeLabelService } from './unit-type-label.service';
 
@@ -66,14 +64,6 @@ describe('NotifierStoreService (ядро)', () => {
           },
         },
         { provide: MrsqmAuthService, useValue: { isAuthenticated: () => true } },
-        { provide: PanelContentService, useValue: { openProperty: () => {} } },
-        {
-          provide: SeenTrackingService,
-          useValue: {
-            recordView: () => Promise.resolve(),
-            markFilterSeen: () => Promise.resolve(),
-          },
-        },
         { provide: SnackService, useValue: { open: () => {} } },
         {
           provide: UnitTypeLabelService,
@@ -191,36 +181,17 @@ describe('NotifierStoreService (ядро)', () => {
   });
 });
 
-describe('NotifierStoreService (действия)', () => {
+describe('NotifierStoreService (requestOpen)', () => {
   let store: NotifierStoreService;
-  let rpc: jasmine.Spy;
-  let openProperty: jasmine.Spy;
-  let recordView: jasmine.Spy;
-  let markFilterSeen: jasmine.Spy;
-  let snackOpen: jasmine.Spy;
-  let changed$: Subject<void>;
 
   beforeEach(() => {
-    rpc = jasmine
-      .createSpy('rpc')
-      .and.callFake((fn: string) =>
-        fn === 'get_bell'
-          ? Promise.resolve({ bell_unseen: 0, items: [] })
-          : Promise.resolve(undefined),
-      );
-    openProperty = jasmine.createSpy('openProperty');
-    recordView = jasmine.createSpy('recordView').and.resolveTo(undefined);
-    markFilterSeen = jasmine.createSpy('markFilterSeen').and.resolveTo(undefined);
-    snackOpen = jasmine.createSpy('open');
-    changed$ = new Subject();
-
     TestBed.configureTestingModule({
       providers: [
         NotifierStoreService,
         {
           provide: MrsqmSupabaseService,
           useValue: {
-            rpc,
+            rpc: () => Promise.resolve(null),
             client: {
               auth: { getSession: () => Promise.resolve({ data: { session: null } }) },
             },
@@ -234,15 +205,13 @@ describe('NotifierStoreService (действия)', () => {
           provide: NotifierSocketService,
           useValue: {
             opened$: new Subject(),
-            changed$,
+            changed$: new Subject(),
             connect: () => {},
             disconnect: () => {},
           },
         },
         { provide: MrsqmAuthService, useValue: { isAuthenticated: () => false } },
-        { provide: PanelContentService, useValue: { openProperty } },
-        { provide: SeenTrackingService, useValue: { recordView, markFilterSeen } },
-        { provide: SnackService, useValue: { open: snackOpen } },
+        { provide: SnackService, useValue: { open: () => {} } },
         {
           provide: UnitTypeLabelService,
           useValue: { getLabel: () => Promise.resolve('Apartment') },
@@ -252,44 +221,9 @@ describe('NotifierStoreService (действия)', () => {
     store = TestBed.inject(NotifierStoreService);
   });
 
-  it('closeBell() → mark_bell_seen затем refresh', async () => {
-    const order: string[] = [];
-    rpc.and.callFake((fn: string) => {
-      order.push(fn);
-      return fn === 'get_bell'
-        ? Promise.resolve({ bell_unseen: 0, items: [] })
-        : Promise.resolve(undefined);
-    });
-    await store.closeBell();
-    expect(order[0]).toBe('mark_bell_seen');
-    expect(order).toContain('get_bell');
-  });
-
-  it('Рамка №0: closeBell НЕ зовёт mark_filter_seen (объекты не трогает)', async () => {
-    await store.closeBell();
-    expect(markFilterSeen).not.toHaveBeenCalled();
-  });
-
-  it('openListing → recordView + openProperty(stub с id)', async () => {
-    await store.openListing('prop-1', 'f1');
-    expect(recordView).toHaveBeenCalledWith('prop-1');
-    expect(openProperty).toHaveBeenCalled();
-    expect(openProperty.calls.mostRecent().args[0].id).toBe('prop-1');
-  });
-
-  it('openListing → markFilterSeen(filterId, [propertyId]) гасит объект', async () => {
-    await store.openListing('prop-1', 'f1');
-    expect(markFilterSeen).toHaveBeenCalledWith('f1', ['prop-1']);
-  });
-
   it('requestOpen() бампает openRequested', () => {
     const before = store.openRequested();
     store.requestOpen();
     expect(store.openRequested()).toBe(before + 1);
-  });
-
-  it('Рамка №0: openListing НЕ зовёт mark_bell_seen (бейдж/точки уведомлений не трогает)', async () => {
-    await store.openListing('prop-1', 'f1');
-    expect(rpc).not.toHaveBeenCalledWith('mark_bell_seen');
   });
 });

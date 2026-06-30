@@ -39,7 +39,6 @@ import { PropertyOwnerService } from '../../services/property-owner.service';
 import { SnackService } from '../../../core/snack/snack.service';
 import { SnackType } from '../../../core/snack/snack.model';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
-import { SavedFilterService } from '../../services/saved-filter.service';
 
 // W-4: разрешённые типы для вкладки Commercial (регистронезависимое сравнение)
 const COMMERCIAL_ALLOWLIST = new Set([
@@ -85,7 +84,6 @@ export class FeedPageComponent {
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _owner = inject(PropertyOwnerService);
   private readonly _seen = inject(SeenTrackingService);
-  private readonly _savedFilters = inject(SavedFilterService);
   private readonly _destroyRef = inject(DestroyRef);
   // Активные таймеры гашения полосок — чистим при destroy.
   private readonly _stripeTimers = new Set<ReturnType<typeof setTimeout>>();
@@ -572,14 +570,6 @@ export class FeedPageComponent {
     if (!ids.length) return;
     void this._seen.markShown(ids);
 
-    // Если открыт сохранённый фильтр — собираем показанные ЧУЖИЕ объекты, чтобы
-    // через 5с пометить их просмотренными per-filter (фиксируем сейчас, до фейда).
-    const fid = this.filter.loadedFilterId();
-    const myId = this._auth.currentUser()?.id ?? null;
-    const matchIds = fid
-      ? items.filter((it) => it.owner_id !== myId).map((it) => it.id)
-      : [];
-
     const idSet = new Set(ids);
     const timer = setTimeout(() => {
       this._stripeTimers.delete(timer);
@@ -589,14 +579,6 @@ export class FeedPageComponent {
           idSet.has(it.id) && it.is_unseen ? { ...it, is_unseen: false } : it,
         ),
       );
-      // Синхронно с фейдом точек: помечаем показанные чужие объекты просмотренными
-      // на сервере и перечитываем бейджи (число только с бекенда, без оптимистики).
-      // Перенос сюда (а не мгновенно) даёт бейджу пульсировать те же 5с, что и точки.
-      if (fid && matchIds.length) {
-        void this._seen
-          .markFilterSeen(fid, matchIds)
-          .then(() => this._savedFilters.bumpReload());
-      }
     }, 5000);
     this._stripeTimers.add(timer);
   }

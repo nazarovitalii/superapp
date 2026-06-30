@@ -4,13 +4,10 @@ import { MrsqmSupabaseService } from './supabase.service';
 import { SavedFilterService } from './saved-filter.service';
 import { NotifierSocketService } from './notifier-socket.service';
 import { MrsqmAuthService } from './auth.service';
-import { PanelContentService } from '../../features/panels/panel-content.service';
-import { SeenTrackingService } from './seen-tracking.service';
 import { SnackService } from '../../core/snack/snack.service';
 import { UnitTypeLabelService } from './unit-type-label.service';
 import { SavedFilter } from './feed-filter.service';
-import { BellItem, BellResponse } from '../types/notifier';
-import { PropertyFeedItem } from '../types/database';
+import { BellResponse } from '../types/notifier';
 import { isBellLiveOn } from '../util/bell-live-pref';
 import { buildPropertyTitle } from '../util/property-title';
 import { formatBellPrice } from '../util/bell-price';
@@ -26,8 +23,6 @@ export class NotifierStoreService {
   private readonly _savedFilters = inject(SavedFilterService);
   private readonly _socket = inject(NotifierSocketService);
   private readonly _auth = inject(MrsqmAuthService);
-  private readonly _panels = inject(PanelContentService);
-  private readonly _seen = inject(SeenTrackingService);
   private readonly _snack = inject(SnackService);
   private readonly _labels = inject(UnitTypeLabelService);
 
@@ -145,63 +140,8 @@ export class NotifierStoreService {
     });
   }
 
-  // 🔔 Закрыл колокол → двигаем bell-курсор (гасит бейдж И все полосы), затем перечитываем.
-  // Рамка №0: счётчики объектов (unseen_count) НЕ трогаем.
-  async closeBell(): Promise<void> {
-    try {
-      await this._supabase.rpc('mark_bell_seen');
-    } catch {
-      // RPC может отсутствовать до go-live — не блокируем закрытие
-    }
-    await this.refresh();
-  }
-
-  // 🏠 Открыл объект из дропдауна → engagement + гасим объект в фильтре. Бейдж/полосы НЕ трогаем.
-  async openListing(
-    propertyId: string,
-    filterId: string,
-    item?: BellItem,
-  ): Promise<void> {
-    void this._seen.recordView(propertyId);
-    void this._seen
-      .markFilterSeen(filterId, [propertyId])
-      .then(() => void this.refresh());
-    this._panels.openProperty(this._toFeedStub(propertyId, item));
-  }
-
   requestOpen(): void {
     this.openRequested.update((n) => n + 1);
-  }
-
-  // Минимальный stub PropertyFeedItem: property-detail сам догрузит полное через get_property
-  // (реактивный effect по property().id). Заполняем что знаем из bell-item, остальное — дефолты.
-  private _toFeedStub(propertyId: string, item?: BellItem): PropertyFeedItem {
-    return {
-      id: propertyId,
-      owner_id: '',
-      deal_type: (item?.deal_type as PropertyFeedItem['deal_type']) ?? 'sale',
-      listing_type: 'pocket',
-      property_type: null,
-      unit_type_id: item?.unit_type_id ?? null,
-      price: item?.price ?? 0,
-      price_currency: item?.price_currency ?? 'AED',
-      price_period: null,
-      bedrooms: item?.bedrooms ?? null,
-      bathrooms: null,
-      area_sqft: null,
-      location_name: item?.location_label ?? null,
-      community_name: item?.community_label ?? null,
-      description: null,
-      furnished: null,
-      handover: null,
-      photos: null,
-      published_at: item?.matched_at ?? new Date().toISOString(),
-      owner_full_name: null,
-      owner_photo_url: null,
-      owner_agency_name: null,
-      is_network: false,
-      developer_name: null,
-    };
   }
 
   // Текстовый toast (brief §2B(2)): +1 → строка свежего объекта; >1 → агрегат «N new matches».
