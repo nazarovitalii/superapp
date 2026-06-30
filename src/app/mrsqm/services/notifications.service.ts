@@ -12,6 +12,8 @@ export class NotificationsService {
   private readonly _supabase = inject(MrsqmSupabaseService);
   private readonly _socket = inject(NotifierSocketService);
 
+  private _loadingMore = false;
+
   readonly items = signal<NotificationItem[]>([]);
   readonly unreadCount = signal(0);
   readonly nextCursor = signal<string | null>(null);
@@ -46,6 +48,8 @@ export class NotificationsService {
   async loadMore(): Promise<void> {
     const cursor = this.nextCursor();
     if (!cursor) return;
+    if (this._loadingMore) return;
+    this._loadingMore = true;
     try {
       const res = await this._supabase.rpc<GetNotificationsResponse>(
         'get_notifications',
@@ -59,6 +63,8 @@ export class NotificationsService {
       this.nextCursor.set(res.next_cursor);
     } catch {
       this.status.set('error');
+    } finally {
+      this._loadingMore = false;
     }
   }
 

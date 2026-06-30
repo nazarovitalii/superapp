@@ -94,4 +94,20 @@ describe('NotificationsService', () => {
     await Promise.resolve();
     expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
   });
+
+  it('повторный loadMore во время загрузки — no-op (без дублей страниц)', async () => {
+    const svc = TestBed.inject(NotificationsService);
+    rpc.and.resolveTo(page({ items: [{ id: '1' } as never], next_cursor: 'c1' }));
+    await svc.loadFirst();
+    rpc.calls.reset();
+    let resolveSecond!: (v: unknown) => void;
+    rpc.and.returnValue(new Promise((r) => (resolveSecond = r)));
+    const p1 = svc.loadMore();
+    const p2 = svc.loadMore(); // должен быть no-op, пока первый в полёте
+    resolveSecond(page({ items: [{ id: '2' } as never], next_cursor: null }));
+    await Promise.all([p1, p2]);
+    const calls = rpc.calls.allArgs().filter((a) => a[0] === 'get_notifications');
+    expect(calls.length).toBe(1);
+    expect(svc.items().length).toBe(2);
+  });
 });
