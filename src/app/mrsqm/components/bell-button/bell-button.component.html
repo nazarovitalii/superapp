@@ -7,7 +7,8 @@
     matTooltip="Уведомления"
     aria-label="Уведомления"
   >
-    <mat-icon>notifications</mat-icon>
+    <!-- Непрочитанные → залитый колокол; всё прочитано → контурный. Цвет серый в обоих случаях. -->
+    <mat-icon>{{ hasUnseen() ? 'notifications' : 'notifications_none' }}</mat-icon>
     @if (badgeText(); as badge) {
       <span
         class="bell-badge"

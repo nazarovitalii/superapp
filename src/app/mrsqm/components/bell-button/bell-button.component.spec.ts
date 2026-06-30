@@ -65,7 +65,7 @@ describe('BellButtonComponent', () => {
     expect(comp.badgeText()).toBeNull();
   });
 
-  it('unreadCount=5 → оранжево + бейдж «5»', () => {
+  it('unreadCount=5 → залитый колокол + бейдж «5»', () => {
     unreadCount.set(5);
     fixture.detectChanges();
     expect(comp.badgeText()).toBe('5');

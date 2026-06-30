@@ -62,15 +62,10 @@
 }
 
 .ntf-title {
-  font-weight: 600;
   color: var(--text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.ntf-row.is-unread .ntf-title {
-  font-weight: 700;
 }
 
 .ntf-time {
@@ -80,10 +75,16 @@
   font-variant-numeric: tabular-nums;
 }
 
-.ntf-line2,
+// Строки 2 и 3 — того же размера шрифта, что и заголовок (строка 1): размер не задаём, наследуется.
+.ntf-line2 {
+  color: var(--text-color); // адрес — чёрный (основной цвет текста)
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ntf-line3 {
-  font-size: 0.82rem;
-  color: var(--text-color-muted);
+  color: var(--text-color-muted); // имя фильтра — серый
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
