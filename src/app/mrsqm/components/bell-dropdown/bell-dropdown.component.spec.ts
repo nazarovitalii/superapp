@@ -1,138 +1,128 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { BellDropdownComponent } from './bell-dropdown.component';
-import { NotifierStoreService } from '../../services/notifier-store.service';
-import { UnitTypeLabelService } from '../../services/unit-type-label.service';
+import { NotificationsService } from '../../services/notifications.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { NotificationItem } from '../../types/notification';
+
+const makeItem = (id: string, entityId: string | null = null): NotificationItem => ({
+  id,
+  type: 'new_listing',
+  created_at: '2026-06-30T10:00:00Z',
+  read_at: null,
+  entity_id: entityId,
+  filter_id: null,
+  thumb_url: null,
+  data: {},
+  source: 'n',
+});
 
 describe('BellDropdownComponent', () => {
   let fixture: ComponentFixture<BellDropdownComponent>;
   let comp: BellDropdownComponent;
-  const filters = signal<unknown[]>([]);
-  const bell = signal({ bell_unseen: 0, items: [] as unknown[] });
+
+  const previewItems = signal<NotificationItem[]>([]);
   const status = signal<'idle' | 'loading' | 'ready' | 'error'>('ready');
-  const openListing = jasmine.createSpy('openListing');
-  const refresh = jasmine.createSpy('refresh').and.resolveTo(undefined);
-  const applyLivePref = jasmine.createSpy('applyLivePref');
+  const loadFirst = jasmine.createSpy('loadFirst').and.resolveTo(undefined);
+  const markAllRead = jasmine.createSpy('markAllRead').and.resolveTo(undefined);
+  const openNotifications = jasmine.createSpy('openNotifications');
+  const openProperty = jasmine.createSpy('openProperty');
 
   beforeEach(async () => {
-    refresh.calls.reset();
-    applyLivePref.calls.reset();
-    filters.set([
-      {
-        id: 'f1',
-        auto_name: 'Marina',
-        unseen_count: 3,
-        filters: {},
-        notification_type: null,
-        created_at: '',
-      },
-    ]);
-    bell.set({ bell_unseen: 1, items: [] });
+    loadFirst.calls.reset();
+    markAllRead.calls.reset();
+    openNotifications.calls.reset();
+    openProperty.calls.reset();
+    previewItems.set([]);
+    status.set('ready');
+
     await TestBed.configureTestingModule({
       imports: [BellDropdownComponent],
       providers: [
         {
-          provide: NotifierStoreService,
-          useValue: {
-            filters,
-            bell,
-            status,
-            openListing,
-            refresh,
-            applyLivePref,
-          },
+          provide: NotificationsService,
+          useValue: { previewItems, status, loadFirst, markAllRead },
         },
         {
-          provide: UnitTypeLabelService,
-          useValue: { getLabel: () => Promise.resolve('Apartment') },
+          provide: SavedFilterService,
+          useValue: { list: () => Promise.resolve([]) },
         },
-        { provide: PanelContentService, useValue: { openFilterPanel: () => {} } },
+        {
+          provide: PanelContentService,
+          useValue: { openNotifications, openProperty },
+        },
       ],
     }).compileComponents();
+
     fixture = TestBed.createComponent(BellDropdownComponent);
     comp = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('строит строки: фильтр с unseen_count>0 виден, имя = auto_name', () => {
-    expect(comp.rows().length).toBe(1);
-    expect(comp.rows()[0].name).toBe('Marina');
-    expect(comp.rows()[0].unseenCount).toBe(3);
-  });
-
-  it('фильтр с unseen_count=0 в строки не попадает (гейт)', () => {
-    filters.set([
-      {
-        id: 'f0',
-        auto_name: 'Z',
-        unseen_count: 0,
-        filters: {},
-        notification_type: null,
-        created_at: '',
-      },
-    ]);
+  it('при previewItems из 2 элементов рендерятся 2 mrsqm-notification-row', () => {
+    previewItems.set([makeItem('n1'), makeItem('n2')]);
     fixture.detectChanges();
-    expect(comp.rows().length).toBe(0);
+    const rows = fixture.nativeElement.querySelectorAll('mrsqm-notification-row');
+    expect(rows.length).toBe(2);
   });
 
-  it('пусто (фильтры есть, новых нет) → состояние no-new', () => {
-    filters.set([
-      {
-        id: 'f0',
-        auto_name: 'Z',
-        unseen_count: 0,
-        filters: {},
-        notification_type: null,
-        created_at: '',
-      },
-    ]);
+  it('пустой список → состояние empty', () => {
+    previewItems.set([]);
+    status.set('ready');
     fixture.detectChanges();
-    expect(comp.viewState()).toBe('no-new');
+    expect(comp.viewState()).toBe('empty');
   });
 
-  it('нет фильтров → состояние no-filters', () => {
-    filters.set([]);
+  it('status=loading и пусто → состояние loading', () => {
+    previewItems.set([]);
+    status.set('loading');
     fixture.detectChanges();
-    expect(comp.viewState()).toBe('no-filters');
+    expect(comp.viewState()).toBe('loading');
   });
 
-  it('клик по строке с превью → openListing(propertyId, filterId)', () => {
-    bell.set({
-      bell_unseen: 1,
-      items: [
-        {
-          property_id: 'p1',
-          filter_id: 'f1',
-          match_type: 'new',
-          matched_at: '2026-06-29T09:00:00Z',
-          unseen: true,
-          price: 2100000,
-          previous_price: null,
-          price_currency: 'AED',
-          deal_type: 'sale',
-          bedrooms: 2,
-          unit_type_id: 'ut1',
-          location_label: 'Marina',
-          community_label: null,
-          thumb_url: null,
-        },
-      ],
-    });
+  it('status=error → состояние error', () => {
+    status.set('error');
     fixture.detectChanges();
-    comp.onRowClick(comp.rows()[0]);
-    expect(openListing).toHaveBeenCalledWith('p1', 'f1', jasmine.anything());
+    expect(comp.viewState()).toBe('error');
   });
 
-  it('onRetry() → store.refresh()', () => {
-    comp.onRetry();
-    expect(refresh).toHaveBeenCalled();
+  it('«Все уведомления» зовёт panels.openNotifications()', () => {
+    const btn = fixture.nativeElement.querySelector('.bell-viewall') as HTMLButtonElement;
+    btn.click();
+    expect(openNotifications).toHaveBeenCalled();
   });
 
-  it('toggleLive() → setBellLive + store.applyLivePref()', () => {
-    comp.toggleLive();
-    expect(applyLivePref).toHaveBeenCalled();
-    // Восстанавливаем исходное состояние Live (toggleLive переключил его).
-    comp.toggleLive();
+  it('«Отметить прочитанными» зовёт store.markAllRead()', () => {
+    const btn = fixture.nativeElement.querySelector('.bell-markall') as HTMLButtonElement;
+    btn.click();
+    expect(markAllRead).toHaveBeenCalled();
+  });
+
+  it('ngOnInit зовёт store.loadFirst()', () => {
+    expect(loadFirst).toHaveBeenCalled();
+  });
+
+  it('onRow() с kind=property открывает объект через openProperty и эмитит closed', () => {
+    const closedSpy = jasmine.createSpy('closed');
+    comp.closed.subscribe(closedSpy);
+    const item = makeItem('n1', 'prop-uuid');
+    comp.onRow(item);
+    expect(openProperty).toHaveBeenCalled();
+    expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('onRow() с kind=none просто эмитит closed без openProperty', () => {
+    const closedSpy = jasmine.createSpy('closed');
+    comp.closed.subscribe(closedSpy);
+    // type=subscription_expiring нет в PROPERTY_TYPES → kind=none
+    const item: NotificationItem = {
+      ...makeItem('n2'),
+      type: 'subscription_expiring',
+      entity_id: null,
+    };
+    comp.onRow(item);
+    expect(openProperty).not.toHaveBeenCalled();
+    expect(closedSpy).toHaveBeenCalled();
   });
 });

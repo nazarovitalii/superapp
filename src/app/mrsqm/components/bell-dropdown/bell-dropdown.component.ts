@@ -6,30 +6,32 @@ import {
   ElementRef,
   inject,
   input,
+  OnInit,
   output,
   signal,
   viewChild,
 } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { NotifierStoreService } from '../../services/notifier-store.service';
-import { UnitTypeLabelService } from '../../services/unit-type-label.service';
-import { buildBellRows } from '../../util/bell-rows';
-import { BellItem, BellRow } from '../../types/notifier';
-import { buildPropertyTitle } from '../../util/property-title';
-import { isBellLiveOn, setBellLive } from '../../util/bell-live-pref';
+import { NotificationsService } from '../../services/notifications.service';
+import { SavedFilterService } from '../../services/saved-filter.service';
+import { SavedFilter } from '../../services/feed-filter.service';
+import { NotificationItem } from '../../types/notification';
+import { notificationTarget } from '../../util/notification-route';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { PropertyFeedItem } from '../../types/database';
+import { NotificationRowComponent } from '../notification-row/notification-row.component';
 
 @Component({
   selector: 'mrsqm-bell-dropdown',
   standalone: true,
-  imports: [MatIcon],
+  imports: [MatIcon, NotificationRowComponent],
   templateUrl: './bell-dropdown.component.html',
   styleUrl: './bell-dropdown.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BellDropdownComponent {
-  private readonly _store = inject(NotifierStoreService);
-  private readonly _labels = inject(UnitTypeLabelService);
+export class BellDropdownComponent implements OnInit {
+  private readonly _store = inject(NotificationsService);
+  private readonly _savedFilters = inject(SavedFilterService);
   private readonly _panels = inject(PanelContentService);
 
   readonly open = input(false);
@@ -37,30 +39,16 @@ export class BellDropdownComponent {
   readonly dialogRef = viewChild<ElementRef<HTMLDialogElement>>('dlg');
 
   readonly status = this._store.status;
-  readonly liveOn = signal(isBellLiveOn());
+  readonly previewItems = this._store.previewItems;
 
-  // Резолв заголовков синхронно: держим Map unit_type_id→label, пополняем асинхронно.
-  private readonly _titleMap = signal<Map<string, string>>(new Map());
+  private readonly _filters = signal<SavedFilter[]>([]);
 
-  readonly rows = computed<BellRow[]>(() => {
-    const map = this._titleMap();
-    const getTitle = (it: BellItem): string =>
-      buildPropertyTitle(
-        it.bedrooms,
-        it.unit_type_id ? (map.get(it.unit_type_id) ?? null) : null,
-      );
-    return buildBellRows(this._store.filters(), this._store.bell().items, getTitle);
+  readonly viewState = computed<'loading' | 'error' | 'empty' | 'list'>(() => {
+    if (this.status() === 'loading' && !this.previewItems().length) return 'loading';
+    if (this.status() === 'error') return 'error';
+    if (!this.previewItems().length) return 'empty';
+    return 'list';
   });
-
-  readonly viewState = computed<'loading' | 'error' | 'no-filters' | 'no-new' | 'list'>(
-    () => {
-      if (this.status() === 'loading' && !this._store.filters().length) return 'loading';
-      if (this.status() === 'error') return 'error';
-      if (!this._store.filters().length) return 'no-filters';
-      if (!this.rows().length) return 'no-new';
-      return 'list';
-    },
-  );
 
   constructor() {
     // Открытие/закрытие нативного <dialog> по input open (top-layer showModal).
@@ -70,59 +58,41 @@ export class BellDropdownComponent {
       if (this.open() && !dlg.open) dlg.showModal();
       else if (!this.open() && dlg.open) dlg.close();
     });
-    // Подгрузка label типов для заголовков (брифом title собирает фронт).
-    effect(() => {
-      const items = this._store.bell().items;
-      void this._loadTitles(items);
-    });
   }
 
-  private async _loadTitles(items: BellItem[]): Promise<void> {
-    const resolved: Array<[string, string]> = [];
-    for (const it of items) {
-      if (it.unit_type_id && !this._titleMap().has(it.unit_type_id)) {
-        const label = await this._labels.getLabel(it.unit_type_id);
-        if (label) resolved.push([it.unit_type_id, label]);
-      }
+  ngOnInit(): void {
+    void this._store.loadFirst();
+    void this._savedFilters.list().then((filters) => this._filters.set(filters));
+  }
+
+  // Название фильтра по filter_id уведомления (для передачи в notification-row).
+  filterNameFor(item: NotificationItem): string | null {
+    return item.filter_id
+      ? (this._filters().find((f) => f.id === item.filter_id)?.auto_name ?? null)
+      : null;
+  }
+
+  onRow(item: NotificationItem): void {
+    const target = notificationTarget(item);
+    if (target.kind === 'property') {
+      this._panels.openProperty(this._toFeedStub(target.id, item));
     }
-    if (resolved.length) {
-      this._titleMap.update((cur) => {
-        const m = new Map(cur);
-        for (const [id, l] of resolved) m.set(id, l);
-        return m;
-      });
-    }
+    // friends/billing/chat/none: навигация вне scope v1 — просто закрываем
+    this.closed.emit();
+  }
+
+  onMarkAllRead(): void {
+    void this._store.markAllRead();
+    this.closed.emit();
+  }
+
+  onViewAll(): void {
+    this._panels.openNotifications();
+    this.closed.emit();
   }
 
   onRetry(): void {
-    void this._store.refresh();
-  }
-
-  onRowClick(row: BellRow): void {
-    if (row.preview) {
-      const item = this._store
-        .bell()
-        .items.find((it) => it.property_id === row.preview?.propertyId);
-      this._store.openListing(row.preview.propertyId, row.filterId, item);
-      this.closed.emit(); // закрытие дропдауна → store.closeBell() в bell-button
-    } else {
-      // fallback (бэклог без превью): пока тоже открываем дропдаун-закрытие; объект клиент
-      // выберет в ленте. v1: просто закрываем (углубление до «результаты фильтра» — отдельная задача).
-      this.closed.emit();
-    }
-  }
-
-  toggleLive(): void {
-    const next = !this.liveOn();
-    this.liveOn.set(next);
-    setBellLive(next);
-    this._store.applyLivePref();
-  }
-
-  // Состояние «нет сохранённых фильтров» → открыть панель фильтров ленты (spec §5).
-  onCreateFilter(): void {
-    this._panels.openFilterPanel();
-    this.closed.emit();
+    void this._store.loadFirst();
   }
 
   onBackdropClick(e: MouseEvent): void {
@@ -131,5 +101,42 @@ export class BellDropdownComponent {
 
   onDialogClose(): void {
     if (this.open()) this.closed.emit(); // Esc / нативное закрытие
+  }
+
+  // Минимальный stub PropertyFeedItem: property-detail сам догрузит полное через get_property.
+  private _toFeedStub(propertyId: string, item: NotificationItem): PropertyFeedItem {
+    const data = item.data as Record<string, unknown>;
+    return {
+      id: propertyId,
+      owner_id: '',
+      deal_type: (typeof data['deal_type'] === 'string'
+        ? data['deal_type']
+        : 'sale') as PropertyFeedItem['deal_type'],
+      listing_type: 'pocket',
+      property_type: null,
+      unit_type_id:
+        typeof data['unit_type_id'] === 'string' ? data['unit_type_id'] : null,
+      price: typeof data['price'] === 'number' ? data['price'] : 0,
+      price_currency:
+        typeof data['price_currency'] === 'string' ? data['price_currency'] : 'AED',
+      price_period: null,
+      bedrooms: typeof data['bedrooms'] === 'number' ? data['bedrooms'] : null,
+      bathrooms: null,
+      area_sqft: null,
+      location_name:
+        typeof data['location_label'] === 'string' ? data['location_label'] : null,
+      community_name:
+        typeof data['community_label'] === 'string' ? data['community_label'] : null,
+      description: null,
+      furnished: null,
+      handover: null,
+      photos: null,
+      published_at: item.created_at,
+      owner_full_name: null,
+      owner_photo_url: null,
+      owner_agency_name: null,
+      is_network: false,
+      developer_name: null,
+    };
   }
 }
