@@ -237,4 +237,15 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-BELL2: баг B (счётчик фильтра +3/+4) фикс + go-live ленты — прод-верификация
+
+**Дата:** 2026-06-30
+**Триггер:** миграция `get_saved_filters.unseen_count` → глобальный `user_seen_listings.shown_at` (отмена per-filter `user_filter_seen`); + realtime go-live ленты (018/019/020).
+**Запрос/проверка (прод, psql):** до применения — сравнение текущей формулы vs новой по фильтрам; после — `pg_get_functiondef('get_saved_filters')` содержит новую подстроку; ливность RPC ленты через PostgREST.
+**Ожидали:** просмотренные объекты не возвращаются в счётчик; `get_notifications`→200, таблица `notifications` + партиции + cron + индекс на месте.
+**Получили:** ✅ до фикса фильтр `test2` показывал `unseen_count=3` при 3 просмотренных (новая формула=0); после применения test2 → 0, тело функции содержит global-shown подзапрос. ✅ `get_notifications`→200, `mark_notifications_read`→400(anon=норма), `notifications` + 3 партиции + cron `notifications-maintain` (active) + индекс `filter_matches_filter_matched_at_idx`.
+**Вывод:** ✅ баг B закрыт (видел где угодно = не считается); бэкенд ленты живой. ⏳ полная лента 12 типов — после 9 доменных продюсеров.
+
+---
+
 _Других тестов пока нет._

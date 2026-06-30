@@ -393,13 +393,19 @@ _Бейдж / баллы / score — НЕ показываем (вне MVP)._
 
 ---
 
-## Уведомления — `/notifications`
+## Уведомления — лента (BELL-2, ✅ фронт реализован 2026-06-30)
 
-_(план после MVP)_
+Плоская лента событий в стиле соцсети (12 типов). Контракт realtime: `get_notifications(p_limit,p_cursor) → {items[], unread_count, next_cursor}` (keyset-пагинация, server-merge матчей из `filter_matches` + доменных из `notifications`); `mark_notifications_read(p_ids)` (null=всё). WS-рефетч по `bell.changed`. Весь код — `src/app/mrsqm/` (типы/утилиты/`NotificationsService`/`NotificationRowComponent`/панель).
 
-- Лента событий из `user_events`
-- Новые объекты по сохранённым фильтрам
-- Реферальные бонусы
+**Две поверхности:**
+- **Дропдаун колокола** (хедер, кнопка-колокол) — превью ~15 свежих; бейдж = `unread_count`; футер «Все уведомления» → открывает полную ленту в правой панели. Тумблер Live убран. Закрытие → `mark_notifications_read(null)`.
+- **Панель «Все уведомления»** (правый сайдбар, тип `NOTIFICATIONS`) — полный список с пагинацией «Загрузить ещё».
+
+**Строка** (компонент `mrsqm-notification-row`): thumb 44×44 слева (фото объекта / аватар / icon-tile по типу) + заголовок + деталь + (для матчей) `Фильтр «имя»` + время (сегодня→`HH:mm` / `Вчера` / `D мес`). Непрочитанное — тонир. фон + жирность имени (a11y). Клик: объектные типы → карточка в сайдбаре; друзья/биллинг/чат — заглушки до тех экранов.
+
+**12 типов:** `new_listing`, `price_drop` (из `filter_matches`, fan-out-on-read) + 10 доменных (`subscription_expiring`, `friend_request`(+accepted), `ai_digest`, `referral_registered`, `bonus_month_granted`, `listing_approved`/`rejected`/`archived`, `new_comment` — из `notifications`, fan-out-on-write).
+
+> ⏳ **Осталось:** 9 доменных продюсеров-триггеров (backend, отдельный план) — без них в проде видны только матч-типы. ai_digest — продюсер на стороне gpt.
 
 ---
 
