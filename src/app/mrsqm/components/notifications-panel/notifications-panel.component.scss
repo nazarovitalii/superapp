@@ -1,0 +1,53 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.ntf-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--card-bg);
+}
+
+.ntf-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--separator-color);
+}
+
+.ntf-h-title {
+  font-weight: 600;
+  color: var(--text-color);
+  flex: 1 1 auto;
+}
+
+.ntf-markall,
+.ntf-close,
+.ntf-more {
+  background: none;
+  border: none;
+  color: var(--text-color-muted);
+  cursor: pointer;
+}
+
+.ntf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.ntf-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-color-muted);
+}
+
+.ntf-more {
+  padding: 12px;
+  width: 100%;
+}

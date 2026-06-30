@@ -19,7 +19,8 @@ export type PanelContentType =
   | 'SCHEDULE_DAY_PANEL'
   | 'PROPERTY'
   | 'FILTERS'
-  | 'AI_CHAT';
+  | 'AI_CHAT'
+  | 'NOTIFICATIONS';
 
 @Injectable({ providedIn: 'root' })
 export class PanelContentService {
@@ -32,6 +33,8 @@ export class PanelContentService {
   readonly isFilterPanelOpen = signal(false);
   // MrSQM: открыт ли AI-чат в правой панели
   readonly isAiChatOpen = signal(false);
+  // MrSQM: открыта ли панель «Все уведомления»
+  readonly isNotificationsOpen = signal(false);
 
   openProperty(property: PropertyFeedItem): void {
     // Закрываем task-panel чтобы не конфликтовать
@@ -39,6 +42,7 @@ export class PanelContentService {
     this.isFilterPanelOpen.set(false);
     // Объект приоритетнее AI-чата: клик по ссылке в чате заменяет чат карточкой
     this.isAiChatOpen.set(false);
+    this.isNotificationsOpen.set(false);
     this.selectedProperty.set(property);
   }
 
@@ -49,6 +53,8 @@ export class PanelContentService {
   openFilterPanel(): void {
     this._taskService.setSelectedId(null);
     this.selectedProperty.set(null);
+    this.isAiChatOpen.set(false);
+    this.isNotificationsOpen.set(false);
     this.isFilterPanelOpen.set(true);
   }
 
@@ -68,7 +74,20 @@ export class PanelContentService {
     this._taskService.setSelectedId(null);
     this.selectedProperty.set(null);
     this.isFilterPanelOpen.set(false);
+    this.isNotificationsOpen.set(false);
     this.isAiChatOpen.set(true);
+  }
+
+  openNotifications(): void {
+    this._taskService.setSelectedId(null);
+    this.selectedProperty.set(null);
+    this.isFilterPanelOpen.set(false);
+    this.isAiChatOpen.set(false);
+    this.isNotificationsOpen.set(true);
+  }
+
+  closeNotifications(): void {
+    this.isNotificationsOpen.set(false);
   }
 
   closeAiChat(): void {
@@ -118,6 +137,7 @@ export class PanelContentService {
     if (isShowPluginPanel) return 'PLUGIN';
     if (isShowScheduleDayPanel) return 'SCHEDULE_DAY_PANEL';
     if (this.isAiChatOpen()) return 'AI_CHAT';
+    if (this.isNotificationsOpen()) return 'NOTIFICATIONS';
     if (this.isFilterPanelOpen()) return 'FILTERS';
     if (this.selectedProperty()) return 'PROPERTY';
     if (selectedTask) return 'TASK';
@@ -144,7 +164,8 @@ export class PanelContentService {
       isShowScheduleDayPanel ||
       this.selectedProperty() ||
       this.isFilterPanelOpen() ||
-      this.isAiChatOpen()
+      this.isAiChatOpen() ||
+      this.isNotificationsOpen()
     );
   });
 

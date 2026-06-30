@@ -1,0 +1,47 @@
+<div class="ntf-panel">
+  <header class="ntf-head">
+    <span class="ntf-h-title">Уведомления</span>
+    <button
+      class="ntf-markall"
+      type="button"
+      (click)="onMarkAll()"
+    >
+      Отметить прочитанными
+    </button>
+    <button
+      class="ntf-close"
+      type="button"
+      aria-label="Закрыть"
+      (click)="onClose()"
+    >
+      ×
+    </button>
+  </header>
+
+  @if (store.status() === 'error') {
+    <div class="ntf-empty">Не удалось загрузить</div>
+  } @else if (!store.items().length) {
+    <div class="ntf-empty">Пока нет уведомлений</div>
+  } @else {
+    <ul class="ntf-list">
+      @for (it of store.items(); track it.id) {
+        <li>
+          <mrsqm-notification-row
+            [item]="it"
+            [filterName]="filterNameFor(it)"
+            (activated)="onRow(it)"
+          />
+        </li>
+      }
+    </ul>
+    @if (store.nextCursor()) {
+      <button
+        class="ntf-more"
+        type="button"
+        (click)="store.loadMore()"
+      >
+        Загрузить ещё
+      </button>
+    }
+  }
+</div>

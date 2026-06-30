@@ -37,6 +37,7 @@ import { PanelContentService, PanelContentType } from '../panels/panel-content.s
 import { PropertyDetailComponent } from '../../mrsqm/components/property-detail/property-detail.component';
 import { FeedFilterPanelComponent } from '../../mrsqm/components/feed-filter-panel/feed-filter-panel.component';
 import { ChatPageComponent } from '../../mrsqm/pages/chat/chat-page.component';
+import { NotificationsPanelComponent } from '../../mrsqm/components/notifications-panel/notifications-panel.component';
 
 // Keep in sync with CSS var --transition-duration-m
 const CLOSE_ANIMATION_MS = 225;
@@ -63,6 +64,7 @@ export type RightPanelContentPanelType = PanelContentType;
     PropertyDetailComponent,
     FeedFilterPanelComponent,
     ChatPageComponent,
+    NotificationsPanelComponent,
   ],
 })
 export class RightPanelContentComponent implements OnDestroy {
@@ -191,6 +193,7 @@ export class RightPanelContentComponent implements OnDestroy {
     const selectedProperty = this._panelContentService.selectedProperty();
     const isFilterPanelOpen = this._panelContentService.isFilterPanelOpen();
     const isAiChatOpen = this._panelContentService.isAiChatOpen();
+    const isNotificationsOpen = this._panelContentService.isNotificationsOpen();
 
     return (
       !!(
@@ -198,6 +201,7 @@ export class RightPanelContentComponent implements OnDestroy {
         selectedProperty ||
         isFilterPanelOpen ||
         isAiChatOpen ||
+        isNotificationsOpen ||
         isShowNotes ||
         isShowAddTaskPanel ||
         isShowTaskViewCustomizerPanel ||
@@ -304,6 +308,7 @@ export class RightPanelContentComponent implements OnDestroy {
     this._panelContentService.closeProperty();
     this._panelContentService.closeFilterPanel();
     this._panelContentService.closeAiChat();
+    this._panelContentService.closeNotifications();
     this.layoutService.hideNotes();
     this.layoutService.hideAddTaskPanel();
     this.layoutService.hideTaskViewCustomizerPanel();
