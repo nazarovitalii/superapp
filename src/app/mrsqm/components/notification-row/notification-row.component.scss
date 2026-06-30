@@ -69,6 +69,10 @@
   white-space: nowrap;
 }
 
+.ntf-row.is-unread .ntf-title {
+  font-weight: 700;
+}
+
 .ntf-time {
   flex: 0 0 auto;
   font-size: 0.72rem;
