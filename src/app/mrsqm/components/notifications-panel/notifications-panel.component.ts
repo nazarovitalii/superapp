@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
@@ -23,7 +24,7 @@ import { PropertyFeedItem } from '../../types/database';
   styleUrl: './notifications-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NotificationsPanelComponent implements OnInit {
+export class NotificationsPanelComponent implements OnInit, OnDestroy {
   private readonly _panels = inject(PanelContentService);
   private readonly _savedFilterService = inject(SavedFilterService);
   private readonly _seen = inject(SeenTrackingService);
@@ -39,6 +40,11 @@ export class NotificationsPanelComponent implements OnInit {
     void this._savedFilterService.list().then((filters) => {
       this._filters.set(filters);
     });
+  }
+
+  ngOnDestroy(): void {
+    // Уход из сайдбара → сбрасываем вкладку, чтобы колокол не наследовал 'personal' (спека §5).
+    this.store.resetScope();
   }
 
   /** Возвращает имя фильтра для матч-уведомления или null. */

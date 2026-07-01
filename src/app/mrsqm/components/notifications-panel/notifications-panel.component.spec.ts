@@ -9,6 +9,7 @@ import { SeenTrackingService } from '../../services/seen-tracking.service';
 const scope = signal<'all' | 'personal'>('all');
 const personalUnread = signal(0);
 const setScope = jasmine.createSpy('setScope');
+const resetScope = jasmine.createSpy('resetScope');
 
 describe('NotificationsPanelComponent', () => {
   let fixture: ComponentFixture<NotificationsPanelComponent>;
@@ -43,6 +44,7 @@ describe('NotificationsPanelComponent', () => {
     scope.set('all');
     personalUnread.set(0);
     setScope.calls.reset();
+    resetScope.calls.reset();
     TestBed.configureTestingModule({
       imports: [NotificationsPanelComponent],
       providers: [
@@ -60,6 +62,7 @@ describe('NotificationsPanelComponent', () => {
             scope,
             personalUnread,
             setScope,
+            resetScope,
           },
         },
         {
@@ -122,5 +125,10 @@ describe('NotificationsPanelComponent', () => {
     fixture.detectChanges();
     const badge = fixture.nativeElement.querySelector('.ntf-tab-count');
     expect(badge.textContent).toContain('4');
+  });
+
+  it('ngOnDestroy сбрасывает scope через resetScope', () => {
+    fixture.destroy();
+    expect(resetScope).toHaveBeenCalled();
   });
 });

@@ -163,4 +163,15 @@ describe('NotificationsService', () => {
       p_scope: 'personal',
     });
   });
+
+  it('resetScope возвращает scope к all без обращения к RPC', async () => {
+    rpc.and.resolveTo(page());
+    const svc = TestBed.inject(NotificationsService);
+    await svc.setScope('personal');
+    expect(svc.scope()).toBe('personal');
+    rpc.calls.reset();
+    svc.resetScope();
+    expect(svc.scope()).toBe('all');
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });

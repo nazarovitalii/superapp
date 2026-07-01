@@ -89,6 +89,12 @@ export class NotificationsService {
     await this.loadFirst();
   }
 
+  // Сброс вкладки на 'all' БЕЗ перезагрузки. Зовётся при уничтожении сайдбара,
+  // чтобы колокол (общий root-singleton) не унаследовал фильтр 'personal' (спека §5).
+  resetScope(): void {
+    this._scope.set('all');
+  }
+
   async markAllRead(): Promise<void> {
     try {
       await this._supabase.rpc('mark_notifications_read', { p_ids: null });
