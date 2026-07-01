@@ -14,6 +14,7 @@ import {
 import { MatIcon } from '@angular/material/icon';
 import { NotificationsService } from '../../services/notifications.service';
 import { SavedFilterService } from '../../services/saved-filter.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { SavedFilter } from '../../services/feed-filter.service';
 import { NotificationItem } from '../../types/notification';
 import { notificationTarget } from '../../util/notification-route';
@@ -33,6 +34,7 @@ export class BellDropdownComponent implements OnInit {
   private readonly _store = inject(NotificationsService);
   private readonly _savedFilters = inject(SavedFilterService);
   private readonly _panels = inject(PanelContentService);
+  private readonly _seen = inject(SeenTrackingService);
 
   readonly open = input(false);
   readonly closed = output<void>();
@@ -73,8 +75,14 @@ export class BellDropdownComponent implements OnInit {
   }
 
   onRow(item: NotificationItem): void {
+    // Bug 2: клик по уведомлению = прочитано → гасим счётчик колокола (−1).
+    if (item.read_at == null) {
+      void this._store.markRead([item.id]);
+    }
     const target = notificationTarget(item);
     if (target.kind === 'property') {
+      // Bug 2: переход на объект = просмотр → track_view + реконсиляция счётчиков фильтра.
+      void this._seen.recordView(target.id);
       this._panels.openProperty(this._toFeedStub(target.id, item));
     }
     // friends/billing/chat/none: навигация вне scope v1 — просто закрываем

@@ -4,6 +4,7 @@ import { NotificationsPanelComponent } from './notifications-panel.component';
 import { NotificationsService } from '../../services/notifications.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { SavedFilterService } from '../../services/saved-filter.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 
 describe('NotificationsPanelComponent', () => {
   let fixture: ComponentFixture<NotificationsPanelComponent>;
@@ -62,6 +63,12 @@ describe('NotificationsPanelComponent', () => {
           provide: SavedFilterService,
           useValue: {
             list: () => Promise.resolve([]),
+          },
+        },
+        {
+          provide: SeenTrackingService,
+          useValue: {
+            recordView: () => Promise.resolve(),
           },
         },
       ],

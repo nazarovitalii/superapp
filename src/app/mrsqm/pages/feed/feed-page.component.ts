@@ -580,6 +580,9 @@ export class FeedPageComponent {
           idSet.has(it.id) && it.is_unseen ? { ...it, is_unseen: false } : it,
         ),
       );
+      // Bug 1: синхронно с точкой ленты пересчитываем серверные счётчики (плашка фильтра,
+      // колокол) — иначе бейдж висел бы до следующего 60с-поллинга. shown_at уже закоммичен.
+      this._seen.reconcileCounters();
     }, 5000);
     this._stripeTimers.add(timer);
   }

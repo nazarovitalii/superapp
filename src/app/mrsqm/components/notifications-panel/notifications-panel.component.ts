@@ -9,6 +9,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { NotificationRowComponent } from '../notification-row/notification-row.component';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { SavedFilterService } from '../../services/saved-filter.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { notificationTarget } from '../../util/notification-route';
 import { NotificationItem } from '../../types/notification';
 import { SavedFilter } from '../../services/feed-filter.service';
@@ -25,6 +26,7 @@ import { PropertyFeedItem } from '../../types/database';
 export class NotificationsPanelComponent implements OnInit {
   private readonly _panels = inject(PanelContentService);
   private readonly _savedFilterService = inject(SavedFilterService);
+  private readonly _seen = inject(SeenTrackingService);
 
   readonly store = inject(NotificationsService);
 
@@ -51,6 +53,8 @@ export class NotificationsPanelComponent implements OnInit {
     }
     const t = notificationTarget(item);
     if (t.kind === 'property') {
+      // Bug 2: переход на объект = просмотр → track_view + реконсиляция счётчиков фильтра.
+      void this._seen.recordView(t.id);
       // Минимальный stub: property-detail догрузит полные данные по id через get_property.
       const stub: PropertyFeedItem = {
         id: t.id,

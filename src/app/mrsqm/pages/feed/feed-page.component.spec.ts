@@ -99,7 +99,11 @@ describe('FeedPageComponent', () => {
     fakeSnack = new FakeSnack();
     fakeSaved = new FakeSaved();
     fakePanels = new FakePanels();
-    seenSpy = jasmine.createSpyObj('SeenTrackingService', ['markShown', 'recordView']);
+    seenSpy = jasmine.createSpyObj('SeenTrackingService', [
+      'markShown',
+      'recordView',
+      'reconcileCounters',
+    ]);
     seenSpy.markShown.and.resolveTo(undefined);
     seenSpy.recordView.and.resolveTo(undefined);
     TestBed.resetTestingModule();
@@ -605,6 +609,8 @@ describe('FeedPageComponent', () => {
     // Через 5с суммарно — is_unseen флипается в false
     tick(2000);
     expect(component.properties().every((p) => p.is_unseen === false)).toBeTrue();
+    // Bug 1: на том же 5с-рубеже дёргается реконсиляция серверных счётчиков (плашка/колокол).
+    expect(seenSpy.reconcileCounters).toHaveBeenCalled();
   }));
 
   it('свежая загрузка гасит устаревшие stripe-таймеры: старый таймер не чистит is_unseen нового списка', fakeAsync(() => {

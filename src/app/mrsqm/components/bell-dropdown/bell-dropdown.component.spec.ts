@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { BellDropdownComponent } from './bell-dropdown.component';
 import { NotificationsService } from '../../services/notifications.service';
 import { SavedFilterService } from '../../services/saved-filter.service';
+import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
 import { NotificationItem } from '../../types/notification';
 
@@ -26,12 +27,16 @@ describe('BellDropdownComponent', () => {
   const status = signal<'idle' | 'loading' | 'ready' | 'error'>('ready');
   const loadFirst = jasmine.createSpy('loadFirst').and.resolveTo(undefined);
   const markAllRead = jasmine.createSpy('markAllRead').and.resolveTo(undefined);
+  const markRead = jasmine.createSpy('markRead').and.resolveTo(undefined);
+  const recordView = jasmine.createSpy('recordView').and.resolveTo(undefined);
   const openNotifications = jasmine.createSpy('openNotifications');
   const openProperty = jasmine.createSpy('openProperty');
 
   beforeEach(async () => {
     loadFirst.calls.reset();
     markAllRead.calls.reset();
+    markRead.calls.reset();
+    recordView.calls.reset();
     openNotifications.calls.reset();
     openProperty.calls.reset();
     previewItems.set([]);
@@ -42,11 +47,15 @@ describe('BellDropdownComponent', () => {
       providers: [
         {
           provide: NotificationsService,
-          useValue: { previewItems, status, loadFirst, markAllRead },
+          useValue: { previewItems, status, loadFirst, markAllRead, markRead },
         },
         {
           provide: SavedFilterService,
           useValue: { list: () => Promise.resolve([]) },
+        },
+        {
+          provide: SeenTrackingService,
+          useValue: { recordView },
         },
         {
           provide: PanelContentService,
@@ -110,6 +119,22 @@ describe('BellDropdownComponent', () => {
     comp.onRow(item);
     expect(openProperty).toHaveBeenCalled();
     expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('onRow() с property: помечает read (−1 колокол) и recordView (Bug 2)', () => {
+    const item = makeItem('n1', 'prop-uuid'); // read_at=null
+    comp.onRow(item);
+    expect(markRead).toHaveBeenCalledWith(['n1']);
+    expect(recordView).toHaveBeenCalledWith('prop-uuid');
+  });
+
+  it('onRow() уже прочитанного не зовёт markRead повторно', () => {
+    const item: NotificationItem = {
+      ...makeItem('n1', 'prop-uuid'),
+      read_at: '2026-06-30T11:00:00Z',
+    };
+    comp.onRow(item);
+    expect(markRead).not.toHaveBeenCalled();
   });
 
   it('onRow() с kind=none просто эмитит closed без openProperty', () => {
