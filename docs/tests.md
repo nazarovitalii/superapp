@@ -272,4 +272,19 @@ smoke `get_feed('rent', p_occupancy_status=>['vacant','occupied'])` вернул
 
 ---
 
+### T-SCOPE1: get_notifications p_scope + personal_unread_count (BELL-2c, миграция 021)
+
+**Дата:** 2026-07-01
+**Триггер:** realtime раскатал `021_notifications_scope.up.sql` в прод — 3-й параметр `p_scope text DEFAULT 'all'` + новое поле `personal_unread_count`. Применил владелец БД; realtime → `git mv` в `applied/`.
+**Запрос/проверка (прод, PostgREST, service-ключ):**
+
+- `POST /rpc/get_notifications {"p_limit":1,"p_scope":"personal"}` → **HTTP 200**, тело `{items, unread_count, personal_unread_count, next_cursor}`.
+- `POST /rpc/get_notifications {"p_limit":1}` (старый 2-арг) → **HTTP 200**, тоже с `personal_unread_count`.
+
+**Ожидали:** новая 3-арг сигнатура живая (не PGRST202); `personal_unread_count` присутствует всегда; 2-арг вызов не сломан (обратная совместимость).
+**Получили:** ✅ оба вызова 200; форма ответа = ровно `GetNotificationsResponse` фронта; overload-ловушки нет (realtime дропнул старую сигнатуру перед CREATE). Данные пустые/нули — probe без user-JWT (`auth.uid()`=null), проверялась сигнатура+поле, не выборка.
+**Вывод:** ✅ бэкенд-контракт вкладок «Все/Личные» состыкован с задеплоенным фронтом; вкладка «Личные» теперь реально фильтрует матчи на сервере. realtime верификация: TDD 6 приёмочных + suite 230/230 + drift-clean.
+
+---
+
 _Других тестов пока нет._
