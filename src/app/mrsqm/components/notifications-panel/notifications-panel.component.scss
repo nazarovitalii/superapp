@@ -45,30 +45,45 @@
   }
 }
 
-// ─── Таб-бар «Все / Личные» — в общем ритме сайдбара ─────────────────────────
+// ─── Таб-бар «Все / Личные» — segmented-control (iOS-style, 2 опции) ──────────
 .ntf-tabs {
   display: flex;
-  gap: var(--s-half);
-  padding: var(--s-half) var(--s) 0;
-  border-bottom: 1px solid var(--extra-border-color);
+  gap: 3px;
+  margin: var(--s) var(--s) 0;
+  padding: 3px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--text-color) 7%, transparent);
 }
 
 .ntf-tab {
+  flex: 1 1 0;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: var(--s-half) var(--s);
-  background: none;
+  justify-content: center;
+  gap: var(--s-half);
+  padding: 6px 10px;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 6px;
+  background: none;
   color: var(--text-color-muted);
-  cursor: pointer;
   font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 
-  &.is-active {
+  &:hover:not(.is-active) {
     color: var(--text-color);
-    border-bottom-color: var(--c-primary, #1976d2);
+  }
+
+  // Активный сегмент — приподнятый «чип» на фоне трека.
+  &.is-active {
+    background: var(--bg);
+    color: var(--text-color);
     font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
   }
 }
 

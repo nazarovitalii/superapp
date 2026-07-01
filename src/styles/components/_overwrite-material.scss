@@ -487,8 +487,14 @@ body.isVerticalActionBar .cdk-overlay-pane.mat-mdc-tooltip-panel {
 .cdk-overlay-pane.mrsqm-confirm-pane {
   max-width: 480px;
 
+  // Единый стиль попапов MrSQM: квадрат (без скруглений) + глубокая тень —
+  // тот же язык, что попап колокола (bell-panel). Окна подтверждения = «попапы».
   .mat-mdc-dialog-surface {
-    border-radius: 16px;
+    border-radius: 0;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    box-shadow:
+      0 18px 50px rgba(0, 0, 0, 0.36),
+      0 6px 16px rgba(0, 0, 0, 0.22);
   }
 }
 

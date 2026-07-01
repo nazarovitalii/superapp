@@ -32,13 +32,13 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--card-bg, #fff);
-  // Фон не затемняется, а блюрится (::backdrop) — поэтому мягкая тень «под скрим»
-  // сливалась с блюром. Углубляем elevation + чуть плотнее край, чтобы поповер «плавал».
+  // Квадратный поповер (без скруглений) + глубокая тень: фон блюрится (::backdrop),
+  // поэтому elevation несёт всё разделение с блюром. Единый «попап-shadow» = confirm-диалог.
   border: 1px solid rgba(0, 0, 0, 0.14);
-  border-radius: 14px;
+  border-radius: 0;
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.26),
-    0 2px 8px rgba(0, 0, 0, 0.14);
+    0 18px 50px rgba(0, 0, 0, 0.36),
+    0 6px 16px rgba(0, 0, 0, 0.22);
   // modal-motion: появляется из триггера (колокол вверху-справа) — scale+fade.
   transform-origin: top right;
   animation: bell-in 0.18s ease-out;
