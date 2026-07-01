@@ -1,27 +1,35 @@
+@use '../../../../styles/_globals.scss' as *;
+
 :host {
   display: block;
   height: 100%;
+  overflow: hidden;
 }
 
+// Повторяет структуру .right-panel из SP (как filter-panel / detail-panel).
 .ntf-panel {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: var(--card-bg);
+  position: relative;
+  background: var(--bg);
 }
 
+// ─── Шапка — повторяет panel-header фильтров/детали ──────────────────────────
 .ntf-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--separator-color);
+  gap: var(--s);
+  min-height: var(--bar-height);
+  padding: var(--s-half) var(--s);
+  border-bottom: 1px solid var(--extra-border-color);
 }
 
 .ntf-h-title {
+  flex: 1 1 auto;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-color);
-  flex: 1 1 auto;
 }
 
 .ntf-markall,
@@ -31,20 +39,25 @@
   border: none;
   color: var(--text-color-muted);
   cursor: pointer;
+
+  &:hover {
+    color: var(--text-color);
+  }
 }
 
+// ─── Таб-бар «Все / Личные» — в общем ритме сайдбара ─────────────────────────
 .ntf-tabs {
   display: flex;
-  gap: 4px;
-  padding: 8px 14px 0;
-  border-bottom: 1px solid var(--separator-color);
+  gap: var(--s-half);
+  padding: var(--s-half) var(--s) 0;
+  border-bottom: 1px solid var(--extra-border-color);
 }
 
 .ntf-tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: var(--s-half) var(--s);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -86,6 +99,6 @@
 }
 
 .ntf-more {
-  padding: 12px;
+  padding: var(--s);
   width: 100%;
 }
