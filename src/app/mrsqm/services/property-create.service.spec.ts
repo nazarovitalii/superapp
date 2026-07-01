@@ -12,6 +12,11 @@ class FakeSupabase {
     data: { id: 'new-id' },
     error: null,
   };
+  // Результат чтения user_context (getUserCityId).
+  selectResult: { data: { city_id: string | null } | null; error: unknown } = {
+    data: { city_id: 'dubai-uuid' },
+    error: null,
+  };
 
   async rpc<T>(fn: string, params?: Record<string, unknown>): Promise<T> {
     this.rpcCalls.push({ fn, params });
@@ -28,6 +33,9 @@ class FakeSupabase {
           }),
         };
       },
+      select: () => ({
+        maybeSingle: async () => this.selectResult,
+      }),
     }),
   };
 }
@@ -114,6 +122,17 @@ describe('PropertyCreateService', () => {
       p_query: 'golf vista',
       p_limit: 50,
     });
+  });
+
+  // LF-2: город юзера из user_context
+  it('getUserCityId возвращает city_id из user_context', async () => {
+    fake.selectResult = { data: { city_id: 'abudhabi-uuid' }, error: null };
+    expect(await svc.getUserCityId()).toBe('abudhabi-uuid');
+  });
+
+  it('getUserCityId → null при отсутствии строки', async () => {
+    fake.selectResult = { data: null, error: null };
+    expect(await svc.getUserCityId()).toBeNull();
   });
 
   // AP-5: searchDevelopers

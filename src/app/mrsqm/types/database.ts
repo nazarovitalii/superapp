@@ -174,6 +174,9 @@ export interface LocationSearchItem {
   level: string;
   city_name: string | null;
   community_name: string | null;
+  // LF-2: id города локации — для сравнения с городом юзера (пометка «другой эмират»).
+  // Опционально: старый search_locations (до миграции city_id) его не отдаёт → скобка не рисуется.
+  city_id?: string | null;
 }
 
 // ─── Form A (договор эксклюзивного листинга) ──────────────────────────────

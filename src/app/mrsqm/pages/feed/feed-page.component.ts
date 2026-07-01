@@ -295,6 +295,8 @@ export class FeedPageComponent {
   // ─── Автокомплит «Адрес или агент» ─────────────────────────────────────────
   readonly searchInput = signal<string>('');
   readonly locationResults = signal<LocationSearchItem[]>([]);
+  // LF-2: город юзера — для пометки результатов автокомплита из другого эмирата.
+  readonly userCityId = signal<string | null>(null);
   readonly showSuggest = signal<boolean>(false);
 
   // Подсказки локаций без уже выбранных адресов — один адрес нельзя выбрать дважды.
@@ -379,6 +381,7 @@ export class FeedPageComponent {
   constructor() {
     void this._loadSaved();
     void this._loadFilterOptions();
+    void this._loadUserCity();
     // Перезагружаем при смене dealType, категории, готовности, выбранных адресов,
     // фильтров, сортировки, охвата или статуса My. Агент — клиентский, перезагрузки
     // не требует.
@@ -424,6 +427,17 @@ export class FeedPageComponent {
     } catch {
       // Справочники недоступны — мега-дропдаун покажет пустые колонки.
     }
+  }
+
+  // LF-2: подгружаем город юзера один раз (для пометки адресов из другого эмирата).
+  private async _loadUserCity(): Promise<void> {
+    this.userCityId.set(await this._createService.getUserCityId());
+  }
+
+  // LF-2: результат из другого эмирата, чем город юзера (сравнение по city_id).
+  isOtherCity(item: LocationSearchItem): boolean {
+    const uc = this.userCityId();
+    return !!uc && !!item.city_id && item.city_id !== uc;
   }
 
   private async _loadSaved(): Promise<void> {

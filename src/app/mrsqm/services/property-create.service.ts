@@ -45,6 +45,20 @@ export class PropertyCreateService {
     return res?.results ?? [];
   }
 
+  // Город юзера (user_context.city_id) для LF-2 — пометка адресов из другого эмирата.
+  // RLS context_select отдаёт только свою строку. null при отсутствии/ошибке (мягко).
+  async getUserCityId(): Promise<string | null> {
+    try {
+      const { data } = await this._supabase.client
+        .from('user_context')
+        .select('city_id')
+        .maybeSingle();
+      return (data as { city_id: string | null } | null)?.city_id ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   // Поиск локаций строго в пределах поддерева узла (RPC search_in_scope, AP-2).
   // Скоуп = последний выбранный узел цепочки; возвращает [] при коротком
   // запросе или пустом withinId — без вызова RPC.

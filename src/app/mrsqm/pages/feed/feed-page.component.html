@@ -121,10 +121,14 @@
                      поэтому пробела перед запятой не будет. -->
                 <span class="tb-suggest-name">
                   <span class="tb-suggest-leaf">{{ l.name }}</span>
-                  @if (l.community_name || l.city_name) {
+                  <!-- LF-2: при «другом эмирате» город уносим в скобку, чтобы не дублировать в подписи. -->
+                  @if (l.community_name || (l.city_name && !isOtherCity(l))) {
                     <span class="tb-suggest-sub"
                       >, {{ l.community_name ?? l.city_name }}</span
                     >
+                  }
+                  @if (isOtherCity(l)) {
+                    <span class="tb-suggest-emirate">({{ l.city_name }})</span>
                   }
                 </span>
               </button>

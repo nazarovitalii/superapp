@@ -411,6 +411,14 @@
   white-space: nowrap;
 }
 
+// LF-2: эмират в скобках, если адрес из города ≠ города юзера. Приглушённый
+// дизамбигуатор (текст несёт смысл — не только цвет), лёгкий отступ слева.
+.tb-suggest-emirate {
+  margin-left: var(--s-quarter);
+  color: var(--text-color-muted);
+  white-space: nowrap;
+}
+
 // 1C: чип фильтров (активные) — высота 44px
 .filter-chip {
   display: inline-flex;
