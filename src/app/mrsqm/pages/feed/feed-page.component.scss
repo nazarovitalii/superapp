@@ -345,8 +345,12 @@
 .tb-suggest {
   position: absolute;
   top: calc(100% + 4px);
+  // LF-1: результаты шире поля на 50% — длинные адреса вмещаются целиком.
+  // Прижаты к левому краю поля; не выходят за вьюпорт (без гориз. скролла).
   left: 0;
-  right: 0;
+  right: auto;
+  width: 150%;
+  max-width: calc(100vw - 24px);
   z-index: 30;
   max-height: 320px;
   overflow-y: auto;
