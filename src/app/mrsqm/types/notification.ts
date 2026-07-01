@@ -29,6 +29,16 @@ export const NOTIFICATION_TYPES: readonly NotificationType[] = [
   'new_comment',
 ];
 
+// Высокочастотные матч-типы — единственный поток, который «топит» остальные (спека §1).
+// Единый источник для scope-фильтра «Личные» = всё, КРОМЕ этих.
+export const MATCH_NOTIFICATION_TYPES: readonly NotificationType[] = [
+  'new_listing',
+  'price_drop',
+];
+
+// Scope ленты: 'all' — все типы (дефолт), 'personal' — всё, кроме матчей.
+export type NotificationScope = 'all' | 'personal';
+
 // source: 'n' = из notifications, 'm' = проекция из filter_matches.
 export interface NotificationItem {
   id: string;
@@ -45,5 +55,7 @@ export interface NotificationItem {
 export interface GetNotificationsResponse {
   items: NotificationItem[];
   unread_count: number;
+  // Непрочитанные личные (не матч) — всегда, независимо от p_scope. Для индикатора вкладки «Личные».
+  personal_unread_count: number;
   next_cursor: string | null;
 }

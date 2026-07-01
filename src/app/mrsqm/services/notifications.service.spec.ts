@@ -14,6 +14,7 @@ describe('NotificationsService', () => {
   ): GetNotificationsResponse => ({
     items: [],
     unread_count: 0,
+    personal_unread_count: 0,
     next_cursor: null,
     ...over,
   });
@@ -55,7 +56,10 @@ describe('NotificationsService', () => {
     );
     const svc = TestBed.inject(NotificationsService);
     await svc.loadFirst();
-    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_scope: 'all',
+    });
     expect(svc.items().length).toBe(1);
     expect(svc.unreadCount()).toBe(1);
     expect(svc.nextCursor()).toBe('c1');
@@ -71,6 +75,7 @@ describe('NotificationsService', () => {
     expect(rpc).toHaveBeenCalledWith('get_notifications', {
       p_limit: 30,
       p_cursor: 'c1',
+      p_scope: 'all',
     });
     expect(svc.items().length).toBe(2);
     expect(svc.nextCursor()).toBeNull();
@@ -81,7 +86,10 @@ describe('NotificationsService', () => {
     rpc.and.resolveTo(page());
     await svc.markAllRead();
     expect(rpc).toHaveBeenCalledWith('mark_notifications_read', { p_ids: null });
-    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_scope: 'all',
+    });
   });
 
   it('сигнал сокета триггерит loadFirst', async () => {
@@ -92,7 +100,10 @@ describe('NotificationsService', () => {
     rpc.and.resolveTo(page({ unread_count: 5 }));
     changed$.next();
     await Promise.resolve();
-    expect(rpc).toHaveBeenCalledWith('get_notifications', { p_limit: 30 });
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_scope: 'all',
+    });
   });
 
   it('повторный loadMore во время загрузки — no-op (без дублей страниц)', async () => {
@@ -109,5 +120,47 @@ describe('NotificationsService', () => {
     const calls = rpc.calls.allArgs().filter((a) => a[0] === 'get_notifications');
     expect(calls.length).toBe(1);
     expect(svc.items().length).toBe(2);
+  });
+
+  it('loadFirst по умолчанию шлёт p_scope=all и заполняет personalUnread', async () => {
+    rpc.and.resolveTo(page({ unread_count: 2, personal_unread_count: 1 }));
+    const svc = TestBed.inject(NotificationsService);
+    await svc.loadFirst();
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_scope: 'all',
+    });
+    expect(svc.scope()).toBe('all');
+    expect(svc.personalUnread()).toBe(1);
+  });
+
+  it('setScope переключает scope и перечитывает первую страницу с новым p_scope', async () => {
+    rpc.and.resolveTo(page());
+    const svc = TestBed.inject(NotificationsService);
+    await svc.loadFirst();
+    rpc.calls.reset();
+    rpc.and.resolveTo(page({ unread_count: 3, personal_unread_count: 3 }));
+    await svc.setScope('personal');
+    expect(svc.scope()).toBe('personal');
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_scope: 'personal',
+    });
+    expect(svc.unreadCount()).toBe(3);
+  });
+
+  it('loadMore шлёт активный p_scope вместе с курсором', async () => {
+    const svc = TestBed.inject(NotificationsService);
+    rpc.and.resolveTo(page({ items: [{ id: '1' } as never], next_cursor: 'c1' }));
+    await svc.loadFirst();
+    await svc.setScope('personal');
+    rpc.calls.reset();
+    rpc.and.resolveTo(page({ items: [{ id: '2' } as never], next_cursor: null }));
+    await svc.loadMore();
+    expect(rpc).toHaveBeenCalledWith('get_notifications', {
+      p_limit: 30,
+      p_cursor: 'c1',
+      p_scope: 'personal',
+    });
   });
 });
