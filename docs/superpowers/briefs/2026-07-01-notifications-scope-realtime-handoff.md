@@ -48,7 +48,26 @@ get_notifications(
 ## Критерий приёмки
 
 `get_notifications(p_scope=>'personal')` не содержит `new_listing`/`price_drop`; `unread_count` — по scope;
-`personal_unread_count` = непрочитанные личные независимо от `p_scope`; `p_scope=>'all'` идентичен текущему.
+`personal_unread_count` = непрочитанные личные независимо от `p_scope`; `p_scope=>'all'` **байт-в-байт**
+идентичен текущему (ветвление, а не переписывание all-пути); keyset-курсор scope-агностичен в кодировке —
+**фронт сбрасывает `p_cursor` при смене вкладки** (superApp уже гарантирует: `setScope` → `loadFirst` без
+курсора, `next_cursor` перечитывается из свежего ответа).
+
+## Реализация на стороне realtime (из сверки контракта 2026-07-01)
+
+Контракт ложится почти даром: в схеме `new_listing`/`price_drop` приходят исключительно из CTE `matches`
+(проекция `filter_matches`), таблица `notifications` их не содержит. Отсюда для realtime/БД:
+
+- `p_scope='personal'` = **выкинуть CTE `matches` из UNION** (ноль джойнов к `filter_matches`/`properties`),
+  `unread_count` = только слагаемое по `notifications`.
+- `personal_unread_count` = уже существующий подзапрос `count(*) FROM notifications WHERE read_at IS NULL`
+  (в таблице нет match-типов) → фактически бесплатно; **без cap** (личных событий мало, это смысл вкладки).
+- **Новая pending-миграция 021**, НЕ правка применённой 019 (ledger-конвент).
+- **Overload-ловушка:** `CREATE OR REPLACE` с 3-м параметром создаёт перегрузку `(int,text)` + `(int,text,text)`
+  → PostgREST падает на неоднозначности. Нужно `DROP FUNCTION public.get_notifications(int, text)` → создать
+  3-арг с дефолтами → заново `GRANT`. Обратная совместимость `get_notifications(p_limit)` — после дропа старой.
+- **Belt-and-suspenders:** в personal-ветке добавить `AND n.type NOT IN ('new_listing','price_drop')` на CTE
+  `notif` — no-op сегодня, но буквально соответствует контракту и устойчиво к дрейфу продюсера.
 
 ## Разделение ответственности
 
