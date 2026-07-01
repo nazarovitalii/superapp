@@ -176,7 +176,7 @@ export const APP_ROUTES: Routes = [
     path: 'mrsqm/chat',
     loadComponent: () =>
       import('./mrsqm/pages/chat/chat-page.component').then((m) => m.ChatPageComponent),
-    data: { page: 'mrsqm-chat', title: 'AI Chat', icon: 'smart_toy' },
+    data: { page: 'mrsqm-chat', title: 'AI Chat', icon: 'wand_stars' },
     canActivate: [mrsqmAuthGuard],
   },
   {

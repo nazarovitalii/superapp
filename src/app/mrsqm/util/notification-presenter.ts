@@ -79,7 +79,7 @@ const META: Record<NotificationType, TypeMeta> = {
   },
   ai_digest: {
     thumbKind: 'icon',
-    icon: 'smart_toy',
+    icon: 'wand_stars',
     accent: 'primary',
     title: () => 'Дайджест от ИИ',
     detail: (d) => str(d, 'summary'),

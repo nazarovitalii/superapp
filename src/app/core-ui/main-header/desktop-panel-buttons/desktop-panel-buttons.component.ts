@@ -42,7 +42,7 @@ import { BellButtonComponent } from '../../../mrsqm/components/bell-button/bell-
       mat-icon-button
       matTooltip="AI-ассистент"
     >
-      <mat-icon>psychology</mat-icon>
+      <mat-icon>wand_stars</mat-icon>
     </button>
 
     <!-- MrSQM: колокольчик live-уведомлений — справа от AI-кнопки -->
@@ -112,7 +112,7 @@ import { BellButtonComponent } from '../../../mrsqm/components/bell-button/bell-
           background-color: var(--hover-color, rgba(0, 0, 0, 0.04));
         }
 
-        /* AI-кнопка: psychology вращается как все panel-btn (45° = «закрыть»). */
+        /* AI-кнопка: wand_stars вращается как все panel-btn (45° = «закрыть»). */
         &.ai-panel-btn.isActive .mat-icon {
           transform: rotate(45deg);
         }

@@ -166,7 +166,7 @@ export class MagicNavConfigService {
         type: 'route',
         id: 'crm-chat',
         label: 'AI Chat',
-        icon: 'smart_toy',
+        icon: 'wand_stars',
         route: '/mrsqm/chat',
       } as NavItem,
       {
