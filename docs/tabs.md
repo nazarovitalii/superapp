@@ -405,7 +405,9 @@ _Бейдж / баллы / score — НЕ показываем (вне MVP)._
 
 **12 типов:** `new_listing`, `price_drop` (из `filter_matches`, fan-out-on-read) + 10 доменных (`subscription_expiring`, `friend_request`(+accepted), `ai_digest`, `referral_registered`, `bonus_month_granted`, `listing_approved`/`rejected`/`archived`, `new_comment` — из `notifications`, fan-out-on-write).
 
-> ⏳ **Осталось:** 9 доменных продюсеров-триггеров (backend, отдельный план) — без них в проде видны только матч-типы. ai_digest — продюсер на стороне gpt.
+**Вкладки «Все / Личные» (BELL-2c, ✅ фронт 2026-07-01)** — в панели «Все уведомления» (только сайдбар, дропдаун колокола не трогаем). «Личные» = всё, **кроме** матч-типов (`new_listing`/`price_drop`), чтобы редкие actionable-уведомления не тонули в потоке матчей. Фильтрация серверная: `p_scope: 'all'|'personal'` в `get_notifications` + `personal_unread_count` в ответе (индикатор на вкладке). `setScope` перезагружает 1-ю страницу без курсора (курсор scope-агностичен → сброс при смене вкладки). `NotificationsService` — root-singleton, поэтому scope сбрасывается в `'all'` при уничтожении сайдбара (`ngOnDestroy`), чтобы колокол не наследовал `personal`.
+
+> ⏳ **Осталось:** 9 доменных продюсеров-триггеров (backend, отдельный план) — без них в проде видны только матч-типы. ai_digest — продюсер на стороне gpt. **`p_scope`** — контракт передан realtime (миграция 021, `docs/superpowers/briefs/2026-07-01-notifications-scope-realtime-handoff.md`); до выката «Личные» отдаёт всё (мягкая деградация).
 
 ---
 
