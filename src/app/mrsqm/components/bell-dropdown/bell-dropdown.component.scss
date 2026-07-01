@@ -32,9 +32,13 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--card-bg, #fff);
-  border: 1px solid var(--separator-alpha, rgba(0, 0, 0, 0.1));
+  // Фон не затемняется, а блюрится (::backdrop) — поэтому мягкая тень «под скрим»
+  // сливалась с блюром. Углубляем elevation + чуть плотнее край, чтобы поповер «плавал».
+  border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: 14px;
-  box-shadow: var(--whiteframe-shadow-4dp, 0 8px 24px rgba(0, 0, 0, 0.18));
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.26),
+    0 2px 8px rgba(0, 0, 0, 0.14);
   // modal-motion: появляется из триггера (колокол вверху-справа) — scale+fade.
   transform-origin: top right;
   animation: bell-in 0.18s ease-out;
@@ -66,7 +70,11 @@
 
 .bell-markall,
 .bell-retry,
-.bell-viewall {
+.bell-viewall,
+.bell-viewpersonal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: none;
   border: none;
   cursor: pointer;
@@ -84,6 +92,19 @@
     outline: 2px solid var(--c-primary, #1976d2);
     outline-offset: 1px;
   }
+}
+
+// Счётчик личных у кнопки-джампа в футере — тот же визуальный язык, что бейдж вкладки в сайдбаре.
+.bell-foot-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--c-primary, #1976d2);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
 }
 
 .bell-rows {

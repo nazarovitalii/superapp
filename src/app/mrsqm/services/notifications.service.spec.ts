@@ -174,4 +174,13 @@ describe('NotificationsService', () => {
     expect(svc.scope()).toBe('all');
     expect(rpc).not.toHaveBeenCalled();
   });
+
+  it('setScopeSilently меняет scope без обращения к RPC', () => {
+    rpc.and.resolveTo(page());
+    const svc = TestBed.inject(NotificationsService);
+    rpc.calls.reset();
+    svc.setScopeSilently('personal');
+    expect(svc.scope()).toBe('personal');
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });

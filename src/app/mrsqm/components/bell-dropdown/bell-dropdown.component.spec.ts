@@ -25,9 +25,11 @@ describe('BellDropdownComponent', () => {
 
   const previewItems = signal<NotificationItem[]>([]);
   const status = signal<'idle' | 'loading' | 'ready' | 'error'>('ready');
+  const personalUnread = signal(0);
   const loadFirst = jasmine.createSpy('loadFirst').and.resolveTo(undefined);
   const markAllRead = jasmine.createSpy('markAllRead').and.resolveTo(undefined);
   const markRead = jasmine.createSpy('markRead').and.resolveTo(undefined);
+  const setScopeSilently = jasmine.createSpy('setScopeSilently');
   const recordView = jasmine.createSpy('recordView').and.resolveTo(undefined);
   const openNotifications = jasmine.createSpy('openNotifications');
   const openProperty = jasmine.createSpy('openProperty');
@@ -37,17 +39,27 @@ describe('BellDropdownComponent', () => {
     markAllRead.calls.reset();
     markRead.calls.reset();
     recordView.calls.reset();
+    setScopeSilently.calls.reset();
     openNotifications.calls.reset();
     openProperty.calls.reset();
     previewItems.set([]);
     status.set('ready');
+    personalUnread.set(0);
 
     await TestBed.configureTestingModule({
       imports: [BellDropdownComponent],
       providers: [
         {
           provide: NotificationsService,
-          useValue: { previewItems, status, loadFirst, markAllRead, markRead },
+          useValue: {
+            previewItems,
+            status,
+            personalUnread,
+            loadFirst,
+            markAllRead,
+            markRead,
+            setScopeSilently,
+          },
         },
         {
           provide: SavedFilterService,
@@ -100,6 +112,28 @@ describe('BellDropdownComponent', () => {
     const btn = fixture.nativeElement.querySelector('.bell-viewall') as HTMLButtonElement;
     btn.click();
     expect(openNotifications).toHaveBeenCalled();
+  });
+
+  it('«Личные» ставит scope=personal (silent) и открывает сайдбар', () => {
+    const closedSpy = jasmine.createSpy('closed');
+    comp.closed.subscribe(closedSpy);
+    const btn = fixture.nativeElement.querySelector(
+      '.bell-viewpersonal',
+    ) as HTMLButtonElement;
+    btn.click();
+    expect(setScopeSilently).toHaveBeenCalledWith('personal');
+    expect(openNotifications).toHaveBeenCalled();
+    expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('счётчик личных в футере виден при personalUnread > 0 и скрыт при 0', () => {
+    personalUnread.set(0);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.bell-foot-count')).toBeNull();
+    personalUnread.set(3);
+    fixture.detectChanges();
+    const badge = fixture.nativeElement.querySelector('.bell-foot-count');
+    expect(badge.textContent).toContain('3');
   });
 
   it('«Отметить прочитанными» зовёт store.markAllRead()', () => {

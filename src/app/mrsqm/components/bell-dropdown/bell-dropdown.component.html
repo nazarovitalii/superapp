@@ -63,6 +63,16 @@
 
     <footer class="bell-foot">
       <button
+        class="bell-viewpersonal"
+        type="button"
+        (click)="onViewPersonal()"
+      >
+        Личные
+        @if (personalUnread() > 0) {
+          <span class="bell-foot-count">{{ personalUnread() }}</span>
+        }
+      </button>
+      <button
         class="bell-viewall"
         type="button"
         (click)="onViewAll()"

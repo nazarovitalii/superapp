@@ -42,6 +42,7 @@ export class BellDropdownComponent implements OnInit {
 
   readonly status = this._store.status;
   readonly previewItems = this._store.previewItems;
+  readonly personalUnread = this._store.personalUnread;
 
   private readonly _filters = signal<SavedFilter[]>([]);
 
@@ -95,6 +96,14 @@ export class BellDropdownComponent implements OnInit {
   }
 
   onViewAll(): void {
+    this._panels.openNotifications();
+    this.closed.emit();
+  }
+
+  onViewPersonal(): void {
+    // Переход на вкладку «Личные» в сайдбаре: ставим scope без перезагрузки,
+    // панель догрузит в ngOnInit. Бейдж колокола и общий счётчик не трогаем.
+    this._store.setScopeSilently('personal');
     this._panels.openNotifications();
     this.closed.emit();
   }

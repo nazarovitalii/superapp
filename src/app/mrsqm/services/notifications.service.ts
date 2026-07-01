@@ -89,10 +89,16 @@ export class NotificationsService {
     await this.loadFirst();
   }
 
+  // Смена вкладки БЕЗ перезагрузки. Для перехода из попапа колокола на «Личные»:
+  // сайдбар сам зовёт loadFirst в ngOnInit, второй RPC не нужен.
+  setScopeSilently(scope: NotificationScope): void {
+    this._scope.set(scope);
+  }
+
   // Сброс вкладки на 'all' БЕЗ перезагрузки. Зовётся при уничтожении сайдбара,
   // чтобы колокол (общий root-singleton) не унаследовал фильтр 'personal' (спека §5).
   resetScope(): void {
-    this._scope.set('all');
+    this.setScopeSilently('all');
   }
 
   async markAllRead(): Promise<void> {
