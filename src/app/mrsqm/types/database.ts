@@ -147,6 +147,8 @@ export interface BuildingInfo {
   total_floors: number | null;
   total_units: number | null;
   project_status: string | null;
+  // Застройщик leaf-локации (из location_developers) — источник авто-подстановки в форме.
+  developer_id: string | null;
 }
 
 // Планировка из справочника комьюнити (community_layouts).

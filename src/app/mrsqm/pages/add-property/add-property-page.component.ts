@@ -496,6 +496,9 @@ export class AddPropertyPageComponent {
     ]);
     this.buildingInfo.set(info);
     this.communityLayouts.set(layouts);
+    // Авто-подстановка застройщика из location_developers (на локацию 0/1 застройщик).
+    // Ручной выбор (pickedDeveloperId) перекрывает это при сохранении.
+    this._developerId.set(info?.developer_id ?? null);
     // Если проект уже сдан (completed), а ранее был выбран Off-Plan — форсируем Ready.
     this._reconcileHandover();
   }
@@ -825,8 +828,10 @@ export class AddPropertyPageComponent {
       handover: this.handover(),
       occupancy_status: this.handover() === 'ready' ? this.occupancy() : null,
       lease_until: lease,
-      // AP-5: вручную выбранный девелопер перекрывает developer_ids из локации.
-      developer_id: this.pickedDeveloperId() ?? (isOffplan ? this._developerId() : null),
+      // AP-5: ручной выбор перекрывает авто-застройщика из location_developers.
+      // Застройщик = свойство здания → проставляем и для ready, не только offplan
+      // (иначе строгий фильтр по застройщику пропускал бы вторичку в размеченных локациях).
+      developer_id: this.pickedDeveloperId() ?? this._developerId(),
       completion_year: isOffplan ? num(this.completionYear()) : null,
       completion_q: isOffplan ? this.completionQ() : null,
       visibility: this.visibility(),

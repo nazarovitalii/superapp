@@ -98,6 +98,7 @@ const completedBuildingInfo = (): BuildingInfo => ({
   total_floors: 30,
   total_units: 200,
   project_status: 'completed',
+  developer_id: null,
 });
 
 // Эталонный BuildingInfo с НЕ-completed статусом.
@@ -109,6 +110,7 @@ const activeBuildingInfo = (): BuildingInfo => ({
   total_floors: null,
   total_units: null,
   project_status: 'under_construction',
+  developer_id: null,
 });
 
 // ── Ожидаемые константы (FC-4, порядок после B3: Описание→Фото) ──────────────
@@ -755,6 +757,27 @@ describe('AddPropertyPageComponent — pickLocation дедуп leaf (FB-1)', () 
     );
     await component.pickLocation('b1');
     expect(component.addrPath().map((p) => p.id)).toEqual(['c0', 'c1', 'b1']);
+  });
+
+  it('leaf с застройщиком в location_developers → авто-подстановка developer_id', async () => {
+    spyOn(service, 'locationInfo').and.resolveTo(
+      makeInfo([{ id: 'b1', name: 'Golf Vita A', level: 'building' }]),
+    );
+    spyOn(service, 'getBuildingInfo').and.resolveTo({
+      developer_id: 'dev-damac',
+      project_name: 'Golf Vita A',
+      built_year: null,
+      completion_year: null,
+      completion_q: null,
+      total_floors: null,
+      total_units: null,
+      project_status: 'under_construction',
+    });
+    await component.pickLocation('b1');
+    const dev = (
+      component as unknown as { _developerId: () => string | null }
+    )._developerId();
+    expect(dev).toBe('dev-damac');
   });
 });
 
