@@ -33,6 +33,44 @@
   cursor: pointer;
 }
 
+.ntf-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 14px 0;
+  border-bottom: 1px solid var(--separator-color);
+}
+
+.ntf-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-color-muted);
+  cursor: pointer;
+  font: inherit;
+
+  &.is-active {
+    color: var(--text-color);
+    border-bottom-color: var(--c-primary, #1976d2);
+    font-weight: 600;
+  }
+}
+
+.ntf-tab-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--c-primary, #1976d2);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
 .ntf-list {
   list-style: none;
   margin: 0;

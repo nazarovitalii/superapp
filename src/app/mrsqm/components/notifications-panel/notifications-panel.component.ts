@@ -11,7 +11,7 @@ import { PanelContentService } from '../../../features/panels/panel-content.serv
 import { SavedFilterService } from '../../services/saved-filter.service';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
 import { notificationTarget } from '../../util/notification-route';
-import { NotificationItem } from '../../types/notification';
+import { NotificationItem, NotificationScope } from '../../types/notification';
 import { SavedFilter } from '../../services/feed-filter.service';
 import { PropertyFeedItem } from '../../types/database';
 
@@ -45,6 +45,10 @@ export class NotificationsPanelComponent implements OnInit {
   filterNameFor(item: NotificationItem): string | null {
     if (!item.filter_id) return null;
     return this._filters().find((f) => f.id === item.filter_id)?.auto_name ?? null;
+  }
+
+  onScope(scope: NotificationScope): void {
+    void this.store.setScope(scope);
   }
 
   onRow(item: NotificationItem): void {

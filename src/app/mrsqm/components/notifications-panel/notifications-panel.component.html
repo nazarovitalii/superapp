@@ -18,10 +18,46 @@
     </button>
   </header>
 
+  <nav
+    class="ntf-tabs"
+    role="tablist"
+    aria-label="Вкладки уведомлений"
+  >
+    <button
+      class="ntf-tab"
+      type="button"
+      role="tab"
+      [class.is-active]="store.scope() === 'all'"
+      [attr.aria-selected]="store.scope() === 'all'"
+      (click)="onScope('all')"
+    >
+      Все
+    </button>
+    <button
+      class="ntf-tab"
+      type="button"
+      role="tab"
+      [class.is-active]="store.scope() === 'personal'"
+      [attr.aria-selected]="store.scope() === 'personal'"
+      (click)="onScope('personal')"
+    >
+      Личные
+      @if (store.personalUnread() > 0) {
+        <span class="ntf-tab-count">{{ store.personalUnread() }}</span>
+      }
+    </button>
+  </nav>
+
   @if (store.status() === 'error') {
     <div class="ntf-empty">Не удалось загрузить</div>
   } @else if (!store.items().length) {
-    <div class="ntf-empty">Пока нет уведомлений</div>
+    <div class="ntf-empty">
+      @if (store.scope() === 'personal') {
+        Личных уведомлений пока нет
+      } @else {
+        Пока нет уведомлений
+      }
+    </div>
   } @else {
     <ul class="ntf-list">
       @for (it of store.items(); track it.id) {

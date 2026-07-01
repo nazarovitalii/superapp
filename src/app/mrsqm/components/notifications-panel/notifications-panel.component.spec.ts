@@ -6,6 +6,10 @@ import { PanelContentService } from '../../../features/panels/panel-content.serv
 import { SavedFilterService } from '../../services/saved-filter.service';
 import { SeenTrackingService } from '../../services/seen-tracking.service';
 
+const scope = signal<'all' | 'personal'>('all');
+const personalUnread = signal(0);
+const setScope = jasmine.createSpy('setScope');
+
 describe('NotificationsPanelComponent', () => {
   let fixture: ComponentFixture<NotificationsPanelComponent>;
 
@@ -36,6 +40,9 @@ describe('NotificationsPanelComponent', () => {
   ]);
 
   beforeEach(() => {
+    scope.set('all');
+    personalUnread.set(0);
+    setScope.calls.reset();
     TestBed.configureTestingModule({
       imports: [NotificationsPanelComponent],
       providers: [
@@ -50,6 +57,9 @@ describe('NotificationsPanelComponent', () => {
             loadMore: () => Promise.resolve(),
             markAllRead: () => Promise.resolve(),
             markRead: () => Promise.resolve(),
+            scope,
+            personalUnread,
+            setScope,
           },
         },
         {
@@ -81,5 +91,36 @@ describe('NotificationsPanelComponent', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelector('mrsqm-notification-row'),
     ).toBeTruthy();
+  });
+
+  it('рендерит две вкладки «Все» и «Личные»', () => {
+    const tabs = fixture.nativeElement.querySelectorAll('.ntf-tab');
+    expect(tabs.length).toBe(2);
+    expect(tabs[0].textContent).toContain('Все');
+    expect(tabs[1].textContent).toContain('Личные');
+  });
+
+  it('клик по вкладке «Личные» зовёт setScope(personal)', () => {
+    const tabs = fixture.nativeElement.querySelectorAll('.ntf-tab');
+    tabs[1].click();
+    expect(setScope).toHaveBeenCalledWith('personal');
+  });
+
+  it('активная вкладка помечена классом is-active по scope()', () => {
+    scope.set('personal');
+    fixture.detectChanges();
+    const tabs = fixture.nativeElement.querySelectorAll('.ntf-tab');
+    expect(tabs[0].classList).not.toContain('is-active');
+    expect(tabs[1].classList).toContain('is-active');
+  });
+
+  it('счётчик личных виден при personalUnread > 0 и скрыт при 0', () => {
+    personalUnread.set(0);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.ntf-tab-count')).toBeNull();
+    personalUnread.set(4);
+    fixture.detectChanges();
+    const badge = fixture.nativeElement.querySelector('.ntf-tab-count');
+    expect(badge.textContent).toContain('4');
   });
 });
