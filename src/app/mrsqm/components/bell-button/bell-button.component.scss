@@ -8,13 +8,23 @@
 
   .mat-icon {
     display: block;
+    transition: transform 0.2s ease;
   }
 
   // Сигнал «есть уведомления» — залитый колокол (см. шаблон), цвет НЕ меняем: остаётся
   // серым (как без уведомлений). Акцент несёт янтарный счётчик .bell-badge.
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled):not(.isActive) {
     background-color: var(--hover-color, rgba(0, 0, 0, 0.04));
+  }
+
+  // Сайдбар открыт — колокол повёрнут как «×» (тот же паттерн, что у panel-btn.isActive).
+  &.isActive {
+    box-shadow: 0px -2px 3px 0px var(--separator-alpha);
+
+    .mat-icon {
+      transform: rotate(45deg);
+    }
   }
 }
 

@@ -13,6 +13,7 @@ import { NotifierStoreService } from '../../services/notifier-store.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { BellDropdownComponent } from '../bell-dropdown/bell-dropdown.component';
+import { PanelContentService } from '../../../features/panels/panel-content.service';
 
 @Component({
   selector: 'mrsqm-bell-button',
@@ -26,10 +27,13 @@ export class BellButtonComponent {
   private readonly _store = inject(NotifierStoreService);
   private readonly _notifications = inject(NotificationsService);
   private readonly _auth = inject(MrsqmAuthService);
+  private readonly _panels = inject(PanelContentService);
 
   readonly isAuthenticated = this._auth.isAuthenticated;
   readonly unreadCount = this._notifications.unreadCount;
   readonly isOpen = signal(false);
+  // Sidebar уведомлений открыт → колокол «активен» (повёрнут как ×).
+  readonly isNotificationsOpen = computed(() => this._panels.isNotificationsOpen());
 
   readonly hasUnseen = computed(() => this.unreadCount() > 0);
   readonly badgeText = computed<string | null>(() => {
@@ -53,6 +57,11 @@ export class BellButtonComponent {
   }
 
   openDropdown(): void {
+    // Если сайдбар уведомлений открыт — клик закрывает его, попап не открываем.
+    if (this._panels.isNotificationsOpen()) {
+      this._panels.closeNotifications();
+      return;
+    }
     this.isOpen.set(true);
   }
 

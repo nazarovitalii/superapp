@@ -6,6 +6,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { MrsqmAuthService } from '../../services/auth.service';
 import { UnitTypeLabelService } from '../../services/unit-type-label.service';
 import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { NotificationScope } from '../../types/notification';
 
 describe('BellButtonComponent', () => {
   let fixture: ComponentFixture<BellButtonComponent>;
@@ -13,9 +14,13 @@ describe('BellButtonComponent', () => {
   const unreadCount = signal(0);
   const openRequested = signal(0);
   const markAllRead = jasmine.createSpy('markAllRead').and.resolveTo(undefined);
+  const isNotificationsOpen = signal(false);
+  const closeNotificationsSpy = jasmine.createSpy('closeNotifications');
 
   beforeEach(async () => {
     unreadCount.set(0);
+    isNotificationsOpen.set(false);
+    closeNotificationsSpy.calls.reset();
     await TestBed.configureTestingModule({
       imports: [BellButtonComponent],
       providers: [
@@ -40,8 +45,11 @@ describe('BellButtonComponent', () => {
             previewItems: signal([]),
             status: signal('ready'),
             nextCursor: signal(null),
+            personalUnread: signal(0),
+            scope: signal<NotificationScope>('all'),
             loadFirst: () => Promise.resolve(),
             loadMore: () => Promise.resolve(),
+            setScopeSilently: () => {},
           },
         },
         { provide: MrsqmAuthService, useValue: { isAuthenticated: () => true } },
@@ -52,7 +60,13 @@ describe('BellButtonComponent', () => {
         },
         {
           provide: PanelContentService,
-          useValue: { openFilterPanel: () => {}, openProperty: () => {} },
+          useValue: {
+            openFilterPanel: () => {},
+            openProperty: () => {},
+            openNotifications: () => {},
+            isNotificationsOpen,
+            closeNotifications: closeNotificationsSpy,
+          },
         },
       ],
     }).compileComponents();
@@ -82,6 +96,21 @@ describe('BellButtonComponent', () => {
     comp.onClosed();
     expect(markAllRead).toHaveBeenCalled();
     expect(comp.isOpen()).toBe(false);
+  });
+
+  it('openDropdown: сайдбар открыт → закрывает сайдбар, попап не открывает', () => {
+    isNotificationsOpen.set(true);
+    fixture.detectChanges();
+    comp.openDropdown();
+    expect(closeNotificationsSpy).toHaveBeenCalled();
+    expect(comp.isOpen()).toBe(false);
+  });
+
+  it('openDropdown: сайдбар закрыт → открывает попап', () => {
+    isNotificationsOpen.set(false);
+    comp.openDropdown();
+    expect(closeNotificationsSpy).not.toHaveBeenCalled();
+    expect(comp.isOpen()).toBe(true);
   });
 
   it('ненулевой openRequested на маунте НЕ авто-открывает; последующий бамп открывает', () => {

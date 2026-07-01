@@ -2,6 +2,7 @@
   <button
     class="panel-btn bell-btn"
     [class.has-unseen]="hasUnseen()"
+    [class.isActive]="isNotificationsOpen()"
     (click)="openDropdown()"
     mat-icon-button
     matTooltip="Уведомления"
