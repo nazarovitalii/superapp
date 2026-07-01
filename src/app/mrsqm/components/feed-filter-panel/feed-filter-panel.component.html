@@ -25,7 +25,7 @@
          ══════════════════════════════════════════════════════════════════════════ -->
     @if (savedFilters().length) {
       <div class="filter-group saved-filters-group">
-        <div class="filter-label"><mat-icon>bookmark</mat-icon>Сохранённые</div>
+        <div class="filter-label"><mat-icon>saved_search</mat-icon>Сохранённые</div>
         <div class="saved-filters-list">
           @for (f of savedFilters(); track f.id) {
             <div
@@ -38,7 +38,7 @@
                 class="saved-filter-load"
                 (click)="loadSavedFilter(f)"
               >
-                <mat-icon class="saved-filter-icon">bookmark</mat-icon>
+                <mat-icon class="saved-filter-icon">saved_search</mat-icon>
                 <span class="saved-filter-name">{{ f.auto_name || 'Без названия' }}</span>
               </button>
               @if (f.unseen_count > 0) {

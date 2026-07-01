@@ -89,3 +89,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+// Bug 3: непрочитанное уведомление — заголовок и деталь (строки 1 и 2) жирные;
+// после клика/просмотра (is-unread снят) вес возвращается к обычному.
+.is-unread {
+  .ntf-title,
+  .ntf-line2 {
+    font-weight: 600;
+  }
+}

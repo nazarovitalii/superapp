@@ -11,7 +11,7 @@
   }
 
   // Сигнал «есть уведомления» — залитый колокол (см. шаблон), цвет НЕ меняем: остаётся
-  // серым (как без уведомлений). Акцент несёт коричневый счётчик .bell-badge.
+  // серым (как без уведомлений). Акцент несёт янтарный счётчик .bell-badge.
 
   &:hover:not(:disabled) {
     background-color: var(--hover-color, rgba(0, 0, 0, 0.04));
@@ -26,7 +26,7 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  background: #795548; // коричневый счётчик уведомлений (Material brown 500)
+  background: #996800; // счётчик новых уведомлений (тёмно-янтарный)
   color: #fff;
   font-size: 0.625rem;
   line-height: 16px;
