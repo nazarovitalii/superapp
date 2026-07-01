@@ -447,6 +447,41 @@ body.isVerticalActionBar .cdk-overlay-pane.mat-mdc-tooltip-panel {
   box-shadow: var(--task-selected-shadow, var(--task-detail-shadow));
 }
 
+// SNACK — MrSQM publish-toast (Bug 5): две строки в столбик —
+// заголовок статуса (14px чёрный) + ссылка «Просмотреть объект →» (14px серый).
+.mat-mdc-snack-bar-container.mrsqm-publish-snack {
+  .mat-mdc-simple-snack-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 0;
+    color: #000;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .mat-mdc-snack-bar-actions {
+    margin: 0;
+  }
+
+  // Ссылка-действие как строка текста, а не кнопка.
+  .mat-mdc-snack-bar-action {
+    min-width: 0;
+    padding: 0;
+    color: #888;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: normal;
+
+    &:hover .mat-mdc-button-persistent-ripple::before {
+      opacity: 0;
+    }
+  }
+}
+
 // DIALOG — MrSQM confirm (своя разметка mrsqm-confirm-dialog, не апстрим).
 // panelClass приземляется на .cdk-overlay-pane → округляем поверхность и ширину.
 .cdk-overlay-pane.mrsqm-confirm-pane {

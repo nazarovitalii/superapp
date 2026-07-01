@@ -19,6 +19,9 @@ import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyFormAService } from '../../services/property-form-a.service';
 import { MrsqmAuthService } from '../../services/auth.service';
+import { SnackService } from '../../../core/snack/snack.service';
+import { PanelContentService } from '../../../features/panels/panel-content.service';
+import { PropertyFeedItem } from '../../types/database';
 import {
   BuildingInfo,
   CommunityLayout,
@@ -83,6 +86,8 @@ export class AddPropertyPageComponent {
   private readonly _formA = inject(PropertyFormAService);
   private readonly _auth = inject(MrsqmAuthService);
   private readonly _router = inject(Router);
+  private readonly _snack = inject(SnackService);
+  private readonly _panels = inject(PanelContentService);
 
   // Ссылка на DOM-элемент бегунка (для getBoundingClientRect при drag).
   private readonly _revealEl = viewChild<ElementRef<HTMLDivElement>>('revealEl');
@@ -868,12 +873,63 @@ export class AddPropertyPageComponent {
         }
       }
       if (!formAFailed) {
+        // network → сразу active (опубликован); official/public → pending_review (на модерации).
+        const isPublished = payload.status === 'active';
         await this._router.navigateByUrl('/mrsqm/feed');
+        this._showPublishToast(id, isPublished);
       }
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Не удалось создать объект');
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  // Bug 5: тост слева-внизу после добавления объекта — строка статуса + ссылка «Просмотреть объект →».
+  // Копия статус-зависимая: «опубликован» только для мгновенно активных (network); иначе «на модерации».
+  private _showPublishToast(propertyId: string, isPublished: boolean): void {
+    this._snack.open({
+      msg: isPublished ? 'Ваш объект опубликован' : 'Объект отправлен на модерацию',
+      isSkipTranslate: true,
+      type: 'CUSTOM',
+      actionStr: 'Просмотреть объект →',
+      actionFn: () => this._panels.openProperty(this._stubFor(propertyId)),
+      config: {
+        duration: 8000,
+        horizontalPosition: 'left',
+        verticalPosition: 'bottom',
+        panelClass: ['mrsqm-snack', 'mrsqm-publish-snack'],
+      },
+    });
+  }
+
+  // Минимальный stub PropertyFeedItem: property-detail догрузит полные данные по id (get_property).
+  private _stubFor(propertyId: string): PropertyFeedItem {
+    return {
+      id: propertyId,
+      owner_id: '',
+      deal_type: 'sale',
+      listing_type: 'pocket',
+      property_type: null,
+      unit_type_id: null,
+      price: 0,
+      price_currency: 'AED',
+      price_period: null,
+      bedrooms: null,
+      bathrooms: null,
+      area_sqft: null,
+      location_name: null,
+      community_name: null,
+      description: null,
+      furnished: null,
+      handover: null,
+      photos: null,
+      published_at: new Date().toISOString(),
+      owner_full_name: null,
+      owner_photo_url: null,
+      owner_agency_name: null,
+      is_network: false,
+      developer_name: null,
+    };
   }
 }

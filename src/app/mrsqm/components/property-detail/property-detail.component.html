@@ -149,25 +149,24 @@
               >{{ activePhotoIdx() + 1 }} / {{ photos().length }}</span
             >
           }
+          <!-- Bug 7: избранное — иконкой поверх главного фото (top-right), не пилюлей над ценой.
+               Свой объект (isOwner) в избранное не добавляют → скрыто (CD-1). -->
+          @if (!isOwner()) {
+            <button
+              type="button"
+              class="gallery-fav"
+              [class.is-saved]="isSaved()"
+              [attr.aria-label]="isSaved() ? 'Убрать из избранного' : 'В избранное'"
+              [attr.aria-pressed]="isSaved()"
+              (click)="toggleSaved(); $event.stopPropagation()"
+            >
+              <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+            </button>
+          }
         </div>
       } @else {
         <div class="gallery gallery--placeholder">
           <span class="no-photo-text">No Photo</span>
-        </div>
-      }
-
-      <!-- Ряд кнопок-пилюль под фото: избранное. Свой объект (isOwner) в избранное не добавляют → скрыто (CD-1). -->
-      @if (!isOwner()) {
-        <div class="action-pills">
-          <button
-            type="button"
-            class="fav-btn"
-            [class.is-saved]="isSaved()"
-            (click)="toggleSaved()"
-          >
-            <mat-icon>{{ isSaved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-            {{ isSaved() ? 'In Favourites' : 'Add to Favourites' }}
-          </button>
         </div>
       }
 

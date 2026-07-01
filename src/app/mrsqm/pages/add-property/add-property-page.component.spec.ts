@@ -6,6 +6,8 @@ import { PropertyCreateService } from '../../services/property-create.service';
 import { PropertyPhotoService } from '../../services/property-photo.service';
 import { PropertyFormAService } from '../../services/property-form-a.service';
 import { MrsqmAuthService } from '../../services/auth.service';
+import { SnackService } from '../../../core/snack/snack.service';
+import { PanelContentService } from '../../../features/panels/panel-content.service';
 import {
   BuildingInfo,
   DeveloperSearchItem,
@@ -142,6 +144,11 @@ describe('AddPropertyPageComponent — структура шагов (FC-4)', ()
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -382,6 +389,11 @@ describe('AddPropertyPageComponent — Off-Plan гейтинг (FC-3)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -486,6 +498,11 @@ describe('AddPropertyPageComponent — reorder галереи (B4)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -552,6 +569,11 @@ describe('AddPropertyPageComponent — Floor Plan до 4 (B4)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -617,6 +639,11 @@ describe('AddPropertyPageComponent — selectReveal (B5)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -688,6 +715,11 @@ describe('AddPropertyPageComponent — pickLocation дедуп leaf (FB-1)', () 
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -786,6 +818,11 @@ describe('AddPropertyPageComponent — developer-автокомплит (AP-5)',
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -882,6 +919,11 @@ describe('AddPropertyPageComponent — новые поля формы', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -988,6 +1030,11 @@ describe('AddPropertyPageComponent — yearOptions (V-6)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -1032,6 +1079,11 @@ describe('AddPropertyPageComponent — обязательный этаж (шаг
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -1106,6 +1158,11 @@ describe('AddPropertyPageComponent — позиции (наборы)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useClass: FakeFormAService },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
@@ -1217,6 +1274,11 @@ describe('AddPropertyPageComponent — Form A (SP-B)', () => {
         { provide: PropertyPhotoService, useClass: FakePhotoService },
         { provide: PropertyFormAService, useValue: formA },
         { provide: MrsqmAuthService, useClass: FakeAuthService },
+        { provide: SnackService, useValue: { open: jasmine.createSpy('open') } },
+        {
+          provide: PanelContentService,
+          useValue: { openProperty: jasmine.createSpy('openProperty') },
+        },
         {
           provide: Router,
           useValue: { navigateByUrl: jasmine.createSpy('navigateByUrl') },
